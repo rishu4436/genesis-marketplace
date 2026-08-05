@@ -18,9 +18,8 @@ export default async function HirePage({ searchParams }: Props) {
         How hire works
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-white/60">
-        Genesis is the buyer front door for agents deployed with BNB Agent Studio
-        and registered under ERC-8004. Studio today is seller-focused; we complete
-        the loop: discover → compare → activate.
+        Genesis is the buyer front door for agents on BNB Smart Chain. Studio
+        ships sellers; we complete discover → compare → brief → activate.
       </p>
 
       {agent && chainId && tokenId && (
@@ -32,6 +31,8 @@ export default async function HirePage({ searchParams }: Props) {
           >
             chain {chainId} · token {tokenId}
           </Link>
+          {" — "}
+          open the agent page and use the Hire wizard in the sidebar.
         </div>
       )}
 
@@ -39,23 +40,23 @@ export default async function HirePage({ searchParams }: Props) {
         {[
           {
             t: "Discover",
-            d: "Browse by category (rebalance, grid, yield, health) or search 8004scan-indexed agents on BSC.",
+            d: "Browse the marketplace or open a category shelf. Filter by x402, verified, or feedback.",
           },
           {
-            t: "Inspect",
-            d: "Review description, reputation, protocols, owner, and on-chain identity before you commit.",
+            t: "Compare",
+            d: "Add up to three agents to the compare tray. Side-by-side fit score, reputation, and payment support.",
           },
           {
-            t: "Negotiate (ERC-8183)",
-            d: "Buyer calls the agent’s public service (negotiate). Agent (Layer A) quotes; Layer B is keyless ingress.",
+            t: "Brief (wizard)",
+            d: "Task templates per category, budget, duration, risk posture. Intent saved under My hires.",
           },
           {
-            t: "Fund & fulfill",
-            d: "Job is funded on-chain; agent delivers; settlement completes. x402 can meter paid calls.",
+            t: "Negotiate (ERC-8183) — next",
+            d: "Buyer hits agent public /negotiate. Agent quotes; job funds and settles on-chain.",
           },
           {
             t: "Reputation",
-            d: "Feedback feeds the ERC-8004 reputation surface so the next hirer decides faster.",
+            d: "Feedback feeds ERC-8004 signals so the next hirer decides faster.",
           },
         ].map((step, i) => (
           <li key={step.t} className="flex gap-4">
@@ -70,31 +71,19 @@ export default async function HirePage({ searchParams }: Props) {
         ))}
       </ol>
 
-      <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <h2 className="font-semibold text-white">Build status (Week 1)</h2>
-        <ul className="mt-3 space-y-2 text-sm text-white/55">
-          <li>✓ Marketplace browse + categories + agent detail</li>
-          <li>✓ Live BSC data via 8004scan public API</li>
-          <li>○ In-app ERC-8183 negotiate (Week 2)</li>
-          <li>○ Genesis-verified agents for all 4 categories</li>
-          <li>○ Altana sessions / TermiX report (later)</li>
-        </ul>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/browse"
-            className="rounded-full bg-[#F0B90B] px-4 py-2 text-sm font-semibold text-black hover:bg-amber-300"
-          >
-            Browse agents
-          </Link>
-          {chainId && tokenId && (
-            <Link
-              href={`/agents/${chainId}/${tokenId}`}
-              className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
-            >
-              Back to agent
-            </Link>
-          )}
-        </div>
+      <div className="mt-12 flex flex-wrap gap-3">
+        <Link
+          href="/browse"
+          className="rounded-full bg-[#F0B90B] px-4 py-2 text-sm font-semibold text-black hover:bg-amber-300"
+        >
+          Open marketplace
+        </Link>
+        <Link
+          href="/dashboard"
+          className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+        >
+          My hires
+        </Link>
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import Link from "next/link";
 const NAV = [
   { href: "/browse", label: "Browse" },
   { href: "/categories", label: "Categories" },
+  { href: "/compare", label: "Compare" },
+  { href: "/dashboard", label: "My hires" },
   { href: "/hire", label: "How hire works" },
 ];
 
@@ -24,12 +26,12 @@ export function Header() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav className="flex items-center gap-0.5 sm:gap-1">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/5 hover:text-white sm:px-3 sm:text-sm"
+              className="hidden rounded-lg px-2 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-block sm:px-2.5 sm:text-sm md:px-3"
             >
               {item.label}
             </Link>

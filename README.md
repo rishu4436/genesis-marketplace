@@ -29,12 +29,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Path | Purpose |
 |------|---------|
-| `/` | Landing + categories + live agents |
-| `/browse` | Search / paginate BSC agents |
+| `/` | Marketplace home + 4 category shelves |
+| `/browse` | Search, sort, filters (x402 / verified / feedback) |
 | `/categories` | Four first-class categories |
-| `/categories/[id]` | Category agents (semantic search) |
-| `/agents/[chainId]/[tokenId]` | Agent detail + hire CTA |
-| `/hire` | Hire flow explainer (ERC-8183 roadmap) |
+| `/categories/[id]` | Category shelf (multi-strategy fetch + rank) |
+| `/agents/[chainId]/[tokenId]` | Detail, fit score, hire wizard, related |
+| `/compare` | Side-by-side compare (up to 3 agents) |
+| `/dashboard` | Local hire intents (“My hires”) |
+| `/hire` | Hire flow explainer |
 
 ## Env
 

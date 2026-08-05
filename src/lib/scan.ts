@@ -23,17 +23,45 @@ async function getJson<T>(
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { ...headers(), ...init?.headers },
-    next: { revalidate: 60 },
+    next: { revalidate: 90 },
   });
 
+  const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
+    const msg =
+      body?.error?.message ||
+      (await Promise.resolve("")).toString() ||
+      res.statusText;
+    throw new Error(`8004scan ${res.status}: ${msg} (${path})`);
+  }
+
+  if (body && body.success === false) {
     throw new Error(
-      `8004scan ${res.status}: ${text || res.statusText} (${path})`,
+      `8004scan: ${body.error?.message || "backend error"} (${path})`,
     );
   }
 
-  return res.json() as Promise<ApiResponse<T>>;
+  if (!body) {
+    throw new Error(`8004scan: empty response (${path})`);
+  }
+
+  return body;
+}
+
+/** Safe wrapper — returns null data instead of throwing */
+export async function safeGetJson<T>(
+  path: string,
+): Promise<{ data: T | null; error: string | null; meta?: ApiResponse<T>["meta"] }> {
+  try {
+    const res = await getJson<T>(path);
+    return { data: res.data ?? null, error: null, meta: res.meta };
+  } catch (e) {
+    return {
+      data: null,
+      error: e instanceof Error ? e.message : "Request failed",
+    };
+  }
 }
 
 export type ListAgentsParams = {
@@ -46,7 +74,7 @@ export type ListAgentsParams = {
   isTestnet?: boolean;
 };
 
-export async function listAgents(params: ListAgentsParams = {}) {
+function listQuery(params: ListAgentsParams = {}) {
   const q = new URLSearchParams();
   q.set("page", String(params.page ?? 1));
   q.set("limit", String(params.limit ?? 20));
@@ -56,12 +84,23 @@ export async function listAgents(params: ListAgentsParams = {}) {
   if (params.sortOrder) q.set("sortOrder", params.sortOrder);
   if (params.isTestnet !== undefined)
     q.set("isTestnet", String(params.isTestnet));
+  return q.toString();
+}
 
-  return getJson<Agent[]>(`/agents?${q.toString()}`);
+export async function listAgents(params: ListAgentsParams = {}) {
+  return getJson<Agent[]>(`/agents?${listQuery(params)}`);
+}
+
+export async function listAgentsSafe(params: ListAgentsParams = {}) {
+  return safeGetJson<Agent[]>(`/agents?${listQuery(params)}`);
 }
 
 export async function getAgent(chainId: number, tokenId: string | number) {
   return getJson<Agent>(`/agents/${chainId}/${tokenId}`);
+}
+
+export async function getAgentSafe(chainId: number, tokenId: string | number) {
+  return safeGetJson<Agent>(`/agents/${chainId}/${tokenId}`);
 }
 
 export async function searchAgents(opts: {
@@ -80,6 +119,22 @@ export async function searchAgents(opts: {
   return getJson<Agent[]>(`/agents/search?${q.toString()}`);
 }
 
+export async function searchAgentsSafe(opts: {
+  q: string;
+  limit?: number;
+  chainId?: number;
+  semanticWeight?: number;
+}) {
+  const q = new URLSearchParams();
+  q.set("q", opts.q);
+  q.set("limit", String(opts.limit ?? 20));
+  q.set("chainId", String(opts.chainId ?? BSC_CHAIN_ID));
+  if (opts.semanticWeight !== undefined)
+    q.set("semanticWeight", String(opts.semanticWeight));
+
+  return safeGetJson<Agent[]>(`/agents/search?${q.toString()}`);
+}
+
 export async function listFeedbacks(opts: {
   chainId?: number;
   tokenId?: string | number;
@@ -95,8 +150,27 @@ export async function listFeedbacks(opts: {
   return getJson<Feedback[]>(`/feedbacks?${q.toString()}`);
 }
 
+export async function listFeedbacksSafe(opts: {
+  chainId?: number;
+  tokenId?: string | number;
+  page?: number;
+  limit?: number;
+}) {
+  const q = new URLSearchParams();
+  q.set("page", String(opts.page ?? 1));
+  q.set("limit", String(opts.limit ?? 20));
+  if (opts.chainId !== undefined) q.set("chainId", String(opts.chainId));
+  if (opts.tokenId !== undefined) q.set("tokenId", String(opts.tokenId));
+
+  return safeGetJson<Feedback[]>(`/feedbacks?${q.toString()}`);
+}
+
 export async function getStats() {
   return getJson<PlatformStats>("/stats");
+}
+
+export async function getStatsSafe() {
+  return safeGetJson<PlatformStats>("/stats");
 }
 
 /** Dedupe agents by agent_id / chain+token */
@@ -115,6 +189,18 @@ export function dedupeAgents(agents: Agent[]): Agent[] {
 
 export function agentHref(agent: Agent) {
   return `/agents/${agent.chain_id}/${agent.token_id}`;
+}
+
+export function agentKey(agent: Agent) {
+  return `${agent.chain_id}:${agent.token_id}`;
+}
+
+export function parseAgentKey(key: string): { chainId: number; tokenId: string } | null {
+  const [c, t] = key.split(":");
+  if (!c || !t) return null;
+  const chainId = Number(c);
+  if (!Number.isFinite(chainId)) return null;
+  return { chainId, tokenId: t };
 }
 
 export function explorerAgentUrl(agent: Agent) {
