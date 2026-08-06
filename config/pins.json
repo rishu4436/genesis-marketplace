@@ -4,12 +4,12 @@
   "chainId": 97,
   "agents": {
     "range-keeper": {
-      "tokenId": "",
+      "tokenId": "1773",
       "chainId": 97,
-      "serviceUrl": "",
-      "walletAddress": "",
-      "agentId": "",
-      "notes": "Deploy via agents/range-keeper then set serviceUrl e.g. https://host:8003/apex"
+      "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY",
+      "walletAddress": "0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133",
+      "agentId": "01KZBTZ2A4NRRY71WF8YV4EXXY",
+      "notes": "LIVE platform trial. ERC-8004 agent_id/token 1773 on bsc-testnet. OAuth buyer client in marketplace .env.local. Expires ~2026-08-08T15:28Z."
     },
     "gridwright": {
       "tokenId": "",

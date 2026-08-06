@@ -5,6 +5,10 @@ import {
   negotiateLive,
   priceToUsdHint,
 } from "./erc8183-client";
+import {
+  a2aNegotiate,
+  rangeKeeperPlatformConfig,
+} from "./platform-a2a";
 
 export type HireStatus =
   | "negotiating"
@@ -217,7 +221,78 @@ export async function createJobWithLiveNegotiate(input: {
       : "Local sim negotiate (no serviceUrl)",
   );
 
-  if (serviceUrl) {
+  // Platform A2A path (RangeKeeper managed deploy)
+  const isPlatform =
+    input.genesisSlug === "range-keeper" &&
+    (serviceUrl?.includes("bnbagent-api.bnbchain.world") ||
+      Boolean(process.env.RANGEKEEPER_AGENT_ID));
+
+  if (isPlatform) {
+    try {
+      const cfg = rangeKeeperPlatformConfig();
+      job = pushTimeline(
+        job,
+        "negotiating",
+        `A2A negotiate → ${cfg.a2aUrl}`,
+      );
+      const a2a = await a2aNegotiate({
+        a2aUrl: cfg.a2aUrl,
+        agentId: cfg.agentId,
+        taskDescription: input.task,
+        terms: {
+          deliverables: "PCS V3 LP rebalance plan",
+          quality_standards: input.notes || "marketplace hire",
+        },
+      });
+
+      if (a2a.ok) {
+        const priceUsd =
+          priceToUsdHint(a2a.price, a2a.price_usd) ?? buildQuote(input).priceUsd;
+        job = {
+          ...pushTimeline(
+            job,
+            "quoted",
+            `Platform A2A quote OK · ~$${priceUsd} (live RangeKeeper)`,
+          ),
+          quote: {
+            priceUsd,
+            currency: a2a.currency || "U",
+            etaMinutes: g?.etaMinutes ?? 2,
+            protocol: "ERC-8183-live",
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            notes: "Signed quote from BNB platform RangeKeeper (A2A)",
+            providerSig: a2a.provider_sig,
+            rawPrice: a2a.price != null ? String(a2a.price) : undefined,
+            live: true,
+          },
+        };
+        // Full on-chain fund+notify is separate; deliver local plan so UI completes
+        if (input.autoFulfill !== false) {
+          job = fulfillJob(job);
+          job = pushTimeline(
+            job,
+            "delivered",
+            "Local deliverable attached; on-chain notify_funded needs funded job_id + tBNB",
+          );
+        }
+        return job;
+      }
+
+      job = pushTimeline(
+        job,
+        "negotiating",
+        `A2A negotiate failed — ${a2a.error || "unknown"} — falling back`,
+      );
+    } catch (e) {
+      job = pushTimeline(
+        job,
+        "negotiating",
+        `A2A error — ${e instanceof Error ? e.message : "error"} — fallback`,
+      );
+    }
+  }
+
+  if (serviceUrl && !isPlatform) {
     try {
       const { ok, data } = await negotiateLive(serviceUrl, {
         task_description: input.task,
