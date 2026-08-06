@@ -1,10 +1,10 @@
 import type { CategoryId } from "./categories";
 import type { Agent } from "./types";
+import { getPin } from "./pins";
 
 /**
  * Genesis-operated reference sellers for the four hackathon categories.
- * These power equal-depth shelves and the hire demo path.
- * Optional chainId/tokenId pins a live ERC-8004 identity when you deploy via Agent Studio.
+ * Pins (tokenId / serviceUrl) come from config/pins.json or env.
  */
 export type GenesisAgent = {
   slug: string;
@@ -15,18 +15,16 @@ export type GenesisAgent = {
   skills: string[];
   protocols: string[];
   x402: boolean;
-  /** Relevant to PancakeSwap traders / LPs */
   pcsRelated: boolean;
   basePriceUsd: number;
   etaMinutes: number;
   riskDefault: "low" | "medium" | "high";
-  /** Optional live ERC-8004 pin (override via env GENESIS_PIN_<SLUG>) */
   chainId?: number;
   tokenId?: string;
-  /** Future ERC-8183 service base URL */
   serviceUrl?: string;
   accent: string;
   icon: string;
+  studioPrompt: string;
 };
 
 export const GENESIS_AGENTS: GenesisAgent[] = [
@@ -51,6 +49,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "medium",
     accent: "from-amber-400 to-orange-500",
     icon: "◎",
+    studioPrompt:
+      "Create a BNB Agent Studio seller named RangeKeeper on bsc-testnet that sells PancakeSwap V3 LP rebalance plans. On fulfill, analyze range health, propose new bands, fee APR vs IL notes. No fund custody. ERC-8183 commerce + x402 for LLM. min/max price around $5–$20.",
   },
   {
     slug: "gridwright",
@@ -73,6 +73,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "medium",
     accent: "from-sky-400 to-blue-600",
     icon: "▦",
+    studioPrompt:
+      "Create a BNB Agent Studio seller named Gridwright on bsc-testnet that sells grid trading layouts for BSC pairs. On fulfill, return N-level grid, spacing, pause DD rules, and 24h fill simulation. No custody. ERC-8183 + x402.",
   },
   {
     slug: "yield-router",
@@ -95,6 +97,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "low",
     accent: "from-emerald-400 to-teal-600",
     icon: "▲",
+    studioPrompt:
+      "Create a BNB Agent Studio seller named YieldRouter on bsc-testnet that sells yield reallocation briefs for BSC (including PancakeSwap farms). Rank venues by risk-adjusted APR, propose splits under gas budget. No custody. ERC-8183 + x402.",
   },
   {
     slug: "health-sentinel",
@@ -117,58 +121,61 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "low",
     accent: "from-rose-400 to-red-600",
     icon: "✚",
+    studioPrompt:
+      "Create a BNB Agent Studio seller named HealthSentinel on bsc-testnet that sells lending health-factor protection plans (Venus/Aave-style on BSC). Simulate shocks, alert thresholds, repay vs collateral options. No custody. ERC-8183 + x402.",
   },
 ];
 
-function envPin(slug: string): { chainId: number; tokenId: string } | null {
-  const key = `GENESIS_PIN_${slug.replace(/-/g, "_").toUpperCase()}`;
-  const raw = process.env[key];
-  if (!raw) return null;
-  const [c, t] = raw.split(":");
-  if (!c || !t) return null;
-  const chainId = Number(c);
-  if (!Number.isFinite(chainId)) return null;
-  return { chainId, tokenId: t };
+function appBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+  return "http://localhost:3000";
 }
 
 export function getGenesisAgent(slug: string): GenesisAgent | undefined {
   const base = GENESIS_AGENTS.find((a) => a.slug === slug);
   if (!base) return undefined;
-  const pin = envPin(slug);
-  if (pin) return { ...base, ...pin };
-  return base;
+  const pin = getPin(slug);
+  const external = pin.serviceUrl?.replace(/\/$/, "");
+  const serviceUrl =
+    external || `${appBaseUrl()}/api/apex/${slug}`;
+
+  return {
+    ...base,
+    chainId: pin.chainId || base.chainId || 56,
+    tokenId: pin.tokenId || base.tokenId,
+    serviceUrl,
+  };
 }
 
 export function getGenesisAgentsByCategory(categoryId: CategoryId): GenesisAgent[] {
-  return GENESIS_AGENTS.filter((a) => a.categoryId === categoryId).map((a) => {
-    const pin = envPin(a.slug);
-    return pin ? { ...a, ...pin } : a;
-  });
+  return GENESIS_AGENTS.filter((a) => a.categoryId === categoryId)
+    .map((a) => getGenesisAgent(a.slug)!)
+    .filter(Boolean);
 }
 
 export function allGenesisAgents(): GenesisAgent[] {
-  return GENESIS_AGENTS.map((a) => {
-    const pin = envPin(a.slug);
-    return pin ? { ...a, ...pin } : a;
-  });
+  return GENESIS_AGENTS.map((a) => getGenesisAgent(a.slug)!).filter(Boolean);
 }
 
 export function isGenesisSlug(slug: string): boolean {
   return GENESIS_AGENTS.some((a) => a.slug === slug);
 }
 
-/** Present a Genesis agent as a marketplace Agent card shape */
 export function genesisToAgentCard(g: GenesisAgent): Agent & {
   genesis_slug: string;
   genesis_verified: true;
 } {
+  const chainId = g.chainId ?? 56;
   return {
     id: `genesis:${g.slug}`,
-    agent_id: g.tokenId
-      ? `${g.chainId}:${g.tokenId}`
-      : `genesis:${g.slug}`,
+    agent_id: g.tokenId ? `${chainId}:${g.tokenId}` : `genesis:${g.slug}`,
     token_id: g.tokenId || g.slug,
-    chain_id: g.chainId ?? 56,
+    chain_id: chainId,
     name: g.name,
     description: g.description,
     image_url: null,

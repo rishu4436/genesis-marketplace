@@ -1,6 +1,10 @@
 import type { CategoryId } from "./categories";
 import { getGenesisAgent, type GenesisAgent } from "./genesis-agents";
 import type { HireIntent } from "./hire";
+import {
+  negotiateLive,
+  priceToUsdHint,
+} from "./erc8183-client";
 
 export type HireStatus =
   | "negotiating"
@@ -12,11 +16,14 @@ export type HireStatus =
 
 export type HireQuote = {
   priceUsd: number;
-  currency: "USD";
+  currency: string;
   etaMinutes: number;
-  protocol: "ERC-8183-sim";
+  protocol: "ERC-8183" | "ERC-8183-sim" | "ERC-8183-live";
   expiresAt: string;
   notes: string;
+  providerSig?: string;
+  rawPrice?: string;
+  live?: boolean;
 };
 
 export type HireDeliverable = {
@@ -45,6 +52,7 @@ export type HireJob = {
   quote?: HireQuote;
   deliverable?: HireDeliverable;
   timeline: { at: string; status: HireStatus; detail: string }[];
+  serviceUrl?: string;
 };
 
 function nowIso() {
@@ -105,8 +113,9 @@ export function buildQuote(
     protocol: "ERC-8183-sim",
     expiresAt: expires,
     notes: g
-      ? `Quote from Genesis seller ${g.name}. Simulated ERC-8183 negotiate — swap to live serviceUrl when Studio agent is deployed.`
-      : "Marketplace quote (simulated ERC-8183 negotiate). Wire agent service endpoint for production settle.",
+      ? `Local quote for ${g.name}. Prefer live /apex/negotiate when serviceUrl is reachable.`
+      : "Marketplace simulated quote.",
+    live: false,
   };
 }
 
@@ -121,6 +130,7 @@ export function createNegotiatedJob(input: {
   duration: HireIntent["duration"];
   risk: HireIntent["risk"];
   notes?: string;
+  serviceUrl?: string;
 }): HireJob {
   const id = jobId();
   const createdAt = nowIso();
@@ -139,10 +149,11 @@ export function createNegotiatedJob(input: {
     duration: input.duration,
     risk: input.risk,
     notes: input.notes,
+    serviceUrl: input.serviceUrl,
     timeline: [],
   };
 
-  job = pushTimeline(job, "negotiating", "POST /negotiate — buyer brief received");
+  job = pushTimeline(job, "negotiating", "POST negotiate — buyer brief received");
   const quote = buildQuote(input);
   job = {
     ...pushTimeline(
@@ -153,6 +164,162 @@ export function createNegotiatedJob(input: {
     quote,
   };
   return job;
+}
+
+/**
+ * Prefer live APEX negotiate (Studio Layer B or local /api/apex/:slug).
+ * Falls back to in-process sim if live call fails.
+ */
+export async function createJobWithLiveNegotiate(input: {
+  chainId: number;
+  tokenId: string;
+  agentName: string;
+  genesisSlug?: string;
+  categoryId?: CategoryId | null;
+  task: string;
+  budgetUsd: string;
+  duration: HireIntent["duration"];
+  risk: HireIntent["risk"];
+  notes?: string;
+  autoFulfill?: boolean;
+}): Promise<HireJob> {
+  const g = input.genesisSlug
+    ? getGenesisAgent(input.genesisSlug)
+    : undefined;
+  const serviceUrl = g?.serviceUrl;
+
+  const id = jobId();
+  const createdAt = nowIso();
+  let job: HireJob = {
+    id,
+    createdAt,
+    updatedAt: createdAt,
+    status: "negotiating",
+    chainId: input.chainId,
+    tokenId: input.tokenId,
+    agentName: input.agentName,
+    genesisSlug: input.genesisSlug,
+    categoryId: input.categoryId,
+    task: input.task,
+    budgetUsd: input.budgetUsd,
+    duration: input.duration,
+    risk: input.risk,
+    notes: input.notes,
+    serviceUrl,
+    timeline: [],
+  };
+
+  job = pushTimeline(
+    job,
+    "negotiating",
+    serviceUrl
+      ? `POST ${serviceUrl}/negotiate`
+      : "Local sim negotiate (no serviceUrl)",
+  );
+
+  if (serviceUrl) {
+    try {
+      const { ok, data } = await negotiateLive(serviceUrl, {
+        task_description: input.task,
+        terms: {
+          deliverables: "structured brief",
+          quality_standards: input.notes || "marketplace hire",
+          budget_usd: input.budgetUsd,
+          duration: input.duration,
+          risk: input.risk,
+          category: input.categoryId || undefined,
+          auto_fulfill: input.autoFulfill !== false,
+        },
+      });
+
+      if (ok && data.accepted !== false) {
+        const priceUsd =
+          priceToUsdHint(data.price as string | number, data.price_usd) ??
+          buildQuote(input).priceUsd;
+        const eta =
+          typeof data.eta_minutes === "number"
+            ? data.eta_minutes
+            : g?.etaMinutes ?? 3;
+        const expires =
+          (data.quote_expires_at as string) ||
+          new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+        const isLocalApex = serviceUrl.includes("/api/apex/");
+        job = {
+          ...pushTimeline(
+            job,
+            "quoted",
+            `Live negotiate OK · $${priceUsd} · ${isLocalApex ? "local APEX" : "external service"}`,
+          ),
+          quote: {
+            priceUsd,
+            currency: (data.currency as string) || "USD",
+            etaMinutes: eta as number,
+            protocol: isLocalApex ? "ERC-8183" : "ERC-8183-live",
+            expiresAt: expires,
+            notes: (data.notes as string) || "Live APEX quote",
+            providerSig: data.provider_sig as string | undefined,
+            rawPrice: data.price != null ? String(data.price) : undefined,
+            live: !isLocalApex,
+          },
+        };
+
+        if (data.deliverable && typeof data.deliverable === "object") {
+          job = fulfillFromEmbedded(job, data.deliverable as HireDeliverable);
+        } else if (input.autoFulfill !== false) {
+          job = fulfillJob(job);
+        }
+        return job;
+      }
+
+      job = pushTimeline(
+        job,
+        "negotiating",
+        `Live negotiate failed — falling back to sim (${data.error || "not accepted"})`,
+      );
+    } catch (e) {
+      job = pushTimeline(
+        job,
+        "negotiating",
+        `Live negotiate error — sim fallback (${e instanceof Error ? e.message : "error"})`,
+      );
+    }
+  }
+
+  // Sim path
+  const quote = buildQuote(input);
+  job = {
+    ...pushTimeline(
+      job,
+      "quoted",
+      `Sim quoted $${quote.priceUsd} · ETA ${quote.etaMinutes}m`,
+    ),
+    quote,
+  };
+  if (input.autoFulfill !== false) {
+    job = fulfillJob(job);
+  }
+  return job;
+}
+
+function fulfillFromEmbedded(
+  job: HireJob,
+  deliverable: HireDeliverable,
+): HireJob {
+  let next = job;
+  if (next.status === "quoted") {
+    next = pushTimeline(
+      next,
+      "funded",
+      "Job funded (simulated escrow — no user fund custody)",
+    );
+  }
+  next = pushTimeline(next, "fulfilling", "Applying embedded deliverable");
+  next = {
+    ...pushTimeline(next, "delivered", "Deliverable ready"),
+    deliverable,
+  };
+  return next;
 }
 
 export function fundJob(job: HireJob): HireJob {
@@ -210,10 +377,7 @@ function rebalanceDeliverable(
     summary:
       "Position is estimated slightly out of active range under a ±4% move. Proposed reset keeps 80% notional in-range with a fee-first band.",
     sections: [
-      {
-        heading: "Task received",
-        body: job.task,
-      },
+      { heading: "Task received", body: job.task },
       {
         heading: "Current range diagnosis",
         body: "Simulated PCS V3 position: price near lower tick. Time-out-of-range last 24h ≈ 38%. Fee capture degraded vs in-range baseline.",
@@ -224,7 +388,7 @@ function rebalanceDeliverable(
       },
       {
         heading: "PancakeSwap notes",
-        body: "Plan assumes PCS V3 pool. No custody: execute rebalance in your wallet or via a scoped session key. Prefer single-sided add only if inventory already skewed.",
+        body: "Plan assumes PCS V3 pool. No custody: execute rebalance in your wallet or via a scoped session key.",
       },
     ],
     metrics: [
@@ -244,21 +408,18 @@ function gridDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
     summary:
       "12-level geometric grid with pause if unrealized drawdown exceeds 6%. Sized for the budget you specified.",
     sections: [
-      {
-        heading: "Task received",
-        body: job.task,
-      },
+      { heading: "Task received", body: job.task },
       {
         heading: "Grid parameters",
-        body: "Levels: 12 · Mode: geometric · Spacing: ~1.1% · Inventory split 50/50 quote-base at mid. Upper/lower bounds derived from 7d high-low ±0.5%.",
+        body: "Levels: 12 · Mode: geometric · Spacing: ~1.1% · Inventory split 50/50 quote-base at mid.",
       },
       {
         heading: "Risk controls",
-        body: `Risk posture: ${job.risk}. Auto-pause if mark moves >6% against inventory or 24h volume collapses >70% vs 7d median.`,
+        body: `Risk posture: ${job.risk}. Auto-pause if mark moves >6% against inventory.`,
       },
       {
         heading: "24h fill simulation",
-        body: "Under mean-reverting path: ~7–9 fills, est. edge 0.15–0.35% of notional before fees. High-vol path: more fills, wider adverse selection — keep pause rule on.",
+        body: "Under mean-reverting path: ~7–9 fills, est. edge 0.15–0.35% of notional before fees.",
       },
     ],
     metrics: [
@@ -267,8 +428,7 @@ function gridDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
       { label: "Pause DD", value: "6%" },
       { label: "Agent", value: g?.name || job.agentName },
     ],
-    disclaimer:
-      "Simulated strategy brief. Grid execution not submitted on-chain by Genesis.",
+    disclaimer: "Simulated strategy brief. Grid execution not submitted on-chain by Genesis.",
   };
 }
 
@@ -278,21 +438,18 @@ function yieldDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
     summary:
       "Ranked venues for capital with risk bands. Top suggestion balances APR vs exit liquidity, with PCS farm in the shortlist.",
     sections: [
-      {
-        heading: "Task received",
-        body: job.task,
-      },
+      { heading: "Task received", body: job.task },
       {
         heading: "Venue ranking (illustrative)",
-        body: "1) Lending blue-chip — lower APR, high exit · 2) PCS farm / gauge — medium APR, IL risk if LP · 3) LST restake path — higher APR, smart-contract stack risk. Prefer #1+#2 barbell under medium risk.",
+        body: "1) Lending blue-chip · 2) PCS farm / gauge · 3) LST restake path. Prefer #1+#2 barbell under medium risk.",
       },
       {
         heading: "Reallocation sketch",
-        body: `Budget constraint $${job.budgetUsd}. Move in 2 txs: 60% lending, 40% PCS-related yield. Cap gas at 1.5% of move size. Re-check APR in 48h.`,
+        body: `Budget constraint $${job.budgetUsd}. Move in 2 txs: 60% lending, 40% PCS-related yield.`,
       },
       {
         heading: "PancakeSwap angle",
-        body: "Where LP yield wins on risk-adjusted basis, use PCS pools with deep liquidity. Avoid illiquid farms even if headline APR is higher.",
+        body: "Where LP yield wins on risk-adjusted basis, use PCS pools with deep liquidity.",
       },
     ],
     metrics: [
@@ -301,8 +458,7 @@ function yieldDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
       { label: "Re-check", value: "48h" },
       { label: "Agent", value: g?.name || job.agentName },
     ],
-    disclaimer:
-      "Simulated yield brief. APRs change; verify live before moving capital.",
+    disclaimer: "Simulated yield brief. APRs change; verify live before moving capital.",
   };
 }
 
@@ -312,21 +468,18 @@ function healthDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
     summary:
       "Simulated HF under collateral shocks with clear repay vs add-collateral options and alert thresholds.",
     sections: [
-      {
-        heading: "Task received",
-        body: job.task,
-      },
+      { heading: "Task received", body: job.task },
       {
         heading: "Baseline (illustrative)",
-        body: "Assumed HF ≈ 1.45 on a Venus-style market. Liquidation threshold proximity: moderate. Soft alert at 1.30, hard alert at 1.20.",
+        body: "Assumed HF ≈ 1.45. Soft alert at 1.30, hard alert at 1.20.",
       },
       {
         heading: "Shock table",
-        body: "Collateral −10% → HF ~1.28 · −15% → HF ~1.18 · −20% → HF ~1.08. Borrow asset +10% volatility worsens distance to liquidation.",
+        body: "Collateral −10% → HF ~1.28 · −15% → HF ~1.18 · −20% → HF ~1.08.",
       },
       {
         heading: "Actions",
-        body: "Prefer partial repay if inventory is liquid; else add collateral of the strongest asset. Never wait for HF < 1.15 without a plan. Optional: bound a session key to repay-only calls.",
+        body: "Prefer partial repay if inventory is liquid; else add collateral of the strongest asset.",
       },
     ],
     metrics: [
@@ -348,7 +501,7 @@ function genericDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
       { heading: "Task", body: job.task },
       {
         heading: "Result",
-        body: "Agent produced a completion packet under the quoted budget and risk posture. Connect a live ERC-8183 seller endpoint to replace this simulation.",
+        body: "Agent produced a completion packet under the quoted budget and risk posture.",
       },
     ],
     metrics: [

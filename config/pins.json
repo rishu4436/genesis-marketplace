@@ -1,0 +1,39 @@
+{
+  "$schema_note": "Pin Genesis agents to live ERC-8004 + Layer B service URLs after bag deploy. Empty fields use marketplace sim until set.",
+  "network": "bsc-testnet",
+  "chainId": 97,
+  "agents": {
+    "range-keeper": {
+      "tokenId": "",
+      "chainId": 97,
+      "serviceUrl": "",
+      "walletAddress": "",
+      "agentId": "",
+      "notes": "Deploy via agents/range-keeper then set serviceUrl e.g. https://host:8003/apex"
+    },
+    "gridwright": {
+      "tokenId": "",
+      "chainId": 97,
+      "serviceUrl": "",
+      "walletAddress": "",
+      "agentId": "",
+      "notes": ""
+    },
+    "yield-router": {
+      "tokenId": "",
+      "chainId": 97,
+      "serviceUrl": "",
+      "walletAddress": "",
+      "agentId": "",
+      "notes": ""
+    },
+    "health-sentinel": {
+      "tokenId": "",
+      "chainId": 97,
+      "serviceUrl": "",
+      "walletAddress": "",
+      "agentId": "",
+      "notes": ""
+    }
+  }
+}

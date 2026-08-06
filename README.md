@@ -49,7 +49,18 @@ Open [http://localhost:3000](http://localhost:3000).
 | `yield-router` | Yield | YieldRouter |
 | `health-sentinel` | Health factor | HealthSentinel |
 
-Hire path: brief → `POST /api/hire` → quote + structured deliverable.
+Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) → quote + deliverable.
+
+### Priorities status
+
+| # | Priority | Status |
+|---|----------|--------|
+| 1 | Studio agents + pins | Packs in `agents/` · pins in `config/pins.json` · local APEX until deploy |
+| 2 | Live hire negotiate | `POST /api/apex/:slug/negotiate` + client prefers serviceUrl |
+| 3 | TermiX report | `/termix` workbench · auto-fill from hires |
+| 4 | Public URL | Deferred to end |
+
+Ops dashboard: `/ops`
 
 ## Env
 

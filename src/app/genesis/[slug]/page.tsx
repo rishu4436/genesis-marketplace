@@ -107,6 +107,19 @@ export default async function GenesisAgentPage({ params }: Props) {
             </ul>
           </section>
 
+          <section className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/40">
+              APEX service
+            </h2>
+            <p className="mt-2 break-all font-mono text-[11px] text-amber-200/90">
+              {agent.serviceUrl || "—"}
+            </p>
+            <p className="mt-1 text-[10px] text-white/40">
+              Hire uses POST …/negotiate (Studio Layer B shape). External URL via
+              config/pins.json after bag deploy.
+            </p>
+          </section>
+
           <section className="mt-10">
             <h2 className="text-lg font-semibold text-white">Why hire</h2>
             <ul className="mt-3 space-y-2 text-sm text-white/60">
