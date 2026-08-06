@@ -103,7 +103,7 @@ export function HireDashboard() {
             )}
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-white/35">
-              <span>
+              <span suppressHydrationWarning>
                 {h.createdAt ? new Date(h.createdAt).toLocaleString() : ""}
               </span>
               <div className="flex gap-3">

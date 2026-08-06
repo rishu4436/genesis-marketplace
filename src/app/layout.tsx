@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CompareTray } from "@/components/CompareTray";
+import { TrialBanner } from "@/components/TrialBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-[#070b12] text-white">
         <Header />
+        <TrialBanner />
         <main className="flex-1 pb-24">{children}</main>
         <Footer />
         <CompareTray />

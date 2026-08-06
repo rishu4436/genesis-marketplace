@@ -8,6 +8,8 @@ import {
 import { getCategory } from "@/lib/categories";
 import { HireWizard } from "@/components/HireWizard";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
+import { getPlatformConfig } from "@/lib/platform-a2a";
+import { getPin } from "@/lib/pins";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -33,6 +35,8 @@ export default async function GenesisAgentPage({ params }: Props) {
 
   const cat = getCategory(agent.categoryId);
   const others = allGenesisAgents().filter((a) => a.slug !== agent.slug);
+  const platform = getPlatformConfig(agent.slug);
+  const pin = getPin(agent.slug);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -59,6 +63,16 @@ export default async function GenesisAgentPage({ params }: Props) {
                 <span className="rounded-full bg-[#F0B90B] px-2.5 py-0.5 text-[11px] font-bold text-black">
                   Genesis verified
                 </span>
+                {platform ? (
+                  <span className="rounded-full bg-sky-500/20 px-2.5 py-0.5 text-[11px] font-medium text-sky-200">
+                    Platform live · ERC-8004
+                    {pin.tokenId ? ` #${pin.tokenId}` : ""}
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/60">
+                    Local APEX hire
+                  </span>
+                )}
               </div>
               <p className="mt-2 text-sm text-amber-100/80">{agent.tagline}</p>
               <p className="mt-3 text-sm leading-relaxed text-white/65">

@@ -38,8 +38,13 @@ export function TermixWorkbench() {
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  // Avoid SSR/client Date + localStorage mismatches (hydration errors)
+  const [mounted, setMounted] = useState(false);
+  const [preparedAt, setPreparedAt] = useState("—");
 
   useEffect(() => {
+    setMounted(true);
+    setPreparedAt(new Date().toISOString());
     try {
       const raw = localStorage.getItem(STORAGE);
       if (raw) {
@@ -53,18 +58,20 @@ export function TermixWorkbench() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     localStorage.setItem(STORAGE, JSON.stringify({ tasks, notes }));
-  }, [tasks, notes]);
+    setPreparedAt(new Date().toISOString());
+  }, [tasks, notes, mounted]);
 
   const report: TermixReport = useMemo(
     () => ({
       project: "Genesis Marketplace",
       marketplace: "https://github.com/rishu4436/genesis-marketplace",
-      preparedAt: new Date().toISOString(),
+      preparedAt,
       tasks,
       notes,
     }),
-    [tasks, notes],
+    [tasks, notes, preparedAt],
   );
 
   const md = renderReportMarkdown(report);
@@ -229,9 +236,13 @@ export function TermixWorkbench() {
         <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">
           Markdown preview
         </h3>
-        <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-white/70">
-          {md}
-        </pre>
+        {!mounted ? (
+          <p className="mt-3 text-[11px] text-white/40">Loading report preview…</p>
+        ) : (
+          <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-white/70">
+            {md}
+          </pre>
+        )}
       </div>
     </div>
   );

@@ -55,12 +55,32 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 | # | Priority | Status |
 |---|----------|--------|
-| 1 | Studio agents + pins | Packs in `agents/` · pins in `config/pins.json` · local APEX until deploy |
-| 2 | Live hire negotiate | `POST /api/apex/:slug/negotiate` + client prefers serviceUrl |
-| 3 | TermiX report | `/termix` workbench · auto-fill from hires |
+| 1 | Studio agents + pins | **3 live** on BNB free platform (max 3) + Gridwright local APEX |
+| 2 | Live hire negotiate | Platform A2A + local APEX fallback |
+| 3 | TermiX report | `/termix` workbench |
 | 4 | Public URL | Deferred to end |
 
-Ops dashboard: `/ops`
+### Live Studio sellers (free platform trial)
+
+| Agent | Category | ERC-8004 | Host |
+|-------|----------|----------|------|
+| RangeKeeper | Rebalancing | 1773 | BNB platform |
+| YieldRouter | Yield | 1774 | BNB platform |
+| HealthSentinel | Health factor | 1775 | BNB platform |
+| Gridwright | Grid | — | Local APEX (quota) |
+
+Trial expires ~**2026-08-08T15:28Z**. Redeploy while active: `scripts/redeploy-platform-agents.ps1`.
+
+### Judge paths
+
+| Path | URL |
+|------|-----|
+| Demo checklist | `/demo` |
+| Ops / pins | `/ops` |
+| TermiX report | `/termix` |
+| Hire RangeKeeper | `/genesis/range-keeper` |
+
+Product ready target: **31 Aug 2026**. Submit: **9 Sep 2026**.
 
 ## Env
 
