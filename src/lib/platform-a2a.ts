@@ -1,6 +1,5 @@
 /**
  * BNB Agent Studio managed-platform A2A client (OAuth client_credentials + JSON-RPC).
- * Used for RangeKeeper (and future) platform-deployed sellers.
  */
 
 export type PlatformNegotiateResult = {
@@ -14,27 +13,102 @@ export type PlatformNegotiateResult = {
   error?: string;
 };
 
+export type PlatformAgentConfig = {
+  slug: string;
+  agentId: string;
+  a2aUrl: string;
+  cardUrl: string;
+  clientIdEnv: string;
+  clientSecretEnv: string;
+};
+
 function env(name: string): string | undefined {
   const v = process.env[name];
   return v && v.trim() ? v.trim() : undefined;
 }
 
-export async function getPlatformAccessToken(scope: string): Promise<string> {
+/** All Genesis slugs that may have platform deploys */
+export const PLATFORM_AGENT_MAP: Record<string, PlatformAgentConfig> = {
+  "range-keeper": {
+    slug: "range-keeper",
+    agentId: env("RANGEKEEPER_AGENT_ID") || "01KZBTZ2A4NRRY71WF8YV4EXXY",
+    a2aUrl:
+      env("RANGEKEEPER_A2A_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY/a2a",
+    cardUrl:
+      env("RANGEKEEPER_CARD_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY/.well-known/agent-card.json",
+    clientIdEnv: "RANGEKEEPER_CLIENT_ID",
+    clientSecretEnv: "RANGEKEEPER_CLIENT_SECRET",
+  },
+  gridwright: {
+    slug: "gridwright",
+    agentId: env("GRIDWRIGHT_AGENT_ID") || "",
+    a2aUrl: env("GRIDWRIGHT_A2A_URL") || "",
+    cardUrl: env("GRIDWRIGHT_CARD_URL") || "",
+    clientIdEnv: "GRIDWRIGHT_CLIENT_ID",
+    clientSecretEnv: "GRIDWRIGHT_CLIENT_SECRET",
+  },
+  "yield-router": {
+    slug: "yield-router",
+    agentId: env("YIELDROUTER_AGENT_ID") || "01KZBXKNH3VKHHE3YCH1K496A9",
+    a2aUrl:
+      env("YIELDROUTER_A2A_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXKNH3VKHHE3YCH1K496A9/a2a",
+    cardUrl:
+      env("YIELDROUTER_CARD_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXKNH3VKHHE3YCH1K496A9/.well-known/agent-card.json",
+    clientIdEnv: "YIELDROUTER_CLIENT_ID",
+    clientSecretEnv: "YIELDROUTER_CLIENT_SECRET",
+  },
+  "health-sentinel": {
+    slug: "health-sentinel",
+    agentId: env("HEALTHSENTINEL_AGENT_ID") || "01KZBXTNSPVX052KK69RPWJMN8",
+    a2aUrl:
+      env("HEALTHSENTINEL_A2A_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXTNSPVX052KK69RPWJMN8/a2a",
+    cardUrl:
+      env("HEALTHSENTINEL_CARD_URL") ||
+      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXTNSPVX052KK69RPWJMN8/.well-known/agent-card.json",
+    clientIdEnv: "HEALTHSENTINEL_CLIENT_ID",
+    clientSecretEnv: "HEALTHSENTINEL_CLIENT_SECRET",
+  },
+};
+
+export function getPlatformConfig(
+  genesisSlug: string,
+): PlatformAgentConfig | null {
+  const cfg = PLATFORM_AGENT_MAP[genesisSlug];
+  if (!cfg?.agentId || !cfg.a2aUrl) return null;
+  return cfg;
+}
+
+export async function getPlatformAccessToken(
+  scope: string,
+  clientId?: string,
+  clientSecret?: string,
+): Promise<string> {
   const tokenUrl =
     env("PLATFORM_TOKEN_URL") ||
     "https://bnbagent-api.bnbchain.world/v1/oauth/token";
-  const clientId = env("PLATFORM_CLIENT_ID");
-  const clientSecret = env("PLATFORM_CLIENT_SECRET");
-  if (!clientId || !clientSecret) {
+  const id =
+    clientId ||
+    env("PLATFORM_CLIENT_ID") ||
+    env("RANGEKEEPER_CLIENT_ID");
+  const secret =
+    clientSecret ||
+    env("PLATFORM_CLIENT_SECRET") ||
+    env("RANGEKEEPER_CLIENT_SECRET");
+  if (!id || !secret) {
     throw new Error(
-      "PLATFORM_CLIENT_ID / PLATFORM_CLIENT_SECRET missing in .env.local",
+      "Platform OAuth client missing (PLATFORM_CLIENT_ID/SECRET or per-agent CLIENT_*)",
     );
   }
 
   const body = new URLSearchParams({
     grant_type: "client_credentials",
-    client_id: clientId,
-    client_secret: clientSecret,
+    client_id: id,
+    client_secret: secret,
     scope,
   });
 
@@ -63,6 +137,8 @@ export async function a2aNegotiate(opts: {
   a2aUrl: string;
   agentId: string;
   taskDescription: string;
+  clientId?: string;
+  clientSecret?: string;
   terms?: {
     deliverables?: string;
     quality_standards?: string;
@@ -70,19 +146,22 @@ export async function a2aNegotiate(opts: {
 }): Promise<PlatformNegotiateResult> {
   try {
     const scope = `invoke:${opts.agentId}`;
-    const token = await getPlatformAccessToken(scope);
+    const token = await getPlatformAccessToken(
+      scope,
+      opts.clientId,
+      opts.clientSecret,
+    );
 
     const payload = {
       skill: "negotiate",
       task_description: opts.taskDescription,
       terms: {
-        deliverables: opts.terms?.deliverables || "structured rebalance plan",
+        deliverables: opts.terms?.deliverables || "structured brief",
         quality_standards:
-          opts.terms?.quality_standards || "actionable PCS V3 LP brief",
+          opts.terms?.quality_standards || "marketplace hire",
       },
     };
 
-    // A2A JSON-RPC message/send with DATA part (not text)
     const rpc = {
       jsonrpc: "2.0",
       id: `neg-${Date.now()}`,
@@ -111,14 +190,9 @@ export async function a2aNegotiate(opts: {
     }));
 
     if (!res.ok) {
-      return {
-        ok: false,
-        raw,
-        error: `A2A HTTP ${res.status}`,
-      };
+      return { ok: false, raw, error: `A2A HTTP ${res.status}` };
     }
 
-    // Walk common response shapes for quote fields
     const flat = JSON.stringify(raw);
     const pick = (key: string): string | undefined => {
       const m = flat.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -146,14 +220,7 @@ export async function a2aNegotiate(opts: {
   }
 }
 
+/** @deprecated use getPlatformConfig */
 export function rangeKeeperPlatformConfig() {
-  return {
-    agentId: env("RANGEKEEPER_AGENT_ID") || "01KZBTZ2A4NRRY71WF8YV4EXXY",
-    a2aUrl:
-      env("RANGEKEEPER_A2A_URL") ||
-      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY/a2a",
-    cardUrl:
-      env("RANGEKEEPER_CARD_URL") ||
-      "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY/.well-known/agent-card.json",
-  };
+  return getPlatformConfig("range-keeper")!;
 }

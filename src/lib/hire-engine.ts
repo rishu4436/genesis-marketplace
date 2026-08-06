@@ -7,7 +7,7 @@ import {
 } from "./erc8183-client";
 import {
   a2aNegotiate,
-  rangeKeeperPlatformConfig,
+  getPlatformConfig,
 } from "./platform-a2a";
 
 export type HireStatus =
@@ -221,26 +221,28 @@ export async function createJobWithLiveNegotiate(input: {
       : "Local sim negotiate (no serviceUrl)",
   );
 
-  // Platform A2A path (RangeKeeper managed deploy)
-  const isPlatform =
-    input.genesisSlug === "range-keeper" &&
-    (serviceUrl?.includes("bnbagent-api.bnbchain.world") ||
-      Boolean(process.env.RANGEKEEPER_AGENT_ID));
+  // Platform A2A path (BNB managed trial agents)
+  const platformCfg = input.genesisSlug
+    ? getPlatformConfig(input.genesisSlug)
+    : null;
 
-  if (isPlatform) {
+  if (platformCfg) {
     try {
-      const cfg = rangeKeeperPlatformConfig();
+      const clientId = process.env[platformCfg.clientIdEnv];
+      const clientSecret = process.env[platformCfg.clientSecretEnv];
       job = pushTimeline(
         job,
         "negotiating",
-        `A2A negotiate → ${cfg.a2aUrl}`,
+        `A2A negotiate → ${platformCfg.a2aUrl}`,
       );
       const a2a = await a2aNegotiate({
-        a2aUrl: cfg.a2aUrl,
-        agentId: cfg.agentId,
+        a2aUrl: platformCfg.a2aUrl,
+        agentId: platformCfg.agentId,
         taskDescription: input.task,
+        clientId: clientId || undefined,
+        clientSecret: clientSecret || undefined,
         terms: {
-          deliverables: "PCS V3 LP rebalance plan",
+          deliverables: g?.tagline || "structured brief",
           quality_standards: input.notes || "marketplace hire",
         },
       });
@@ -252,7 +254,7 @@ export async function createJobWithLiveNegotiate(input: {
           ...pushTimeline(
             job,
             "quoted",
-            `Platform A2A quote OK · ~$${priceUsd} (live RangeKeeper)`,
+            `Platform A2A quote OK · ~$${priceUsd} (live ${g?.name || input.genesisSlug})`,
           ),
           quote: {
             priceUsd,
@@ -260,13 +262,12 @@ export async function createJobWithLiveNegotiate(input: {
             etaMinutes: g?.etaMinutes ?? 2,
             protocol: "ERC-8183-live",
             expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-            notes: "Signed quote from BNB platform RangeKeeper (A2A)",
+            notes: `Signed quote from BNB platform ${g?.name || input.genesisSlug} (A2A)`,
             providerSig: a2a.provider_sig,
             rawPrice: a2a.price != null ? String(a2a.price) : undefined,
             live: true,
           },
         };
-        // Full on-chain fund+notify is separate; deliver local plan so UI completes
         if (input.autoFulfill !== false) {
           job = fulfillJob(job);
           job = pushTimeline(
@@ -292,7 +293,7 @@ export async function createJobWithLiveNegotiate(input: {
     }
   }
 
-  if (serviceUrl && !isPlatform) {
+  if (serviceUrl && !platformCfg) {
     try {
       const { ok, data } = await negotiateLive(serviceUrl, {
         task_description: input.task,
