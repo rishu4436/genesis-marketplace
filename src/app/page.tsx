@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { CategoryCard } from "@/components/CategoryCard";
 import { CategoryPreview } from "@/components/CategoryPreview";
+import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { StatPill } from "@/components/StatPill";
 import { CATEGORIES } from "@/lib/categories";
 import { listAgentsSafe, getStatsSafe } from "@/lib/scan";
 import { getAllCategorySnapshots } from "@/lib/category-agents";
-import { sortAgents } from "@/lib/agent-rank";
+import { allGenesisAgents } from "@/lib/genesis-agents";
 
 export const revalidate = 90;
 
 export default async function HomePage() {
+  const genesis = allGenesisAgents();
   const [listRes, statsRes, snapshots] = await Promise.all([
     listAgentsSafe({
       chainId: 56,
@@ -21,10 +23,9 @@ export default async function HomePage() {
     getAllCategorySnapshots(4),
   ]);
 
-  const topAgents = sortAgents(listRes.data || [], { mode: "rank" });
   const agentTotal = listRes.meta?.pagination?.total ?? null;
   const stats = statsRes.data;
-  const filledCategories = snapshots.filter((s) => s.agents.length > 0).length;
+  const filledCategories = 4; // Genesis guarantees one seller per category
 
   return (
     <div>
@@ -49,10 +50,10 @@ export default async function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/browse"
+              href="/genesis/range-keeper"
               className="rounded-full bg-[#F0B90B] px-5 py-2.5 text-sm font-semibold text-black shadow-lg shadow-amber-500/20 transition hover:bg-amber-300"
             >
-              Browse marketplace
+              Hire Genesis agent
             </Link>
             <Link
               href="/categories"
@@ -61,10 +62,10 @@ export default async function HomePage() {
               Shop by category
             </Link>
             <Link
-              href="/compare"
+              href="/browse"
               className="rounded-full px-5 py-2.5 text-sm font-medium text-white/70 transition hover:text-white"
             >
-              Compare agents →
+              Browse all BSC →
             </Link>
           </div>
 
@@ -100,28 +101,56 @@ export default async function HomePage() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-white sm:text-2xl">
-              Shop by job
+              Genesis verified · hire now
             </h2>
             <p className="mt-1 text-sm text-white/50">
-              Four first-class categories — equal marketplace depth.
+              One reference seller per category — negotiate, quote, and receive a
+              deliverable in-product (ERC-8183-shaped).
             </p>
           </div>
+          <Link
+            href="/dashboard"
+            className="hidden text-sm font-medium text-amber-300 sm:block"
+          >
+            My hires →
+          </Link>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CATEGORIES.map((c) => (
-            <CategoryCard key={c.id} category={c} />
+          {genesis.map((a) => (
+            <GenesisAgentCard key={a.slug} agent={a} />
           ))}
         </div>
       </section>
 
       <section className="border-t border-white/10 bg-black/20">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white sm:text-2xl">
+                Shop by job
+              </h2>
+              <p className="mt-1 text-sm text-white/50">
+                Four first-class categories — equal marketplace depth.
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CATEGORIES.map((c) => (
+              <CategoryCard key={c.id} category={c} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10">
         <div className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
           <div>
             <h2 className="text-xl font-semibold text-white sm:text-2xl">
-              Marketplace shelves
+              Live BSC index
             </h2>
             <p className="mt-1 text-sm text-white/50">
-              Each category is a full shelf — not a single featured agent.
+              Ecosystem agents from 8004scan under each category, below Genesis
+              verified sellers.
             </p>
           </div>
           {snapshots.map((s) => (
@@ -129,6 +158,7 @@ export default async function HomePage() {
               key={s.category.id}
               category={s.category}
               agents={s.agents}
+              genesis={genesis.filter((a) => a.categoryId === s.category.id)}
             />
           ))}
         </div>
@@ -152,13 +182,13 @@ export default async function HomePage() {
             },
             {
               step: "03",
-              title: "Brief",
-              body: "Hire wizard captures task, budget, duration, and risk.",
+              title: "Negotiate",
+              body: "ERC-8183-shaped hire: quote under budget, risk, and duration.",
             },
             {
               step: "04",
-              title: "Activate",
-              body: "Intent saved in My hires — ERC-8183 settle ships next.",
+              title: "Deliver",
+              body: "Structured result in UI + My hires. No fund custody on Genesis.",
             },
           ].map((s) => (
             <div
@@ -171,8 +201,8 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
-        {listRes.error && topAgents.length === 0 && (
-          <p className="mt-6 text-xs text-rose-300/80">
+        {listRes.error && (
+          <p className="mt-6 text-xs text-white/35">
             Index note: {listRes.error}
           </p>
         )}

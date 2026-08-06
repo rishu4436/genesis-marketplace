@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AgentCard } from "@/components/AgentCard";
 import { EmptyState } from "@/components/EmptyState";
+import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { getCategory, CATEGORIES, type CategoryId } from "@/lib/categories";
 import { getAgentsForCategory } from "@/lib/category-agents";
+import { getGenesisAgentsByCategory } from "@/lib/genesis-agents";
 
 export const revalidate = 90;
 
@@ -29,6 +31,7 @@ export default async function CategoryDetailPage({ params }: Props) {
   const cat = getCategory(id);
   if (!cat) notFound();
 
+  const genesis = getGenesisAgentsByCategory(id as CategoryId);
   const { agents, source, error } = await getAgentsForCategory(
     id as CategoryId,
     18,
@@ -72,11 +75,27 @@ export default async function CategoryDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10">
         <h2 className="text-lg font-semibold text-white">
-          Agents you can hire
+          Genesis verified
         </h2>
-        <span className="text-xs text-white/40">{agents.length} listed</span>
+        <p className="mt-1 text-xs text-white/45">
+          Hire end-to-end in the product — equal depth for this category.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {genesis.map((a) => (
+            <GenesisAgentCard key={a.slug} agent={a} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-12 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-white">
+          More from BSC index
+        </h2>
+        <span className="text-xs text-white/40">
+          {agents.length} listed · {source}
+        </span>
       </div>
 
       {agents.length > 0 ? (
@@ -92,10 +111,10 @@ export default async function CategoryDetailPage({ params }: Props) {
       ) : (
         <div className="mt-8">
           <EmptyState
-            title="Shelf is empty right now"
+            title="No index matches right now"
             body={
               error ||
-              "Index returned no matches. Genesis-verified agents for this category will fill this shelf."
+              "8004scan returned no keyword matches. Genesis verified seller above is still hireable."
             }
             actionHref="/browse"
             actionLabel="Browse all agents"

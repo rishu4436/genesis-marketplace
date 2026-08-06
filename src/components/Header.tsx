@@ -1,11 +1,10 @@
 import Link from "next/link";
 
 const NAV = [
-  { href: "/browse", label: "Browse" },
   { href: "/categories", label: "Categories" },
+  { href: "/browse", label: "Browse" },
   { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
-  { href: "/hire", label: "How hire works" },
 ];
 
 export function Header() {
@@ -37,7 +36,7 @@ export function Header() {
             </Link>
           ))}
           <Link
-            href="/browse"
+            href="/genesis/range-keeper"
             className="ml-1 rounded-full bg-[#F0B90B] px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-amber-300 sm:px-4 sm:text-sm"
           >
             Hire an agent

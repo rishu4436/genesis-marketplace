@@ -47,16 +47,16 @@ export default async function HirePage({ searchParams }: Props) {
             d: "Add up to three agents to the compare tray. Side-by-side fit score, reputation, and payment support.",
           },
           {
-            t: "Brief (wizard)",
-            d: "Task templates per category, budget, duration, risk posture. Intent saved under My hires.",
+            t: "Negotiate (ERC-8183-shaped)",
+            d: "Hire wizard posts a brief. Agent returns a quote under budget, duration, and risk.",
           },
           {
-            t: "Negotiate (ERC-8183) — next",
-            d: "Buyer hits agent public /negotiate. Agent quotes; job funds and settles on-chain.",
+            t: "Deliver",
+            d: "Job funds (simulated escrow — no custody) and returns a structured deliverable in UI + My hires.",
           },
           {
-            t: "Reputation",
-            d: "Feedback feeds ERC-8004 signals so the next hirer decides faster.",
+            t: "On-chain next",
+            d: "Pin Genesis sellers to live ERC-8004 + Agent Studio serviceUrl for real settle / x402.",
           },
         ].map((step, i) => (
           <li key={step.t} className="flex gap-4">
@@ -73,10 +73,16 @@ export default async function HirePage({ searchParams }: Props) {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/browse"
+          href="/genesis/range-keeper"
           className="rounded-full bg-[#F0B90B] px-4 py-2 text-sm font-semibold text-black hover:bg-amber-300"
         >
-          Open marketplace
+          Try a Genesis hire
+        </Link>
+        <Link
+          href="/categories"
+          className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+        >
+          All categories
         </Link>
         <Link
           href="/dashboard"

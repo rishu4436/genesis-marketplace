@@ -1,15 +1,21 @@
 import Link from "next/link";
 import type { Category } from "@/lib/categories";
 import type { Agent } from "@/lib/types";
+import type { GenesisAgent } from "@/lib/genesis-agents";
 import { AgentCard } from "@/components/AgentCard";
+import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 
 export function CategoryPreview({
   category,
   agents,
+  genesis,
 }: {
   category: Category;
   agents: Agent[];
+  genesis?: GenesisAgent[];
 }) {
+  const g = genesis?.[0];
+
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -33,20 +39,20 @@ export function CategoryPreview({
           View category →
         </Link>
       </div>
-      {agents.length === 0 ? (
-        <p className="mt-6 text-xs text-white/40">
-          Loading agents for this category… If empty, API rate limits may apply.
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {g && <GenesisAgentCard agent={g} />}
+        {agents.slice(0, g ? 3 : 4).map((a) => (
+          <AgentCard
+            key={a.id || a.agent_id}
+            agent={a}
+            categoryId={category.id}
+          />
+        ))}
+      </div>
+      {!g && agents.length === 0 && (
+        <p className="mt-4 text-xs text-white/40">
+          No agents loaded for this shelf yet.
         </p>
-      ) : (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {agents.slice(0, 4).map((a) => (
-            <AgentCard
-              key={a.id || a.agent_id}
-              agent={a}
-              categoryId={category.id}
-            />
-          ))}
-        </div>
       )}
     </section>
   );

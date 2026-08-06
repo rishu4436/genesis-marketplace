@@ -34,9 +34,22 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/categories` | Four first-class categories |
 | `/categories/[id]` | Category shelf (multi-strategy fetch + rank) |
 | `/agents/[chainId]/[tokenId]` | Detail, fit score, hire wizard, related |
+| `/genesis/[slug]` | Genesis verified sellers (4 categories) |
+| `/api/hire` | Negotiate → quote → deliver (ERC-8183-sim) |
 | `/compare` | Side-by-side compare (up to 3 agents) |
-| `/dashboard` | Local hire intents (“My hires”) |
+| `/dashboard` | Hire jobs + deliverables (“My hires”) |
 | `/hire` | Hire flow explainer |
+
+### Genesis verified agents
+
+| Slug | Category | Name |
+|------|----------|------|
+| `range-keeper` | Rebalancing | RangeKeeper (PCS LP) |
+| `gridwright` | Grid trading | Gridwright |
+| `yield-router` | Yield | YieldRouter |
+| `health-sentinel` | Health factor | HealthSentinel |
+
+Hire path: brief → `POST /api/hire` → quote + structured deliverable.
 
 ## Env
 
