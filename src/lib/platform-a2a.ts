@@ -224,3 +224,56 @@ export async function a2aNegotiate(opts: {
 export function rangeKeeperPlatformConfig() {
   return getPlatformConfig("range-keeper")!;
 }
+
+/** Buyer-push notify_funded after on-chain fund */
+export async function a2aNotifyFunded(opts: {
+  a2aUrl: string;
+  agentId: string;
+  jobId: number;
+  clientId?: string;
+  clientSecret?: string;
+}): Promise<{ ok: boolean; raw: unknown; error?: string }> {
+  try {
+    const token = await getPlatformAccessToken(
+      `invoke:${opts.agentId}`,
+      opts.clientId,
+      opts.clientSecret,
+    );
+    const payload = { skill: "notify_funded", job_id: opts.jobId };
+    const rpc = {
+      jsonrpc: "2.0",
+      id: `nf-${Date.now()}`,
+      method: "message/send",
+      params: {
+        message: {
+          role: "user",
+          parts: [{ kind: "data", data: payload }],
+        },
+      },
+    };
+    const res = await fetch(opts.a2aUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(rpc),
+      cache: "no-store",
+    });
+    const raw = await res.json().catch(async () => ({
+      text: await res.text().catch(() => ""),
+    }));
+    if (!res.ok) {
+      return { ok: false, raw, error: `A2A HTTP ${res.status}` };
+    }
+    return { ok: true, raw };
+  } catch (e) {
+    return {
+      ok: false,
+      raw: null,
+      error: e instanceof Error ? e.message : "notify_funded failed",
+    };
+  }
+}
+

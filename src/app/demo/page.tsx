@@ -37,6 +37,11 @@ const STEPS = [
     href: "/termix",
   },
   {
+    t: "On-chain fund (optional)",
+    d: "After tBNB + $U on buyer wallet: /fund → buy → notify → status → settle.",
+    href: "/fund",
+  },
+  {
     t: "Compare",
     d: "Optional: add 2–3 agents to compare tray.",
     href: "/browse",
