@@ -172,7 +172,7 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
           </h3>
           <p className="mt-1 text-[11px] leading-relaxed text-white/45">
             Card is a Stripe test demo (no account, no charge). Wallet is
-            live: real MetaMask, real BNB on BSC.
+            live: your wallet, real BNB on BSC.
           </p>
         </div>
         <div className="text-right">
@@ -294,7 +294,7 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
               onClick={() => void connectWallet()}
               className="btn-secondary w-full !py-2.5 !text-sm"
             >
-              {hasInjected ? "Connect MetaMask" : "Install a wallet to pay"}
+              {hasInjected ? "Connect wallet" : "Open a wallet to pay"}
             </button>
           )}
           {quote && (
@@ -314,7 +314,7 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
             <p className="text-xs text-rose-200">{quoteErr}</p>
           )}
           <p className="text-[10px] leading-relaxed text-white/35">
-            Requires MetaMask (or another injected wallet) on BNB Smart Chain.
+            Uses the wallet already in this browser on BNB Smart Chain.
             Confirm in the wallet. No fake wallet. Gas is extra.
           </p>
         </div>

@@ -67,7 +67,7 @@ export async function switchToBsc(eth: EthProvider): Promise<void> {
 export async function connectInjectedWallet(): Promise<string> {
   const eth = getInjectedEth();
   if (!eth) {
-    throw new Error("Install MetaMask or another injected wallet to pay.");
+    throw new Error("Open a browser wallet to pay.");
   }
   const accs = (await eth.request({
     method: "eth_requestAccounts",
