@@ -13,9 +13,11 @@ import {
   type DemoPayment,
 } from "@/lib/demo-pay";
 import {
-  connectInjectedWallet,
-  getInjectedEth,
+  connectProvider,
+  discoverWallets,
   sendBnbHire,
+  type DiscoveredWallet,
+  type EthProvider,
   type WalletQuote,
 } from "@/lib/wallet-pay";
 
@@ -33,15 +35,13 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
   const [cvc, setCvc] = useState("");
   const [name, setName] = useState("");
   const [wallet, setWallet] = useState<string | null>(null);
+  const [provider, setProvider] = useState<EthProvider | null>(null);
+  const [walletLabel, setWalletLabel] = useState<string>("Wallet");
+  const [choices, setChoices] = useState<DiscoveredWallet[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasInjected, setHasInjected] = useState(false);
   const [quote, setQuote] = useState<WalletQuote | null>(null);
   const [quoteErr, setQuoteErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    setHasInjected(Boolean(getInjectedEth()));
-  }, []);
 
   useEffect(() => {
     if (method !== "wallet") return;
@@ -75,11 +75,25 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
     setError(null);
   }
 
-  async function connectWallet() {
+  async function showWalletChoices() {
+    setError(null);
+    setChoices(null);
+    const list = await discoverWallets();
+    if (list.length === 0) {
+      setError("No browser wallet found. Open one, then try again.");
+      return;
+    }
+    setChoices(list);
+  }
+
+  async function pickWallet(w: DiscoveredWallet) {
     setError(null);
     try {
-      const addr = await connectInjectedWallet();
+      const addr = await connectProvider(w.provider);
+      setProvider(w.provider);
       setWallet(addr);
+      setWalletLabel(w.name);
+      setChoices(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Wallet request rejected");
     }
@@ -129,11 +143,19 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
         setBusy(false);
         return;
       }
-      const hash = await sendBnbHire({
-        from: wallet,
-        to: quote.to,
-        wei: quote.wei,
-      });
+      if (!provider) {
+        setError("Choose a wallet first");
+        setBusy(false);
+        return;
+      }
+      const hash = await sendBnbHire(
+        {
+          from: wallet,
+          to: quote.to,
+          wei: quote.wei,
+        },
+        provider,
+      );
       onPaid(
         makeDemoPayment({
           method: "wallet",
@@ -282,19 +304,58 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
           {wallet ? (
             <div className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-3">
               <p className="text-[10px] uppercase tracking-wider text-emerald-300/80">
-                Connected · BSC
+                Connected · {walletLabel} · BSC
               </p>
               <p className="mt-1 font-mono text-sm text-white">
                 {shortWallet(wallet)}
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setWallet(null);
+                  setProvider(null);
+                  void showWalletChoices();
+                }}
+                className="mt-2 text-[11px] text-amber-300 hover:text-amber-200"
+              >
+                Use a different wallet
+              </button>
+            </div>
+          ) : choices && choices.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                Wallets in this browser
+              </p>
+              {choices.map((w) => (
+                <button
+                  key={w.uuid}
+                  type="button"
+                  onClick={() => void pickWallet(w)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2.5 text-left text-sm text-white/85 transition hover:border-amber-400/35"
+                >
+                  {w.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={w.icon}
+                      alt=""
+                      className="h-7 w-7 rounded-md"
+                    />
+                  ) : (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 text-[10px]">
+                      W
+                    </span>
+                  )}
+                  <span className="font-medium">{w.name}</span>
+                </button>
+              ))}
             </div>
           ) : (
             <button
               type="button"
-              onClick={() => void connectWallet()}
+              onClick={() => void showWalletChoices()}
               className="btn-secondary w-full !py-2.5 !text-sm"
             >
-              {hasInjected ? "Connect wallet" : "Open a wallet to pay"}
+              Choose wallet
             </button>
           )}
           {quote && (
@@ -314,8 +375,8 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
             <p className="text-xs text-rose-200">{quoteErr}</p>
           )}
           <p className="text-[10px] leading-relaxed text-white/35">
-            Uses the wallet already in this browser on BNB Smart Chain.
-            Confirm in the wallet. No fake wallet. Gas is extra.
+            Pick any wallet already in this browser. We do not open one for
+            you. Confirm the send there. Gas is extra.
           </p>
         </div>
       )}
@@ -331,7 +392,7 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
           type="button"
           disabled={
             busy ||
-            (method === "wallet" && (!hasInjected || !wallet || !quote))
+            (method === "wallet" && (!wallet || !provider || !quote))
           }
           onClick={() => void pay()}
           className="btn-primary w-full disabled:opacity-40"

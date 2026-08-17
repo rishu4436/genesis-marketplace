@@ -23,10 +23,58 @@ export type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
 
+export type DiscoveredWallet = {
+  uuid: string;
+  name: string;
+  icon?: string;
+  provider: EthProvider;
+};
+
+type AnnounceDetail = {
+  info?: { uuid?: string; name?: string; icon?: string; rdns?: string };
+  provider?: EthProvider;
+};
+
 export function getInjectedEth(): EthProvider | null {
   if (typeof window === "undefined") return null;
   const w = window as Window & { ethereum?: EthProvider };
   return w.ethereum ?? null;
+}
+
+/** EIP-6963: every installed wallet announces itself. We do not pick a brand. */
+export function discoverWallets(): Promise<DiscoveredWallet[]> {
+  if (typeof window === "undefined") return Promise.resolve([]);
+  return new Promise((resolve) => {
+    const found = new Map<string, DiscoveredWallet>();
+    const onAnnounce = (ev: Event) => {
+      const detail = (ev as CustomEvent<AnnounceDetail>).detail;
+      const info = detail?.info;
+      const provider = detail?.provider;
+      if (!info?.uuid || !provider) return;
+      found.set(info.uuid, {
+        uuid: info.uuid,
+        name: info.name || "Wallet",
+        icon: info.icon,
+        provider,
+      });
+    };
+    window.addEventListener("eip6963:announceProvider", onAnnounce);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    window.setTimeout(() => {
+      window.removeEventListener("eip6963:announceProvider", onAnnounce);
+      if (found.size === 0) {
+        const legacy = getInjectedEth();
+        if (legacy) {
+          found.set("browser", {
+            uuid: "browser",
+            name: "Browser wallet",
+            provider: legacy,
+          });
+        }
+      }
+      resolve([...found.values()].sort((a, b) => a.name.localeCompare(b.name)));
+    }, 120);
+  });
 }
 
 export function treasuryAddress(): string {
@@ -64,11 +112,7 @@ export async function switchToBsc(eth: EthProvider): Promise<void> {
   }
 }
 
-export async function connectInjectedWallet(): Promise<string> {
-  const eth = getInjectedEth();
-  if (!eth) {
-    throw new Error("Open a browser wallet to pay.");
-  }
+export async function connectProvider(eth: EthProvider): Promise<string> {
   const accs = (await eth.request({
     method: "eth_requestAccounts",
   })) as string[];
@@ -77,13 +121,10 @@ export async function connectInjectedWallet(): Promise<string> {
   return accs[0];
 }
 
-export async function sendBnbHire(opts: {
-  from: string;
-  to: string;
-  wei: string;
-}): Promise<string> {
-  const eth = getInjectedEth();
-  if (!eth) throw new Error("Wallet not available");
+export async function sendBnbHire(
+  opts: { from: string; to: string; wei: string },
+  eth: EthProvider,
+): Promise<string> {
   await switchToBsc(eth);
   const hash = (await eth.request({
     method: "eth_sendTransaction",
