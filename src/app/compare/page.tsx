@@ -5,6 +5,7 @@ import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
+import { formatAverageScore } from "@/lib/feedback-score";
 import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
 
@@ -55,11 +56,7 @@ export default async function ComparePage({ searchParams }: Props) {
     });
     rows.push({
       label: "Avg score",
-      values: agents.map((a) =>
-        a.average_score && a.average_score > 0
-          ? a.average_score.toFixed(2)
-          : "—",
-      ),
+      values: agents.map((a) => formatAverageScore(a.average_score)),
     });
     rows.push({
       label: "Feedbacks",

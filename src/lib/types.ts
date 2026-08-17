@@ -28,11 +28,15 @@ export type Agent = {
 export type Feedback = {
   id: string;
   chain_id: number;
-  token_id: number | string;
+  token_id?: number | string;
   user_id?: string;
+  user_address?: string;
   score: number;
   comment?: string;
   created_at?: string;
+  tag1?: string;
+  tag2?: string;
+  agent?: { token_id?: number | string; name?: string };
 };
 
 export type PlatformStats = {

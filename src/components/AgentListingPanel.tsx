@@ -1,4 +1,5 @@
 import type { Agent } from "@/lib/types";
+import { formatAverageScore } from "@/lib/feedback-score";
 
 export type ListingFeature = {
   label: string;
@@ -180,7 +181,7 @@ export function featuresFromAgent(agent: Agent): ListingFeature[] {
         (agent.total_feedbacks ?? 0) > 0
           ? `${agent.total_feedbacks} signals · avg ${
               agent.average_score != null
-                ? agent.average_score.toFixed(1)
+                ? formatAverageScore(agent.average_score)
                 : "—"
             }`
           : "No feedback yet",

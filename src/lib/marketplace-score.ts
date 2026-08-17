@@ -14,6 +14,7 @@
 
 import type { Agent } from "./types";
 import { listAgentsSafe, getStatsSafe, dedupeAgents, BSC_CHAIN_ID } from "./scan";
+import { formatAverageScore } from "./feedback-score";
 import { allGenesisAgents, genesisToAgentCard } from "./genesis-agents";
 
 export type ScoreAxisId =
@@ -133,7 +134,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   const values: Record<ScoreAxisId, { value: number; source: string }> = {
     reputation: {
       value: reputation,
-      source: `avg ${avg || "—"} · ${feedbacks} feedbacks`,
+      source: `avg ${avg ? formatAverageScore(avg) : "—"} · ${feedbacks} feedbacks`,
     },
     trust: {
       value: trust,

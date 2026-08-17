@@ -25,6 +25,11 @@ import {
   compositeFromAxes,
   computeAxes,
 } from "@/lib/marketplace-score";
+import {
+  feedbackBelongsToAgent,
+  formatAverageScore,
+  formatFeedbackScore,
+} from "@/lib/feedback-score";
 import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
 
 export const revalidate = 90;
@@ -67,7 +72,9 @@ export default async function AgentDetailPage({ params }: Props) {
     listFeedbacksSafe({ chainId: cid, tokenId, limit: 10 }),
     getRelatedAgents(agent, 4),
   ]);
-  const feedbacks = fbRes.data || [];
+  const feedbacks = (fbRes.data || []).filter((f) =>
+    feedbackBelongsToAgent(f, cid, tokenId),
+  );
 
   const categoryId = matchCategory(agent.name || "", agent.description || "");
   const category = categoryId ? getCategory(categoryId) : null;
@@ -187,10 +194,7 @@ export default async function AgentDetailPage({ params }: Props) {
                     },
                     {
                       label: "Avg feedback",
-                      value:
-                        agent.average_score && agent.average_score > 0
-                          ? agent.average_score.toFixed(1)
-                          : "—",
+                      value: formatAverageScore(agent.average_score),
                     },
                     {
                       label: "Feedbacks",
@@ -289,11 +293,14 @@ export default async function AgentDetailPage({ params }: Props) {
                   >
                     <div className="flex items-center justify-between text-xs text-white/45">
                       <span className="font-medium text-amber-200">
-                        {f.score}/5
+                        {formatFeedbackScore(f.score)}
                       </span>
                       <span>
+                        {f.user_address
+                          ? shortAddress(f.user_address, 4)
+                          : ""}
                         {f.created_at
-                          ? new Date(f.created_at).toLocaleDateString()
+                          ? ` · ${new Date(f.created_at).toLocaleDateString()}`
                           : ""}
                       </span>
                     </div>
