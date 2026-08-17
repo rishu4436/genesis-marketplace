@@ -24,6 +24,22 @@ export function formatAverageScore(score: number | null | undefined): string {
   return formatFeedbackScore(score);
 }
 
+/**
+ * Map a partner/local average onto 0–100 for the rating pentagon.
+ * 8004scan is usually 0–100; Genesis specialists (and a few rows) use 0–5.
+ * Never treat 4.8 as "4.8 out of 100".
+ */
+export function toHundredPointScale(
+  score: number | null | undefined,
+): number {
+  if (score == null || !Number.isFinite(Number(score))) return 0;
+  const n = Number(score);
+  if (n <= 0) return 0;
+  if (n <= 5) return Math.round((n / 5) * 1000) / 10;
+  if (n <= 10) return Math.round((n / 10) * 1000) / 10;
+  return Math.max(0, Math.min(100, n));
+}
+
 export function feedbackBelongsToAgent(
   f: Feedback,
   chainId: number,

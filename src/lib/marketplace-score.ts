@@ -5,7 +5,7 @@
  * and normalized into 0–100 axes for radar display + a single composite.
  *
  * Axes (pentagon):
- *  1. Reputation  — rating quality (average_score)
+ *  1. Reputation  — on-chain average on 0–100 (0–5 scaled); unrated uses a listing floor, not 0
  *  2. Trust       — verification + on-chain identity signals
  *  3. Reach       — stars / social proof
  *  4. Commerce    — x402 + protocols (can get paid / interoperable)
@@ -14,7 +14,7 @@
 
 import type { Agent } from "./types";
 import { listAgentsSafe, getStatsSafe, dedupeAgents, BSC_CHAIN_ID } from "./scan";
-import { formatAverageScore } from "./feedback-score";
+import { formatAverageScore, toHundredPointScale } from "./feedback-score";
 import { allGenesisAgents, genesisToAgentCard } from "./genesis-agents";
 
 export type ScoreAxisId =
@@ -90,19 +90,35 @@ function num(v: unknown): number {
 
 /** Map partner agent record → 5 axes (0–100 each) */
 export function computeAxes(agent: Agent): ScoreAxis[] {
-  const avg = num(agent.average_score); // 0–100
+  const avg = num(agent.average_score);
+  const avg100 = toHundredPointScale(avg);
   const feedbacks = num(agent.total_feedbacks);
   const stars = num(agent.star_count);
-  const total = num(agent.total_score); // often ~0–60+
+  const total = num(agent.total_score); // 8004scan cluster is ~0–50 even at the top
   const health = num(agent.health_score);
   const protocols = agent.supported_protocols?.length ?? 0;
+  const hasListing =
+    Boolean(agent.owner_address) ||
+    Boolean(agent.description && agent.description.length > 40);
 
-  // Reputation: rating quality, boosted slightly by volume
-  const reputation = clamp01(
-    avg > 0
-      ? avg * 0.85 + Math.min(feedbacks, 40) * 0.375
-      : Math.min(feedbacks, 20) * 2,
-  );
+  // Reputation: real ratings on 0–100. Unrated is a listing floor, not 0/100.
+  let reputation: number;
+  let reputationSource: string;
+  if (avg100 > 0) {
+    reputation = clamp01(avg100 * 0.9 + Math.min(feedbacks, 20) * 0.5);
+    reputationSource = `avg ${formatAverageScore(avg)} · ${feedbacks} ratings`;
+  } else if (feedbacks > 0) {
+    reputation = clamp01(40 + Math.min(feedbacks, 20) * 2);
+    reputationSource = `${feedbacks} ratings · no average yet`;
+  } else {
+    let floor = 32;
+    if (agent.owner_address) floor += 8;
+    if (agent.description && agent.description.length > 60) floor += 8;
+    if (agent.image_url) floor += 6;
+    if (protocols > 0) floor += 4;
+    reputation = clamp01(floor);
+    reputationSource = "no on-chain ratings yet · listing floor";
+  }
 
   // Trust: verified identity + owner presence + non-empty listing
   let trust = 20;
@@ -110,11 +126,12 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   if (agent.owner_address) trust += 15;
   if (agent.description && agent.description.length > 60) trust += 12;
   if (agent.image_url) trust += 8;
+  if (agent.agent_id || agent.token_id != null) trust += 6;
   trust = clamp01(trust);
 
-  // Reach: stars + rating volume (social proof)
+  // Reach: listed agents start above 0; stars/ratings add proof
   const reach = clamp01(
-    Math.min(stars, 80) * 0.7 + Math.min(feedbacks, 50) * 0.9,
+    18 + Math.min(stars, 80) * 0.65 + Math.min(feedbacks, 40) * 0.85,
   );
 
   // Commerce: can take payments / multi-protocol
@@ -123,18 +140,21 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   commerce += Math.min(protocols, 5) * 7;
   commerce = clamp01(commerce);
 
-  // Fitness: partner composite + health + listing quality
-  // total_score often tops ~50–60; scale toward 100
+  // Fitness: stretch 8004scan's ~0–50 total_score toward 0–100
   const fitness = clamp01(
-    Math.min(total, 80) * 1.15 +
-      (health > 0 ? Math.min(health, 100) * 0.15 : 0) +
-      (agent.description && agent.description.length > 100 ? 8 : 0),
+    (total > 0
+      ? Math.min(total, 55) * 1.7
+      : hasListing
+        ? 22
+        : 8) +
+      (health > 0 ? Math.min(health, 100) * 0.1 : 0) +
+      (agent.description && agent.description.length > 100 ? 6 : 0),
   );
 
   const values: Record<ScoreAxisId, { value: number; source: string }> = {
     reputation: {
       value: reputation,
-      source: `avg ${avg ? formatAverageScore(avg) : "—"} · ${feedbacks} ratings`,
+      source: reputationSource,
     },
     trust: {
       value: trust,

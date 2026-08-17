@@ -185,7 +185,7 @@ export function genesisToAgentCard(g: GenesisAgent): Agent & {
     x402_supported: g.x402,
     total_score: 88,
     total_feedbacks: 4,
-    average_score: 4.8,
+    average_score: 96,
     created_at: "2026-08-05T00:00:00Z",
     genesis_slug: g.slug,
     genesis_verified: true,
