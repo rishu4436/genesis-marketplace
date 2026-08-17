@@ -258,10 +258,12 @@ export function HireWizard({
           {job.payment && (
             <p className="mt-3 text-[11px] text-white/50">
               {job.payment.method === "card"
-                ? `Demo card · ${job.payment.brand || "Card"} •••• ${job.payment.last4}`
-                : `Demo wallet · ${shortWallet(job.payment.walletAddress)}`}
-              {" · "}
-              no charge
+                ? `Demo card · ${job.payment.brand || "Card"} •••• ${job.payment.last4} · no charge`
+                : `Wallet · ${shortWallet(job.payment.walletAddress)}${
+                    job.payment.amountBnb
+                      ? ` · ${job.payment.amountBnb} BNB`
+                      : ""
+                  }${job.payment.txHash ? ` · tx ${job.payment.txHash.slice(0, 10)}…` : ""}`}
             </p>
           )}
 

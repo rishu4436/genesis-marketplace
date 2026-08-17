@@ -71,12 +71,25 @@ export default async function JobPage({ params }: Props) {
         {job.payment
           ? job.payment.method === "card"
             ? ` · demo card •••• ${job.payment.last4}`
-            : ` · demo wallet`
+            : ` · on-chain ${job.payment.amountBnb || ""} BNB`
           : ""}{" "}
         ·{" "}
         <Link href={href} className="text-amber-300 hover:underline">
           Open agent
         </Link>
+        {job.payment?.txHash && (
+          <>
+            {" · "}
+            <a
+              href={`https://bscscan.com/tx/${job.payment.txHash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-amber-300 hover:underline"
+            >
+              BSC tx
+            </a>
+          </>
+        )}
       </p>
 
       <p className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/65">

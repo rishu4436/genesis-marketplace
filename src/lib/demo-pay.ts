@@ -10,12 +10,18 @@ export type DemoPayment = {
   method: DemoPayMethod;
   status: "succeeded" | "declined";
   amountUsd: number;
-  demo: true;
+  /** true = Stripe test card. Wallet pays are never demo. */
+  demo: boolean;
   createdAt: string;
   last4?: string;
   brand?: string;
   walletAddress?: string;
-  walletSource?: "injected" | "demo";
+  walletSource?: "injected";
+  txHash?: string;
+  chainId?: number;
+  amountWei?: string;
+  amountBnb?: string;
+  payTo?: string;
 };
 
 export function stripeTestCards() {
@@ -77,11 +83,12 @@ export function evaluateDemoCard(num: string): {
 export function makeDemoPayment(
   partial: Omit<DemoPayment, "id" | "demo" | "createdAt" | "status"> & {
     status?: DemoPayment["status"];
+    demo?: boolean;
   },
 ): DemoPayment {
   return {
-    id: `pay_demo_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
-    demo: true,
+    id: `pay_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+    demo: partial.demo ?? true,
     createdAt: new Date().toISOString(),
     status: partial.status ?? "succeeded",
     ...partial,

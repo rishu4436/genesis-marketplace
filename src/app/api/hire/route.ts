@@ -7,6 +7,7 @@ import { saveJob } from "@/lib/job-store";
 import type { CommerceTier } from "@/lib/agent-model";
 import type { BuyerContext } from "@/lib/buyer-context";
 import type { DemoPayment } from "@/lib/demo-pay";
+import { verifyWalletPayment } from "@/lib/verify-wallet-pay";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -68,7 +69,18 @@ export async function POST(req: Request) {
     });
 
     if (body.payment?.status === "succeeded") {
-      job.payment = { ...body.payment, demo: true };
+      if (body.payment.method === "wallet") {
+        const check = await verifyWalletPayment(body.payment);
+        if (!check.ok) {
+          return NextResponse.json(
+            { success: false, error: check.error || "Wallet payment failed" },
+            { status: 402 },
+          );
+        }
+        job.payment = { ...body.payment, demo: false };
+      } else {
+        job.payment = { ...body.payment, demo: true };
+      }
     }
 
     try {
