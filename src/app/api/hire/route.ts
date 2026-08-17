@@ -6,6 +6,7 @@ import { getGenesisAgent } from "@/lib/genesis-agents";
 import { saveJob } from "@/lib/job-store";
 import type { CommerceTier } from "@/lib/agent-model";
 import type { BuyerContext } from "@/lib/buyer-context";
+import type { DemoPayment } from "@/lib/demo-pay";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
       autoFulfill?: boolean;
       tier?: CommerceTier;
       buyerContext?: BuyerContext | null;
+      payment?: DemoPayment | null;
     };
 
     if (!body.task?.trim()) {
@@ -64,6 +66,10 @@ export async function POST(req: Request) {
       tier,
       buyerContext: body.buyerContext ?? null,
     });
+
+    if (body.payment?.status === "succeeded") {
+      job.payment = { ...body.payment, demo: true };
+    }
 
     try {
       await saveJob(job);

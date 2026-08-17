@@ -67,7 +67,13 @@ export default async function JobPage({ params }: Props) {
       </h1>
       <p className="mt-2 text-sm text-white/50">
         {job.agentName}
-        {job.quote ? ` · $${job.quote.priceUsd}` : ""} ·{" "}
+        {job.quote ? ` · $${job.quote.priceUsd}` : ""}
+        {job.payment
+          ? job.payment.method === "card"
+            ? ` · demo card •••• ${job.payment.last4}`
+            : ` · demo wallet`
+          : ""}{" "}
+        ·{" "}
         <Link href={href} className="text-amber-300 hover:underline">
           Open agent
         </Link>

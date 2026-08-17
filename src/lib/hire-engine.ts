@@ -14,6 +14,7 @@ import {
 import { buildExpertDeliverable } from "./agent-specialists";
 import type { CommerceTier } from "./agent-model";
 import type { BuyerContext } from "./buyer-context";
+import type { DemoPayment } from "./demo-pay";
 import { buildFullReport, buildFreeScan } from "./report-engine";
 import {
   FEATURED_THIRD_PARTY,
@@ -76,6 +77,7 @@ export type HireJob = {
   tier?: CommerceTier;
   buyerContext?: BuyerContext | null;
   quote?: HireQuote;
+  payment?: DemoPayment;
   deliverable?: HireDeliverable;
   timeline: { at: string; status: HireStatus; detail: string }[];
   serviceUrl?: string;
