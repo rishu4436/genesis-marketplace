@@ -17,7 +17,9 @@ const dmSans = DM_Sans({
 const syne = Syne({
   variable: "--font-syne",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["600", "700"],
+  fallback: ["system-ui", "sans-serif"],
+  adjustFontFallback: true,
 });
 
 const siteUrl =
