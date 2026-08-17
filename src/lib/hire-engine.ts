@@ -472,7 +472,7 @@ async function fulfillCatalogHire(
   if (seller) {
     const result = await runThirdPartyHire(seller, input.task);
     const priceUsd = result.quote.accepted ? 0.1 : 0;
-    let next = {
+    let next: HireJob = {
       ...pushTimeline(
         job,
         "quoted",
@@ -524,7 +524,7 @@ async function fulfillCatalogHire(
     tokenId: input.tokenId,
     task: input.task,
   });
-  let next = {
+  let next: HireJob = {
     ...pushTimeline(
       job,
       "quoted",
@@ -538,7 +538,7 @@ async function fulfillCatalogHire(
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       notes: "Identity only — seller has no reachable A2A/operator API",
       live: false,
-    } as HireQuote,
+    },
   };
   if (input.autoFulfill !== false) {
     next = {

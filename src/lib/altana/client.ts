@@ -27,8 +27,8 @@ import { writeLiveProof } from "./proof";
 
 export type AltanaNetwork = "bnb-testnet" | "bnb";
 
-const MIN_LIVE_WEI = 20_000_000_000_000_000n; // 0.02 tBNB
-const FAUCET_WEI = 50_000_000_000_000_000n; // 0.05 tBNB
+const MIN_LIVE_WEI = BigInt("20000000000000000"); // 0.02 tBNB
+const FAUCET_WEI = BigInt("50000000000000000"); // 0.05 tBNB
 
 export function altanaNetwork(): AltanaNetwork {
   return process.env.ALTANA_NETWORK === "mainnet" ? "bnb" : "bnb-testnet";
@@ -144,10 +144,10 @@ function policyToSdkPermissions(policy: AgentPolicyTemplate) {
   return { calls, spend };
 }
 
-function sessionSignerKey(session: {
-  signer?: { _privateKey?: string; privateKey?: string };
-}): string | undefined {
-  return session.signer?._privateKey || session.signer?.privateKey;
+function sessionSignerKey(session: unknown): string | undefined {
+  const signer = (session as { signer?: Record<string, unknown> }).signer;
+  const pk = signer?._privateKey ?? signer?.privateKey;
+  return typeof pk === "string" ? pk : undefined;
 }
 
 const TESTNET_RPC = "https://data-seed-prebsc-1-s1.binance.org:8545";
