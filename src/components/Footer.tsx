@@ -12,6 +12,7 @@ const PRODUCT = [
   { href: "/why", label: "Why Genesis" },
   { href: "/for-agents", label: "For agents" },
   { href: "/sell", label: "Sell / claim" },
+  { href: "/profile", label: "Profile" },
   { href: "/dashboard", label: "My hires" },
   { href: "/altana", label: "Altana sessions" },
   { href: "/judge", label: "Judge path" },

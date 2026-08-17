@@ -140,6 +140,16 @@ export function Header() {
           </div>
 
           <Link
+            href="/profile"
+            className={`ml-1 rounded-full px-3.5 py-1.5 text-[0.875rem] font-medium tracking-tight transition ${
+              navActive(pathname, "/profile")
+                ? "bg-white/[0.08] text-white"
+                : "text-white/50 hover:bg-white/[0.04] hover:text-white"
+            }`}
+          >
+            Profile
+          </Link>
+          <Link
             href="/hire"
             className="btn-primary ml-2 !px-4 !py-2 !text-[0.8rem]"
           >
@@ -148,6 +158,12 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2 md:hidden">
+          <Link
+            href="/profile"
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80"
+          >
+            Profile
+          </Link>
           <Link
             href="/hire"
             className="rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-xs font-semibold text-black"
@@ -186,7 +202,7 @@ export function Header() {
             className="overflow-hidden border-t border-white/[0.06] bg-[#05060a] md:hidden"
           >
             <nav className="mx-auto flex max-w-6xl flex-col px-5 py-3 sm:px-8">
-              {[...PRIMARY, ...MORE].map((item) => (
+              {[{ href: "/profile", label: "Profile" }, ...PRIMARY, ...MORE].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

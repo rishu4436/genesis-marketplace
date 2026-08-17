@@ -233,6 +233,12 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
             Enter the Marketplace
           </Link>
           <Link
+            href="/profile"
+            className="btn-secondary !px-6 !py-3 !text-[0.95rem]"
+          >
+            Profile
+          </Link>
+          <Link
             href="/judge"
             className="btn-secondary !px-6 !py-3 !text-[0.95rem]"
           >
