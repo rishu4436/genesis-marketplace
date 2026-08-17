@@ -14,6 +14,7 @@ export type Agent = {
   star_count?: number;
   supported_protocols?: string[];
   x402_supported?: boolean;
+  a2a_endpoint?: string | null;
   total_score?: number;
   rank?: number | null;
   network_rank?: number | null;

@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# durable job store (local / runtime)
+/data/jobs/
+/data/claims/
+/data/altana-sessions/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -44,4 +49,6 @@ next-env.d.ts
 studio/**/.studio/
 studio/**/.venv/
 studio/**/app/agent/.venv/
+studio/**/wheels/
+studio/**/app/agent/wheels/
 

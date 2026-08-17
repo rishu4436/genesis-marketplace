@@ -13,6 +13,7 @@ function hrefWith(base: string, current: BrowseFilters, patch: BrowseFilters) {
   const p = new URLSearchParams();
   const next = { ...current, ...patch };
   if (next.q) p.set("q", next.q);
+  // Persist sort on every link (score/feedback/newest) so paging never drops it
   if (next.sort && next.sort !== "rank") p.set("sort", next.sort);
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");

@@ -1,12 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { HireJob } from "@/lib/hire-engine";
+import { useEffect, useMemo, useState } from "react";
+import type { HireJob, HireStatus } from "@/lib/hire-engine";
+import { BRAND } from "@/lib/brand";
+
+function statusStyle(status: HireStatus | string) {
+  switch (status) {
+    case "delivered":
+      return "bg-emerald-400/15 text-emerald-300 ring-emerald-400/20";
+    case "failed":
+      return "bg-rose-400/15 text-rose-300 ring-rose-400/20";
+    case "funded":
+    case "fulfilling":
+      return "bg-sky-400/15 text-sky-300 ring-sky-400/20";
+    case "quoted":
+    case "negotiating":
+      return "bg-amber-400/15 text-amber-200 ring-amber-400/20";
+    default:
+      return "bg-white/10 text-white/60 ring-white/10";
+  }
+}
+
+/** User-facing label — hide internal negotiate jargon */
+function statusLabel(status: HireStatus | string) {
+  switch (status) {
+    case "delivered":
+      return "Delivered";
+    case "failed":
+      return "Failed";
+    case "funded":
+    case "fulfilling":
+      return "In progress";
+    case "quoted":
+    case "negotiating":
+      return "Purchasing";
+    default:
+      return status;
+  }
+}
+
+function formatWhen(iso?: string) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
 
 export function HireDashboard() {
   const [jobs, setJobs] = useState<HireJob[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -16,114 +67,212 @@ export function HireDashboard() {
     } catch {
       setJobs([]);
     }
+    setReady(true);
   }, []);
+
+  const stats = useMemo(() => {
+    const delivered = jobs.filter((j) => j.status === "delivered").length;
+    const active = jobs.filter(
+      (j) => j.status !== "delivered" && j.status !== "failed",
+    ).length;
+    return { total: jobs.length, delivered, active };
+  }, [jobs]);
 
   function clearAll() {
     localStorage.removeItem("genesis-hires");
     setJobs([]);
+    setOpenId(null);
+  }
+
+  if (!ready) {
+    return (
+      <div className="panel p-8 text-center">
+        <p className="body-sm">Loading hires…</p>
+      </div>
+    );
   }
 
   if (jobs.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
-        <p className="text-sm text-white/50">No hires yet.</p>
-        <p className="mt-1 text-xs text-white/35">
-          Hire a Genesis verified agent to see negotiate → deliver here.
-        </p>
-        <Link
-          href="/categories"
-          className="mt-4 inline-block text-sm font-medium text-amber-300"
-        >
-          Browse categories →
-        </Link>
+      <div className="panel-strong relative overflow-hidden px-6 py-16 text-center sm:px-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-50"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(240,185,11,0.1), transparent 70%)",
+          }}
+        />
+        <div className="relative">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 font-display text-xl text-amber-300">
+            ∅
+          </div>
+          <h2 className="card-title mt-6 text-xl">No purchases yet</h2>
+          <p className="body mx-auto mt-3 max-w-sm">
+            Buy an agent to see the deliverable land here under My hires.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/hire" className="btn-primary">
+              Buy an agent
+            </Link>
+            <Link href="/categories" className="btn-secondary">
+              Browse categories
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-end">
+    <div className="space-y-6">
+      {/* Summary strip */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "Total hires", value: stats.total },
+          { label: "Delivered", value: stats.delivered },
+          { label: "In progress", value: stats.active },
+        ].map((s) => (
+          <div key={s.label} className="panel px-5 py-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">
+              {s.label}
+            </div>
+            <div className="stat-value mt-2 text-3xl">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-white/45">
+          {jobs.length} job{jobs.length === 1 ? "" : "s"} in this browser
+        </p>
         <button
           type="button"
           onClick={clearAll}
-          className="text-xs text-white/40 hover:text-white/70"
+          className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-white/45 transition hover:border-white/20 hover:text-white/70"
         >
           Clear all
         </button>
       </div>
-      {jobs.map((h) => {
-        const expanded = openId === h.id;
-        const href = h.genesisSlug
-          ? `/genesis/${h.genesisSlug}`
-          : `/agents/${h.chainId}/${h.tokenId}`;
 
-        return (
-          <article
-            key={h.id}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h2 className="text-sm font-semibold text-white">
-                  {h.agentName || `Agent ${h.chainId}:${h.tokenId}`}
-                </h2>
-                <p className="mt-0.5 font-mono text-[10px] text-white/35">
-                  {h.id} · {h.status}
-                  {h.genesisSlug ? " · genesis" : ""}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                  h.status === "delivered"
-                    ? "bg-emerald-400/15 text-emerald-300"
-                    : "bg-amber-400/15 text-amber-200"
-                }`}
-              >
-                {h.quote ? `$${h.quote.priceUsd}` : `$${h.budgetUsd}`} ·{" "}
-                {h.status}
-              </span>
-            </div>
-            <p className="mt-3 text-xs leading-relaxed text-white/65">{h.task}</p>
+      <div className="space-y-3">
+        {jobs.map((h) => {
+          const expanded = openId === h.id;
+          const href = h.genesisSlug
+            ? `/genesis/${h.genesisSlug}`
+            : `/agents/${h.chainId}/${h.tokenId}`;
+          const price = h.quote?.priceUsd ?? Number(h.budgetUsd) ?? 0;
 
-            {expanded && h.deliverable && (
-              <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-                <h3 className="text-xs font-semibold text-amber-200">
-                  {h.deliverable.title}
-                </h3>
-                <p className="text-xs text-white/60">{h.deliverable.summary}</p>
-                {h.deliverable.sections.slice(0, 3).map((s) => (
-                  <div key={s.heading}>
-                    <div className="text-[10px] font-medium text-white/40">
-                      {s.heading}
+          return (
+            <article
+              key={h.id}
+              className="panel group overflow-hidden transition-colors hover:border-white/12"
+            >
+              <div className="p-5 sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="card-title text-lg">
+                        {h.agentName || `Agent ${h.chainId}:${h.tokenId}`}
+                      </h2>
+                      {h.genesisSlug && (
+                        <span
+                          className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-200"
+                          title={BRAND.specialistLabel}
+                        >
+                          {BRAND.byBadge}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-white/55">{s.body}</p>
+                    <p className="mt-1 font-mono text-[11px] text-white/30">
+                      {h.id}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-white/35">
-              <span suppressHydrationWarning>
-                {h.createdAt ? new Date(h.createdAt).toLocaleString() : ""}
-              </span>
-              <div className="flex gap-3">
-                {h.deliverable && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(expanded ? null : h.id)}
-                    className="text-amber-300 hover:underline"
-                  >
-                    {expanded ? "Hide result" : "View result"}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs font-semibold tabular-nums text-white/80">
+                      ${typeof price === "number" ? price.toFixed(2) : price}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${statusStyle(h.status)}`}
+                    >
+                      {statusLabel(h.status)}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="body-sm mt-4 line-clamp-2">{h.task}</p>
+
+                {expanded && h.deliverable && (
+                  <div className="mt-5 space-y-4 rounded-xl border border-white/[0.08] bg-black/25 p-4 sm:p-5">
+                    <div>
+                      <h3 className="card-title text-base text-amber-100">
+                        {h.deliverable.title}
+                      </h3>
+                      <p className="body-sm mt-2">{h.deliverable.summary}</p>
+                    </div>
+                    {h.deliverable.sections.slice(0, 4).map((s) => (
+                      <div key={s.heading}>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/35">
+                          {s.heading}
+                        </div>
+                        <p className="body-sm mt-1.5">{s.body}</p>
+                      </div>
+                    ))}
+                    {h.deliverable.metrics?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {h.deliverable.metrics.slice(0, 4).map((m) => (
+                          <span
+                            key={m.label}
+                            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-[11px] text-white/55"
+                          >
+                            <span className="text-white/35">{m.label}: </span>
+                            <span className="font-medium text-white/80">
+                              {m.value}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
-                <Link href={href} className="text-amber-300 hover:underline">
-                  Open agent →
-                </Link>
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+                  <span
+                    className="text-xs font-medium text-white/35"
+                    suppressHydrationWarning
+                  >
+                    {formatWhen(h.createdAt)}
+                    {h.quote?.protocol ? ` · ${h.quote.protocol}` : ""}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {h.deliverable && (
+                      <button
+                        type="button"
+                        onClick={() => setOpenId(expanded ? null : h.id)}
+                        className="rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-white/80 transition hover:border-amber-400/30 hover:text-amber-100"
+                      >
+                        {expanded ? "Hide result" : "View result"}
+                      </button>
+                    )}
+                    <Link
+                      href={`/jobs/${encodeURIComponent(h.id)}`}
+                      className="rounded-full border border-white/12 px-3.5 py-1.5 text-xs font-semibold text-white/70 transition hover:border-white/25"
+                    >
+                      Share page
+                    </Link>
+                    <Link
+                      href={`${href}#buy`}
+                      className="rounded-full bg-amber-400/15 px-3.5 py-1.5 text-xs font-semibold text-amber-200 transition hover:bg-amber-400/25"
+                    >
+                      Buy again
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </article>
-        );
-      })}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

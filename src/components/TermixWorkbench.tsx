@@ -147,6 +147,17 @@ export function TermixWorkbench() {
     setMsg("Report markdown copied");
   }
 
+  function downloadMd() {
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `termix-agent-advantage-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg("Downloaded TermiX report markdown");
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
@@ -163,6 +174,13 @@ export function TermixWorkbench() {
           className="rounded-full border border-white/15 px-4 py-2 text-xs text-white/80"
         >
           Copy report markdown
+        </button>
+        <button
+          type="button"
+          onClick={downloadMd}
+          className="rounded-full border border-white/15 px-4 py-2 text-xs text-white/80"
+        >
+          Download .md
         </button>
         <Link
           href="/dashboard"

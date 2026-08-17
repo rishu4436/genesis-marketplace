@@ -4,6 +4,7 @@ import type { Agent } from "@/lib/types";
 import type { GenesisAgent } from "@/lib/genesis-agents";
 import { AgentCard } from "@/components/AgentCard";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 export function CategoryPreview({
   category,
@@ -17,19 +18,15 @@ export function CategoryPreview({
   const g = genesis?.[0];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${category.accent} text-base font-bold text-black/80`}
-          >
-            {category.icon}
-          </div>
+    <section className="panel p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <CategoryIcon id={category.id} size="sm" />
           <div>
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-sm font-semibold tracking-tight text-white">
               {category.name}
             </h3>
-            <p className="mt-0.5 text-xs text-white/45">{category.tagline}</p>
+            <p className="text-xs text-white/45">{category.tagline}</p>
           </div>
         </div>
         <Link

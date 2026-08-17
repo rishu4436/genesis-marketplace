@@ -1,30 +1,37 @@
 import Link from "next/link";
+import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
+import { getCategory } from "@/lib/categories";
+import { CategoryIcon } from "@/components/CategoryIcon";
+import { HowHireWorks } from "@/components/HowHireWorks";
+import { BRAND } from "@/lib/brand";
 
 type Props = {
   searchParams: Promise<{ agent?: string }>;
 };
 
 export const metadata = {
-  title: "How hire works",
+  title: "Buy an agent",
+  description:
+    "Buy By Genesis specialists or any indexed agent — one click, structured deliverable.",
 };
 
 export default async function HirePage({ searchParams }: Props) {
   const { agent } = await searchParams;
   const [chainId, tokenId] = (agent || "").split(":");
+  const specialists = allGenesisAgents();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-white">
-        How hire works
-      </h1>
-      <p className="mt-3 text-sm leading-relaxed text-white/60">
-        Genesis is the buyer front door for agents on BNB Smart Chain. Studio
-        ships sellers; we complete discover → compare → brief → activate.
+    <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
+      <p className="section-label">Buy</p>
+      <h1 className="display-section mt-3 text-white">Buy an agent</h1>
+      <p className="lead mt-3 max-w-xl">
+        One action: describe the job and buy. You get a structured deliverable
+        under My hires. Start with a hire-ready {BRAND.byBadge} specialist.
       </p>
 
       {agent && chainId && tokenId && (
-        <div className="mt-6 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-          Selected agent:{" "}
+        <div className="panel mt-6 border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          Selected catalog agent:{" "}
           <Link
             href={`/agents/${chainId}/${tokenId}`}
             className="font-semibold underline"
@@ -32,65 +39,73 @@ export default async function HirePage({ searchParams }: Props) {
             chain {chainId} · token {tokenId}
           </Link>
           {" — "}
-          open the agent page and use the Hire wizard in the sidebar.
+          open that page and use <strong>Buy agent</strong>.
         </div>
       )}
 
-      <ol className="mt-10 space-y-6">
-        {[
-          {
-            t: "Discover",
-            d: "Browse the marketplace or open a category shelf. Filter by x402, verified, or feedback.",
-          },
-          {
-            t: "Compare",
-            d: "Add up to three agents to the compare tray. Side-by-side fit score, reputation, and payment support.",
-          },
-          {
-            t: "Negotiate (ERC-8183-shaped)",
-            d: "Hire wizard posts a brief. Agent returns a quote under budget, duration, and risk.",
-          },
-          {
-            t: "Deliver",
-            d: "Job funds (simulated escrow — no custody) and returns a structured deliverable in UI + My hires.",
-          },
-          {
-            t: "On-chain next",
-            d: "Pin Genesis sellers to live ERC-8004 + Agent Studio serviceUrl for real settle / x402.",
-          },
-        ].map((step, i) => (
-          <li key={step.t} className="flex gap-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F0B90B] text-sm font-bold text-black">
-              {i + 1}
-            </div>
-            <div>
-              <h2 className="font-semibold text-white">{step.t}</h2>
-              <p className="mt-1 text-sm text-white/55">{step.d}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-8">
+        <HowHireWorks />
+      </div>
 
-      <div className="mt-12 flex flex-wrap gap-3">
+      <p className="section-label mt-12">Buy-ready specialists</p>
+      <p className="body-sm mt-2 max-w-xl">
+        Pick one, land on the buy panel — price and ETA shown up front.
+      </p>
+
+      <div className="mt-5 space-y-2.5">
+        {specialists.map((a) => {
+          const cat = getCategory(a.categoryId);
+          return (
+            <Link
+              key={a.slug}
+              href={`${genesisHref(a)}#buy`}
+              className="panel group flex items-center gap-3.5 px-3.5 py-3.5 transition-colors hover:border-amber-400/30 hover:bg-white/[0.04]"
+            >
+              <CategoryIcon id={a.categoryId} size="md" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-semibold tracking-tight text-white group-hover:text-amber-50">
+                    {a.name}
+                  </h2>
+                  <span className="rounded-full bg-[#F0B90B] px-2 py-0.5 text-[10px] font-bold text-black">
+                    {BRAND.byBadge}
+                  </span>
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                    Registered
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-white/45">
+                  {cat?.name || a.categoryId} · ~{a.etaMinutes}m deliverable
+                </p>
+                <p className="mt-1 line-clamp-1 text-xs text-white/55">
+                  {a.tagline}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-amber-400 px-3 py-1.5 text-xs font-semibold text-black">
+                Buy · ${a.basePriceUsd}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <p className="body-sm mt-8">
+        Or buy any indexed listing from{" "}
         <Link
-          href="/genesis/range-keeper"
-          className="rounded-full bg-[#F0B90B] px-4 py-2 text-sm font-semibold text-black hover:bg-amber-300"
+          href="/browse"
+          className="font-semibold text-amber-300 hover:text-amber-200"
         >
-          Try a Genesis hire
-        </Link>
+          All agents
+        </Link>{" "}
+        /{" "}
         <Link
           href="/categories"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+          className="font-semibold text-amber-300 hover:text-amber-200"
         >
-          All categories
+          Categories
         </Link>
-        <Link
-          href="/dashboard"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
-        >
-          My hires
-        </Link>
-      </div>
+        .
+      </p>
     </div>
   );
 }

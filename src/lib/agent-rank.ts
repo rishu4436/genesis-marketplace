@@ -1,6 +1,8 @@
 import type { Agent } from "./types";
 import type { CategoryId } from "./categories";
 import { CATEGORIES } from "./categories";
+import { compareByScore } from "./agent-score";
+import { destinationRank } from "./hire-class";
 
 /** Higher = better fit for marketplace ranking */
 export function rankScore(agent: Agent, categoryId?: CategoryId): number {
@@ -50,8 +52,10 @@ export function sortAgents(
       return (b.total_feedbacks ?? 0) - (a.total_feedbacks ?? 0);
     }
     if (mode === "score") {
-      return (b.total_score ?? 0) - (a.total_score ?? 0);
+      return compareByScore(a, b);
     }
+    const dest = destinationRank(b) - destinationRank(a);
+    if (dest !== 0 && !opts?.categoryId) return dest;
     return rankScore(b, opts?.categoryId) - rankScore(a, opts?.categoryId);
   });
 

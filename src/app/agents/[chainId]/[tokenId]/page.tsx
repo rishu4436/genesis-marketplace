@@ -11,8 +11,21 @@ import { matchCategory, getCategory } from "@/lib/categories";
 import { getRelatedAgents } from "@/lib/category-agents";
 import { HireWizard } from "@/components/HireWizard";
 import { AgentCard } from "@/components/AgentCard";
+import { AgentAvatar } from "@/components/AgentAvatar";
 import { CompareToggle } from "@/components/CompareTray";
+import { ScoreAxisList, ScorePentagon } from "@/components/ScorePentagon";
+import {
+  featuresFromAgent,
+  isAgentRegistered,
+} from "@/components/AgentListingPanel";
+import { TrustPassport } from "@/components/TrustPassport";
 import { rankScore } from "@/lib/agent-rank";
+import { getCategoryDepth } from "@/lib/category-depth";
+import {
+  compositeFromAxes,
+  computeAxes,
+} from "@/lib/marketplace-score";
+import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
 
 export const revalidate = 90;
 
@@ -60,6 +73,9 @@ export default async function AgentDetailPage({ params }: Props) {
   const category = categoryId ? getCategory(categoryId) : null;
   const scanUrl = explorerAgentUrl(agent);
   const fit = rankScore(agent, categoryId || undefined);
+  const axes = computeAxes(agent);
+  const composite = compositeFromAxes(axes);
+  const pentId = `agent-${agent.chain_id}-${String(agent.token_id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -76,24 +92,28 @@ export default async function AgentDetailPage({ params }: Props) {
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
         <div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white/10">
-              {agent.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={agent.image_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl text-amber-300">
-                  ◆
-                </div>
-              )}
-            </div>
+            <AgentAvatar
+              src={agent.image_url}
+              name={agent.name || `Agent #${agent.token_id}`}
+              size="lg"
+              className="!rounded-2xl"
+            />
             <div className="min-w-0 flex-1">
-              <h1 className="text-3xl font-semibold tracking-tight text-white">
-                {agent.name || `Agent #${agent.token_id}`}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-semibold tracking-tight text-white">
+                  {agent.name || `Agent #${agent.token_id}`}
+                </h1>
+                {isAgentRegistered(agent) && (
+                  <span className="rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-400/25">
+                    Registered
+                  </span>
+                )}
+                {agent.is_verified && (
+                  <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300">
+                    Verified
+                  </span>
+                )}
+              </div>
               <p className="mt-2 text-sm text-white/50">
                 Chain {agent.chain_id}
                 {agent.is_testnet ? " (testnet)" : " · mainnet"} · Token #
@@ -115,80 +135,113 @@ export default async function AgentDetailPage({ params }: Props) {
                 {agent.description ||
                   "No description provided on-chain. Identity is still verifiable via ERC-8004."}
               </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <a
+                  href="#buy"
+                  className="btn-primary !px-4 !py-2 !text-sm lg:hidden"
+                >
+                  Buy · $10
+                </a>
+                <span className="text-xs text-white/40">
+                  One brief → structured deliverable
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {[
-              {
-                label: "Fit score",
-                value: fit.toFixed(0),
-              },
-              {
-                label: "Avg score",
-                value:
-                  agent.average_score && agent.average_score > 0
-                    ? agent.average_score.toFixed(2)
-                    : "—",
-              },
-              {
-                label: "Feedbacks",
-                value: agent.total_feedbacks ?? 0,
-              },
-              {
-                label: "Stars",
-                value: agent.star_count ?? 0,
-              },
-              {
-                label: "Total score",
-                value:
-                  agent.total_score && agent.total_score > 0
-                    ? Number(agent.total_score).toFixed(0)
-                    : "—",
-              },
-            ].map((m) => (
-              <div
-                key={m.label}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3"
-              >
-                <div className="text-[10px] uppercase tracking-wider text-white/40">
-                  {m.label}
-                </div>
-                <div className="mt-1 text-lg font-semibold tabular-nums text-white">
-                  {m.value}
+          {/* Per-agent Genesis pentagon */}
+          <section
+            id="score"
+            className="mt-8 scroll-mt-24 rounded-2xl border border-amber-400/20 bg-white/[0.03] p-5 sm:p-6"
+          >
+            <p className="section-label">Marketplace score</p>
+            <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white">
+              Pentagon index
+            </h2>
+            <p className="body-sm mt-1.5 max-w-xl">
+              Genesis 5-axis score for this agent — Reputation · Trust · Reach ·
+              Commerce · Fitness (partner-fed).
+            </p>
+            <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
+              <div className="flex flex-col items-center">
+                <ScorePentagon
+                  axes={axes}
+                  composite={composite}
+                  size={260}
+                  title={agent.name || `Agent #${agent.token_id}`}
+                  gradientId={pentId}
+                />
+              </div>
+              <div className="max-w-md">
+                <ScoreAxisList axes={axes} />
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {[
+                    { label: "Composite", value: String(Math.round(composite)) },
+                    { label: "Fit", value: fit.toFixed(0) },
+                    {
+                      label: "Partner total",
+                      value:
+                        agent.total_score && agent.total_score > 0
+                          ? Number(agent.total_score).toFixed(0)
+                          : "—",
+                    },
+                    {
+                      label: "Avg feedback",
+                      value:
+                        agent.average_score && agent.average_score > 0
+                          ? agent.average_score.toFixed(1)
+                          : "—",
+                    },
+                    {
+                      label: "Feedbacks",
+                      value: String(agent.total_feedbacks ?? 0),
+                    },
+                    {
+                      label: "Stars",
+                      value: String(agent.star_count ?? 0),
+                    },
+                  ].map((m) => (
+                    <div
+                      key={m.label}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2"
+                    >
+                      <div className="text-[10px] uppercase tracking-wider text-white/40">
+                        {m.label}
+                      </div>
+                      <div className="mt-0.5 text-base font-semibold tabular-nums text-white">
+                        {m.value}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-
-          <section className="mt-10">
-            <h2 className="text-lg font-semibold text-white">
-              Why hire this agent
-            </h2>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {[
-                agent.x402_supported
-                  ? "Supports x402 payments"
-                  : "Payment rails not flagged (x402)",
-                agent.is_verified
-                  ? "Marked verified in index"
-                  : "Unverified — inspect owner & feedback",
-                (agent.total_feedbacks ?? 0) > 0
-                  ? `${agent.total_feedbacks} feedback signals on record`
-                  : "No feedback yet — early / unproven",
-                category
-                  ? `Mapped to ${category.name}`
-                  : "General-purpose listing",
-              ].map((line) => (
-                <li
-                  key={line}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/65"
-                >
-                  {line}
-                </li>
-              ))}
-            </ul>
+            </div>
           </section>
+
+          <TrustPassport
+            agent={agent}
+            registered={isAgentRegistered(agent)}
+            registrationDetail={
+              isAgentRegistered(agent)
+                ? `On-chain identity indexed from ERC-8004${
+                    agent.owner_address
+                      ? ` · owner ${shortAddress(agent.owner_address, 4)}`
+                      : ""
+                  }${
+                    category ? ` · mapped to ${category.name}` : ""
+                  }.`
+                : "No registration signals in the partner index for this agent."
+            }
+            features={featuresFromAgent(agent)}
+            samplePreview={
+              categoryId
+                ? {
+                    title: getCategoryDepth(categoryId).sampleOutputTitle,
+                    body: getCategoryDepth(categoryId).sampleOutputBody,
+                  }
+                : undefined
+            }
+          />
 
           <section className="mt-10">
             <h2 className="text-lg font-semibold text-white">On-chain identity</h2>
@@ -268,11 +321,41 @@ export default async function AgentDetailPage({ params }: Props) {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-white/50">
+            {isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
+              <>
+                <span className="font-semibold text-sky-300">
+                  Live third-party seller
+                </span>
+                {" — "}
+                not operated by Genesis. Buy negotiates their A2A endpoint and
+                pulls their operator report. We do not write a Genesis plan
+                under their name.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-white/70">
+                  Indexed agent
+                </span>
+                {" — "}
+                ERC-8004 identity from 8004scan. If they have no live endpoint,
+                Buy records that honestly — we will not impersonate them.
+                Hire-ready sellers are{" "}
+                <span className="text-amber-200">By Genesis</span>.
+              </>
+            )}
+          </div>
           <HireWizard
             chainId={agent.chain_id}
             tokenId={String(agent.token_id)}
             agentName={agent.name || `Agent #${agent.token_id}`}
             categoryId={categoryId}
+            hireReady={isFeaturedThirdParty(agent.chain_id, agent.token_id)}
+            priceUsd={
+              isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0
+            }
+            etaMinutes={1}
+            x402={Boolean(agent.x402_supported)}
           />
           <a
             href={scanUrl}

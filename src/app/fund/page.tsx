@@ -95,8 +95,8 @@ export default function FundPage() {
           </li>
           <li>CLI: bag erc8183 settle &lt;job_id&gt; --action approve|dispute</li>
         </ul>
-        <Link href="/demo" className="mt-3 inline-block text-amber-300">
-          Demo checklist →
+        <Link href="/hire" className="mt-3 inline-block text-amber-300">
+          Hire specialists →
         </Link>
       </section>
     </div>

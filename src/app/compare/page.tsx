@@ -4,6 +4,9 @@ import { rankScore } from "@/lib/agent-rank";
 import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
+import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
+import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
+import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
 
 export const metadata = {
   title: "Compare agents",
@@ -67,8 +70,24 @@ export default async function ComparePage({ searchParams }: Props) {
       values: agents.map((a) => String(a.star_count ?? 0)),
     });
     rows.push({
+      label: "Hire class",
+      values: agents.map((a) => hireClassLabel(hireClassForAgent(a))),
+    });
+    rows.push({
+      label: "What Buy returns",
+      values: agents.map((a) => {
+        const c = hireClassForAgent(a);
+        if (c === "live") return "Their quote + operator report";
+        return "Identity only (no impersonation)";
+      }),
+    });
+    rows.push({
       label: "x402",
       values: agents.map((a) => (a.x402_supported ? "Yes" : "No")),
+    });
+    rows.push({
+      label: "Live A2A",
+      values: agents.map((a) => (a.a2a_endpoint ? "Yes" : "No")),
     });
     rows.push({
       label: "Verified",
@@ -90,9 +109,27 @@ export default async function ComparePage({ searchParams }: Props) {
         Compare agents
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-white/55">
-        Add agents from the marketplace with the Compare button (up to 3), then
-        open this page — or paste chain:token ids below.
+        Compare hire class, fit, and what Buy actually returns — before you
+        spend a click. Add cards from the floor (up to 3) or pick a starter
+        set.
       </p>
+      <div className="mt-4 flex flex-wrap gap-2 text-xs">
+        {allGenesisAgents().map((g) => (
+          <Link
+            key={g.slug}
+            href={genesisHref(g)}
+            className="rounded-full border border-white/10 px-3 py-1 text-white/60 hover:border-amber-400/40 hover:text-amber-200"
+          >
+            {g.name}
+          </Link>
+        ))}
+        <Link
+          href={thirdPartyHref(FEATURED_THIRD_PARTY)}
+          className="rounded-full border border-sky-400/25 px-3 py-1 text-sky-300 hover:border-sky-400/50"
+        >
+          {FEATURED_THIRD_PARTY.name}
+        </Link>
+      </div>
 
       <ComparePicker initialIds={raw} />
 

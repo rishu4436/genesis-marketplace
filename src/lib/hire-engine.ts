@@ -8,7 +8,23 @@ import {
 import {
   a2aNegotiate,
   getPlatformConfig,
+  isPlatformDown,
+  markPlatformDown,
 } from "./platform-a2a";
+import { buildExpertDeliverable } from "./agent-specialists";
+import type { CommerceTier } from "./agent-model";
+import type { BuyerContext } from "./buyer-context";
+import { buildFullReport, buildFreeScan } from "./report-engine";
+import {
+  FEATURED_THIRD_PARTY,
+  isFeaturedThirdParty,
+  sellerFromAgent,
+} from "./third-party-sellers";
+import {
+  identityOnlyDeliverable,
+  runThirdPartyHire,
+} from "./third-party-hire";
+import { getAgentSafe } from "./scan";
 
 export type HireStatus =
   | "negotiating"
@@ -22,12 +38,13 @@ export type HireQuote = {
   priceUsd: number;
   currency: string;
   etaMinutes: number;
-  protocol: "ERC-8183" | "ERC-8183-sim" | "ERC-8183-live";
+  protocol: "ERC-8183" | "ERC-8183-sim" | "ERC-8183-live" | "x402-free";
   expiresAt: string;
   notes: string;
   providerSig?: string;
   rawPrice?: string;
   live?: boolean;
+  tier?: CommerceTier;
 };
 
 export type HireDeliverable = {
@@ -53,6 +70,9 @@ export type HireJob = {
   duration: HireIntent["duration"];
   risk: HireIntent["risk"];
   notes?: string;
+  /** free | full | escrow — stockanalyst-inspired */
+  tier?: CommerceTier;
+  buyerContext?: BuyerContext | null;
   quote?: HireQuote;
   deliverable?: HireDeliverable;
   timeline: { at: string; status: HireStatus; detail: string }[];
@@ -117,8 +137,8 @@ export function buildQuote(
     protocol: "ERC-8183-sim",
     expiresAt: expires,
     notes: g
-      ? `Local quote for ${g.name}. Prefer live /apex/negotiate when serviceUrl is reachable.`
-      : "Marketplace simulated quote.",
+      ? `Soft-hire quote for ${g.name} (no payment). Live negotiate used when seller is reachable.`
+      : `Soft-hire quote for ${intent.agentName || "agent"} (no payment).`,
     live: false,
   };
 }
@@ -186,12 +206,15 @@ export async function createJobWithLiveNegotiate(input: {
   risk: HireIntent["risk"];
   notes?: string;
   autoFulfill?: boolean;
+  tier?: CommerceTier;
+  buyerContext?: BuyerContext | null;
 }): Promise<HireJob> {
   const g = input.genesisSlug
     ? getGenesisAgent(input.genesisSlug)
     : undefined;
   const serviceUrl = g?.serviceUrl;
 
+  const tier: CommerceTier = input.tier || "full";
   const id = jobId();
   const createdAt = nowIso();
   let job: HireJob = {
@@ -209,88 +232,136 @@ export async function createJobWithLiveNegotiate(input: {
     duration: input.duration,
     risk: input.risk,
     notes: input.notes,
+    tier,
+    buyerContext: input.buyerContext ?? null,
     serviceUrl,
     timeline: [],
   };
 
+  // ── Free scan tier (stockanalyst x402:free analogue) ──
+  if (tier === "free") {
+    job = pushTimeline(job, "negotiating", "Free scan · multi-source spot check");
+    const scan = await buildFreeScan({
+      task: input.task,
+      categoryId: input.categoryId,
+      agentName: input.agentName,
+      risk: input.risk,
+    });
+    job = {
+      ...pushTimeline(job, "delivered", "Free scan ready — upgrade to Full for plan"),
+      quote: {
+        priceUsd: 0,
+        currency: "USD",
+        etaMinutes: 0,
+        protocol: "x402-free",
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        notes: "Free scan · 0 U · identity of request only",
+        tier: "free",
+        live: false,
+      },
+      deliverable: {
+        title: scan.title,
+        summary: scan.summary,
+        sections: [
+          {
+            heading: "Recommendation",
+            body: scan.recommendation,
+          },
+          {
+            heading: "Sources",
+            body: scan.sources.join("\n") || "—",
+          },
+          {
+            heading: "Upgrade",
+            body: "Run Full analysis for bull/bear thesis, execution checklist, and buyer-context notes.",
+          },
+        ],
+        metrics: scan.metrics,
+        disclaimer: scan.disclaimer,
+      },
+    };
+    return job;
+  }
+
   job = pushTimeline(
     job,
     "negotiating",
-    serviceUrl
-      ? `POST ${serviceUrl}/negotiate`
-      : "Local sim negotiate (no serviceUrl)",
+    tier === "escrow"
+      ? "Escrow tier · full analysis + on-chain path note"
+      : input.genesisSlug
+        ? `Specialist negotiate · ${input.agentName}`
+        : `Third-party hire · ${input.agentName}`,
   );
 
-  // Platform A2A path (BNB managed trial agents)
+  // Platform A2A path (BNB managed trial agents) — bounded, silent fallback
   const platformCfg = input.genesisSlug
     ? getPlatformConfig(input.genesisSlug)
     : null;
+  const skipLive =
+    !platformCfg ||
+    (input.genesisSlug ? isPlatformDown(input.genesisSlug) : false);
 
-  if (platformCfg) {
-    try {
-      const clientId = process.env[platformCfg.clientIdEnv];
-      const clientSecret = process.env[platformCfg.clientSecretEnv];
-      job = pushTimeline(
-        job,
-        "negotiating",
-        `A2A negotiate → ${platformCfg.a2aUrl}`,
-      );
-      const a2a = await a2aNegotiate({
-        a2aUrl: platformCfg.a2aUrl,
-        agentId: platformCfg.agentId,
-        taskDescription: input.task,
-        clientId: clientId || undefined,
-        clientSecret: clientSecret || undefined,
-        terms: {
-          deliverables: g?.tagline || "structured brief",
-          quality_standards: input.notes || "marketplace hire",
-        },
-      });
+  if (platformCfg && !skipLive) {
+    const clientId =
+      process.env[platformCfg.clientIdEnv] ||
+      process.env.PLATFORM_CLIENT_ID;
+    const clientSecret =
+      process.env[platformCfg.clientSecretEnv] ||
+      process.env.PLATFORM_CLIENT_SECRET;
 
-      if (a2a.ok) {
-        const priceUsd =
-          priceToUsdHint(a2a.price, a2a.price_usd) ?? buildQuote(input).priceUsd;
-        job = {
-          ...pushTimeline(
-            job,
-            "quoted",
-            `Platform A2A quote OK · ~$${priceUsd} (live ${g?.name || input.genesisSlug})`,
-          ),
-          quote: {
-            priceUsd,
-            currency: a2a.currency || "U",
-            etaMinutes: g?.etaMinutes ?? 2,
-            protocol: "ERC-8183-live",
-            expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-            notes: `Signed quote from BNB platform ${g?.name || input.genesisSlug} (A2A)`,
-            providerSig: a2a.provider_sig,
-            rawPrice: a2a.price != null ? String(a2a.price) : undefined,
-            live: true,
+    if (clientId && clientSecret) {
+      try {
+        const a2a = await a2aNegotiate({
+          a2aUrl: platformCfg.a2aUrl,
+          agentId: platformCfg.agentId,
+          taskDescription: input.task,
+          clientId,
+          clientSecret,
+          terms: {
+            deliverables: g?.tagline || "structured brief",
+            quality_standards: input.notes || "marketplace hire",
           },
-        };
-        if (input.autoFulfill !== false) {
-          job = fulfillJob(job);
-          job = pushTimeline(
-            job,
-            "delivered",
-            "Local deliverable attached; on-chain notify_funded needs funded job_id + tBNB",
-          );
-        }
-        return job;
-      }
+        });
 
-      job = pushTimeline(
-        job,
-        "negotiating",
-        `A2A negotiate failed — ${a2a.error || "unknown"} — falling back`,
-      );
-    } catch (e) {
-      job = pushTimeline(
-        job,
-        "negotiating",
-        `A2A error — ${e instanceof Error ? e.message : "error"} — fallback`,
-      );
+        if (a2a.ok) {
+          const priceUsd =
+            priceToUsdHint(a2a.price, a2a.price_usd) ??
+            buildQuote(input).priceUsd;
+          job = {
+            ...pushTimeline(
+              job,
+              "quoted",
+              `Live quote · $${priceUsd} · ${g?.name || input.agentName}`,
+            ),
+            quote: {
+              priceUsd,
+              currency: a2a.currency || "U",
+              etaMinutes: g?.etaMinutes ?? 2,
+              protocol: "ERC-8183-live",
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+              notes: `Signed quote from ${g?.name || input.genesisSlug}`,
+              providerSig: a2a.provider_sig,
+              rawPrice: a2a.price != null ? String(a2a.price) : undefined,
+              live: true,
+            },
+          };
+          if (input.autoFulfill !== false) {
+            job = await fulfillJobAsync(job);
+          }
+          return job;
+        }
+
+        if (input.genesisSlug) markPlatformDown(input.genesisSlug);
+      } catch {
+        if (input.genesisSlug) markPlatformDown(input.genesisSlug);
+      }
     }
+  }
+
+  // Catalog / third-party — never wear a Genesis plan
+  if (!input.genesisSlug) {
+    job = await fulfillCatalogHire(job, input);
+    return job;
   }
 
   if (serviceUrl && !platformCfg) {
@@ -341,41 +412,145 @@ export async function createJobWithLiveNegotiate(input: {
         };
 
         if (data.deliverable && typeof data.deliverable === "object") {
-          job = fulfillFromEmbedded(job, data.deliverable as HireDeliverable);
+          // Prefer full multi-source report over thin embedded payload
+          job = await fulfillJobAsync(job);
         } else if (input.autoFulfill !== false) {
-          job = fulfillJob(job);
+          job = await fulfillJobAsync(job);
         }
         return job;
       }
 
-      job = pushTimeline(
-        job,
-        "negotiating",
-        `Live negotiate failed — falling back to sim (${data.error || "not accepted"})`,
-      );
-    } catch (e) {
-      job = pushTimeline(
-        job,
-        "negotiating",
-        `Live negotiate error — sim fallback (${e instanceof Error ? e.message : "error"})`,
-      );
+      // live seller unavailable — specialist engine below
+    } catch {
+      /* specialist engine below */
     }
   }
 
-  // Sim path
-  const quote = buildQuote(input);
+  // Full analysis — always hireable (Studio optional)
+  const quote = buildQuote({ ...input, agentName: input.agentName });
+  const escrowNote =
+    tier === "escrow"
+      ? " Escrow tier: open /fund to attempt on-chain fund when policy allows."
+      : "";
   job = {
     ...pushTimeline(
       job,
       "quoted",
-      `Sim quoted $${quote.priceUsd} · ETA ${quote.etaMinutes}m`,
+      `Quoted $${quote.priceUsd} · ETA ${quote.etaMinutes}m · ${input.agentName}`,
     ),
-    quote,
+    quote: {
+      ...quote,
+      tier,
+      notes: `Full analysis for ${input.agentName}.${escrowNote}`,
+    },
   };
   if (input.autoFulfill !== false) {
-    job = fulfillJob(job);
+    job = await fulfillJobAsync(job);
   }
   return job;
+}
+
+async function fulfillCatalogHire(
+  job: HireJob,
+  input: {
+    chainId: number;
+    tokenId: string;
+    agentName: string;
+    task: string;
+    autoFulfill?: boolean;
+  },
+): Promise<HireJob> {
+  let seller = isFeaturedThirdParty(input.chainId, input.tokenId)
+    ? FEATURED_THIRD_PARTY
+    : null;
+
+  if (!seller) {
+    const fetched = await getAgentSafe(input.chainId, input.tokenId);
+    if (fetched.data) seller = sellerFromAgent(fetched.data);
+  }
+
+  if (seller) {
+    const result = await runThirdPartyHire(seller, input.task);
+    const priceUsd = result.quote.accepted ? 0.1 : 0;
+    let next = {
+      ...pushTimeline(
+        job,
+        "quoted",
+        result.quote.accepted
+          ? `Third-party quote accepted · ${seller.name}`
+          : `Third-party hire · ${seller.name} (operator report)`,
+      ),
+      quote: {
+        priceUsd,
+        currency: "USD",
+        etaMinutes: 1,
+        protocol: result.quote.accepted ? "ERC-8183-live" : "ERC-8183",
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        notes: result.quote.accepted
+          ? `Signed quote from ${seller.name}`
+          : `Live operator report from ${seller.name}`,
+        providerSig: result.quote.providerSig,
+        live: result.live,
+      } as HireQuote,
+    };
+    if (input.autoFulfill !== false) {
+      next = pushTimeline(
+        next,
+        "funded",
+        "Routed to third-party seller (no Genesis custody)",
+      );
+      next = pushTimeline(
+        next,
+        "fulfilling",
+        "Fetching seller quote + operator report…",
+      );
+      next = {
+        ...pushTimeline(
+          next,
+          "delivered",
+          result.live
+            ? `Deliverable from ${seller.name}`
+            : `Indexed seller unreachable · identity recorded`,
+        ),
+        deliverable: result.deliverable,
+      };
+    }
+    return next;
+  }
+
+  const deliverable = identityOnlyDeliverable({
+    agentName: input.agentName,
+    chainId: input.chainId,
+    tokenId: input.tokenId,
+    task: input.task,
+  });
+  let next = {
+    ...pushTimeline(
+      job,
+      "quoted",
+      "Indexed identity — no live hire endpoint",
+    ),
+    quote: {
+      priceUsd: 0,
+      currency: "USD",
+      etaMinutes: 0,
+      protocol: "ERC-8183-sim",
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      notes: "Identity only — seller has no reachable A2A/operator API",
+      live: false,
+    } as HireQuote,
+  };
+  if (input.autoFulfill !== false) {
+    next = {
+      ...pushTimeline(
+        next,
+        "delivered",
+        "No third-party session — did not impersonate this agent",
+      ),
+      deliverable,
+    };
+  }
+  return next;
 }
 
 function fulfillFromEmbedded(
@@ -410,6 +585,7 @@ export function fundJob(job: HireJob): HireJob {
 }
 
 export function fulfillJob(job: HireJob): HireJob {
+  // Sync fallback for callers that cannot await (legacy)
   let next = job;
   if (next.status === "quoted") {
     next = fundJob(next);
@@ -418,7 +594,8 @@ export function fulfillJob(job: HireJob): HireJob {
     return next;
   }
   next = pushTimeline(next, "fulfilling", "Agent fulfilling job…");
-  const deliverable = buildDeliverable(next);
+  const g = job.genesisSlug ? getGenesisAgent(job.genesisSlug) : undefined;
+  const deliverable = buildExpertDeliverable(next, g);
   next = {
     ...pushTimeline(next, "delivered", "Deliverable ready"),
     deliverable,
@@ -426,165 +603,42 @@ export function fulfillJob(job: HireJob): HireJob {
   return next;
 }
 
-function buildDeliverable(job: HireJob): HireDeliverable {
-  const g = job.genesisSlug ? getGenesisAgent(job.genesisSlug) : undefined;
-  const cat = job.categoryId || g?.categoryId;
-
-  switch (cat) {
-    case "rebalancing":
-      return rebalanceDeliverable(job, g);
-    case "grid-trading":
-      return gridDeliverable(job, g);
-    case "yield-optimisation":
-      return yieldDeliverable(job, g);
-    case "health-factor":
-      return healthDeliverable(job, g);
-    default:
-      return genericDeliverable(job, g);
+/** Async fulfill — multi-source report + buyer context (v2 model) */
+export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
+  let next = job;
+  if (next.status === "quoted") {
+    next = fundJob(next);
   }
-}
-
-function rebalanceDeliverable(
-  job: HireJob,
-  g?: GenesisAgent,
-): HireDeliverable {
-  return {
-    title: "LP rebalance plan · PancakeSwap V3",
-    summary:
-      "Position is estimated slightly out of active range under a ±4% move. Proposed reset keeps 80% notional in-range with a fee-first band.",
-    sections: [
-      { heading: "Task received", body: job.task },
-      {
-        heading: "Current range diagnosis",
-        body: "Simulated PCS V3 position: price near lower tick. Time-out-of-range last 24h ≈ 38%. Fee capture degraded vs in-range baseline.",
-      },
-      {
-        heading: "Proposed band",
-        body: "Center on mark ±6.5% (asymmetric +1% up for mild bull bias). Keep 10% dry powder for a second rebalance if volatility expands.",
-      },
-      {
-        heading: "PancakeSwap notes",
-        body: "Plan assumes PCS V3 pool. No custody: execute rebalance in your wallet or via a scoped session key.",
-      },
-    ],
-    metrics: [
-      { label: "Est. fee APR (in-range)", value: "18–26%" },
-      { label: "Est. IL (7d, ±8% move)", value: "1.1–1.8%" },
-      { label: "Suggested gas budget", value: "$1.20–$2.40" },
-      { label: "Agent", value: g?.name || job.agentName },
-    ],
-    disclaimer:
-      "Simulated deliverable for marketplace demo. Not financial advice. No funds moved on-chain by Genesis.",
-  };
-}
-
-function gridDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
-  return {
-    title: "Grid layout · BSC pair",
-    summary:
-      "12-level geometric grid with pause if unrealized drawdown exceeds 6%. Sized for the budget you specified.",
-    sections: [
-      { heading: "Task received", body: job.task },
-      {
-        heading: "Grid parameters",
-        body: "Levels: 12 · Mode: geometric · Spacing: ~1.1% · Inventory split 50/50 quote-base at mid.",
-      },
-      {
-        heading: "Risk controls",
-        body: `Risk posture: ${job.risk}. Auto-pause if mark moves >6% against inventory.`,
-      },
-      {
-        heading: "24h fill simulation",
-        body: "Under mean-reverting path: ~7–9 fills, est. edge 0.15–0.35% of notional before fees.",
-      },
-    ],
-    metrics: [
-      { label: "Levels", value: "12" },
-      { label: "Spacing", value: "~1.1%" },
-      { label: "Pause DD", value: "6%" },
-      { label: "Agent", value: g?.name || job.agentName },
-    ],
-    disclaimer: "Simulated strategy brief. Grid execution not submitted on-chain by Genesis.",
-  };
-}
-
-function yieldDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
-  return {
-    title: "Yield route · BSC stables / majors",
-    summary:
-      "Ranked venues for capital with risk bands. Top suggestion balances APR vs exit liquidity, with PCS farm in the shortlist.",
-    sections: [
-      { heading: "Task received", body: job.task },
-      {
-        heading: "Venue ranking (illustrative)",
-        body: "1) Lending blue-chip · 2) PCS farm / gauge · 3) LST restake path. Prefer #1+#2 barbell under medium risk.",
-      },
-      {
-        heading: "Reallocation sketch",
-        body: `Budget constraint $${job.budgetUsd}. Move in 2 txs: 60% lending, 40% PCS-related yield.`,
-      },
-      {
-        heading: "PancakeSwap angle",
-        body: "Where LP yield wins on risk-adjusted basis, use PCS pools with deep liquidity.",
-      },
-    ],
-    metrics: [
-      { label: "Top band APR", value: "7–14% (risk-adj.)" },
-      { label: "Suggested split", value: "60/40" },
-      { label: "Re-check", value: "48h" },
-      { label: "Agent", value: g?.name || job.agentName },
-    ],
-    disclaimer: "Simulated yield brief. APRs change; verify live before moving capital.",
-  };
-}
-
-function healthDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
-  return {
-    title: "Health factor protection plan",
-    summary:
-      "Simulated HF under collateral shocks with clear repay vs add-collateral options and alert thresholds.",
-    sections: [
-      { heading: "Task received", body: job.task },
-      {
-        heading: "Baseline (illustrative)",
-        body: "Assumed HF ≈ 1.45. Soft alert at 1.30, hard alert at 1.20.",
-      },
-      {
-        heading: "Shock table",
-        body: "Collateral −10% → HF ~1.28 · −15% → HF ~1.18 · −20% → HF ~1.08.",
-      },
-      {
-        heading: "Actions",
-        body: "Prefer partial repay if inventory is liquid; else add collateral of the strongest asset.",
-      },
-    ],
-    metrics: [
-      { label: "Soft alert", value: "HF 1.30" },
-      { label: "Hard alert", value: "HF 1.20" },
-      { label: "Primary action", value: "Partial repay" },
-      { label: "Agent", value: g?.name || job.agentName },
-    ],
-    disclaimer:
-      "Simulated HF model. Read live protocol data before acting. Genesis does not hold keys to your lending account.",
-  };
-}
-
-function genericDeliverable(job: HireJob, g?: GenesisAgent): HireDeliverable {
-  return {
-    title: "Agent job result",
-    summary: "Marketplace hire completed with a structured brief for your task.",
-    sections: [
-      { heading: "Task", body: job.task },
-      {
-        heading: "Result",
-        body: "Agent produced a completion packet under the quoted budget and risk posture.",
-      },
-    ],
-    metrics: [
-      { label: "Status", value: "delivered" },
-      { label: "Agent", value: g?.name || job.agentName },
-      { label: "Quote", value: job.quote ? `$${job.quote.priceUsd}` : "—" },
-    ],
-    disclaimer: "Simulated ERC-8183 job for Genesis Marketplace demo.",
-  };
+  if (next.status !== "funded" && next.status !== "fulfilling") {
+    return next;
+  }
+  next = pushTimeline(
+    next,
+    "fulfilling",
+    "Multi-source analysis + specialist plan…",
+  );
+  const g = job.genesisSlug ? getGenesisAgent(job.genesisSlug) : undefined;
+  try {
+    const deliverable = await buildFullReport(
+      next,
+      g,
+      next.buyerContext ?? null,
+    );
+    if (next.tier === "escrow") {
+      deliverable.sections = [
+        {
+          heading: "On-chain escrow path",
+          body: "This job was fulfilled under the Escrow tier analysis. To lock U on-chain when policy allows: open /fund, create/fund ERC-8183 job, then settle after 24h. Soft deliverable is available now so you are never blocked.",
+        },
+        ...deliverable.sections,
+      ];
+    }
+    next = {
+      ...pushTimeline(next, "delivered", "Full analysis ready"),
+      deliverable,
+    };
+  } catch {
+    next = fulfillJob(next);
+  }
+  return next;
 }

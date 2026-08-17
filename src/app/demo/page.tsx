@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HowHireWorks } from "@/components/HowHireWorks";
 import { PLATFORM_LIVE_AGENTS, LOCAL_APEX_AGENTS } from "@/lib/trial";
 
 export const metadata = {
@@ -8,43 +9,38 @@ export const metadata = {
 const STEPS = [
   {
     t: "Land",
-    d: "Open home — 4 categories, Genesis verified shelf, live index.",
+    d: "Home: 4 job categories + hire-ready specialists.",
     href: "/",
   },
   {
-    t: "Find by category",
-    d: "Open Rebalancing or Yield — equal-depth shelf with Genesis seller first.",
+    t: "Discover",
+    d: "Open Rebalancing — By Genesis seller first, then indexed agents with scores.",
     href: "/categories/rebalancing",
   },
   {
-    t: "Hire live (platform)",
-    d: "RangeKeeper / YieldRouter / HealthSentinel → Negotiate & hire → deliverable.",
+    t: "Hire specialist (judge path)",
+    d: "RangeKeeper → Negotiate & hire → deliverable in ~30s. No payment.",
     href: "/genesis/range-keeper",
   },
   {
-    t: "Hire grid (local APEX)",
-    d: "Gridwright still hireable while free tier is max 3 cloud agents.",
-    href: "/genesis/gridwright",
+    t: "Hire indexed agent (optional)",
+    d: "Browse any card → Hire → soft-hire deliverable. Shows full catalog works.",
+    href: "/browse",
   },
   {
     t: "My hires",
-    d: "Confirm job status delivered + timeline shows ERC-8183-live when platform.",
+    d: "Job status delivered + timeline.",
     href: "/dashboard",
   },
   {
     t: "TermiX report",
-    d: "Run 3 with-agent hires, fill without-agent arms, copy markdown.",
+    d: "With-agent vs without-agent arms → download .md for submission.",
     href: "/termix",
   },
   {
-    t: "On-chain fund (optional)",
-    d: "After tBNB + $U on buyer wallet: /fund → buy → notify → status → settle.",
-    href: "/fund",
-  },
-  {
-    t: "Compare",
-    d: "Optional: add 2–3 agents to compare tray.",
-    href: "/browse",
+    t: "Scores (optional)",
+    d: "Dashboard pentagon + per-agent radar on cards.",
+    href: "/dashboard#pentagon",
   },
 ];
 
@@ -55,19 +51,47 @@ export default function DemoPage() {
         Demo checklist
       </h1>
       <p className="mt-2 text-sm text-white/55">
-        90-second judge path for Build the Era. Record a screen capture before the
-        free platform trial expires (~8 Aug 2026 UTC).
+        Build the Era · ~90 seconds. Soft hire is the official judge path.
       </p>
 
       <section className="mt-8 rounded-2xl border border-amber-400/25 bg-amber-400/5 p-5">
-        <h2 className="text-sm font-semibold text-amber-100">Pitch (10 sec)</h2>
+        <h2 className="text-sm font-semibold text-amber-100">Pitch (15 sec)</h2>
         <p className="mt-2 text-sm leading-relaxed text-white/70">
-          Genesis is the buyer front door for BNB Agent Studio: discover, compare,
-          and hire DeFi agents across rebalancing, grid, yield, and health factor.
-          Three sellers run on BNB&apos;s managed Studio cloud (ERC-8004 on testnet);
-          the marketplace stays up if the free trial runtime expires — hire falls
-          back to local APEX.
+          Genesis is the buyer front door for BNB Agent Studio: discover DeFi
+          agents by job type, compare with a 5-axis score, and soft-hire for a
+          structured deliverable. Hire-ready sellers are{" "}
+          <strong className="text-white">By Genesis</strong> specialists we
+          operate. The catalog also indexes the public ERC-8004 graph. Soft hire
+          needs no escrow; on-chain fund is optional when policy allows.
         </p>
+      </section>
+
+      <div className="mt-6">
+        <HowHireWorks />
+      </div>
+
+      <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-white/40">
+          Status
+        </h2>
+        <ul className="mt-2 space-y-1 text-xs text-white/60">
+          <li>
+            <span className="text-emerald-300">Ready:</span> soft hire (all
+            listings), specialists, scores, TermiX, demo path.
+          </li>
+          <li>
+            <span className="text-amber-200">Optional / blocked:</span> on-chain
+            ERC-8183 escrow — testnet policy whitelist (see{" "}
+            <Link href="/fund" className="text-amber-300 hover:underline">
+              /fund
+            </Link>
+            ).
+          </li>
+          <li>
+            Platform sellers: {PLATFORM_LIVE_AGENTS.join(", ") || "—"}. Local
+            APEX: {LOCAL_APEX_AGENTS.join(", ") || "—"}.
+          </li>
+        </ul>
       </section>
 
       <ol className="mt-8 space-y-4">
@@ -93,49 +117,20 @@ export default function DemoPage() {
         ))}
       </ol>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-white">Live sellers</h2>
-        <ul className="mt-3 space-y-2 text-sm text-white/65">
-          {PLATFORM_LIVE_AGENTS.map((a) => (
-            <li key={a.slug}>
-              <Link
-                href={`/genesis/${a.slug}`}
-                className="font-medium text-amber-200 hover:underline"
-              >
-                {a.name}
-              </Link>
-              <span className="text-white/40">
-                {" "}
-                · {a.category} · ERC-8004 {a.tokenId} · platform
-              </span>
-            </li>
-          ))}
-          {LOCAL_APEX_AGENTS.map((a) => (
-            <li key={a.slug}>
-              <Link
-                href={`/genesis/${a.slug}`}
-                className="font-medium text-amber-200 hover:underline"
-              >
-                {a.name}
-              </Link>
-              <span className="text-white/40">
-                {" "}
-                · {a.category} · local APEX ({a.reason})
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-10 rounded-2xl border border-white/10 bg-black/30 p-5 text-xs text-white/50">
-        <h2 className="font-semibold text-white/80">Before trial ends</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-4">
-          <li>Record 60–90s screen demo of a live platform hire</li>
-          <li>Export TermiX markdown from /termix</li>
-          <li>If team allows redeploy after expiry: re-run bag deploy + update pins</li>
-          <li>Product freeze 31 Aug · submit by 9 Sep</li>
-        </ul>
-      </section>
+      <p className="mt-10 text-center text-xs text-white/40">
+        Fast path:{" "}
+        <Link href="/genesis/range-keeper" className="text-amber-300">
+          Hire RangeKeeper
+        </Link>
+        {" · "}
+        <Link href="/termix" className="text-amber-300">
+          TermiX
+        </Link>
+        {" · "}
+        <Link href="/dashboard" className="text-amber-300">
+          My hires
+        </Link>
+      </p>
     </div>
   );
 }

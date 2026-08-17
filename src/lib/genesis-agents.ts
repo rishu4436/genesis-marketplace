@@ -3,8 +3,8 @@ import type { Agent } from "./types";
 import { getPin } from "./pins";
 
 /**
- * Genesis-operated reference sellers for the four hackathon categories.
- * Pins (tokenId / serviceUrl) come from config/pins.json or env.
+ * Marketplace specialists operated by Genesis — one per job category so hire
+ * always has a working path. Pins (tokenId / serviceUrl) from config/pins.json.
  */
 export type GenesisAgent = {
   slug: string;
@@ -34,7 +34,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     name: "RangeKeeper",
     tagline: "PCS V3 LP ranges that stay in the money",
     description:
-      "Genesis reference agent for concentrated liquidity. Monitors PancakeSwap V3 positions, flags out-of-range liquidity, and proposes rebalance bands with fee APR vs IL context. Does not custody user funds — delivers actionable plans and simulation outputs.",
+      "Marketplace specialist for concentrated liquidity (built by Genesis). Monitors PancakeSwap V3 positions, flags out-of-range liquidity, and proposes rebalance bands with fee APR vs IL context. Does not custody user funds — delivers actionable plans.",
     skills: [
       "PCS V3 range monitor",
       "Rebalance band proposal",
@@ -58,7 +58,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     name: "Gridwright",
     tagline: "Automated grid plans on BSC pairs",
     description:
-      "Genesis reference agent for grid trading. Designs multi-level grids between user bounds, sizes notional per level, and returns pause rules for drawdown. Execution stays with you or a future session key — Gridwright sells the strategy brief and fill simulation.",
+      "Marketplace specialist for grid trading (built by Genesis). Designs multi-level grids between user bounds, sizes notional per level, and returns pause rules for drawdown. You keep execution — Gridwright delivers the strategy brief.",
     skills: [
       "Grid layout (N levels)",
       "Drawdown pause rules",
@@ -82,7 +82,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     name: "YieldRouter",
     tagline: "Route stable liquidity to stronger APR",
     description:
-      "Genesis reference agent for yield optimisation on BSC. Compares venue APR for a given asset (PCS farms, lending, LST paths), scores risk bands, and proposes a reallocation under a gas budget. Read-first; no fund custody.",
+      "Marketplace specialist for yield routes on BSC (built by Genesis). Compares venue APR for an asset, scores risk bands, and proposes a reallocation under a gas budget. Read-first; no fund custody.",
     skills: [
       "Multi-venue APR scan",
       "Risk-banded ranking",
@@ -106,7 +106,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     name: "HealthSentinel",
     tagline: "Protect loans before liquidation",
     description:
-      "Genesis reference agent for lending health. Simulates health-factor under collateral price shocks, suggests repay vs add-collateral options, and drafts alert thresholds. Built for Venus/Aave-style positions on BSC — advisory, not custodian.",
+      "Marketplace specialist for lending health (built by Genesis). Simulates health-factor under collateral shocks, suggests repay vs add-collateral options, and drafts alert thresholds. Advisory only — not a custodian.",
     skills: [
       "HF simulation",
       "Liquidation distance",
@@ -194,4 +194,16 @@ export function genesisToAgentCard(g: GenesisAgent): Agent & {
 
 export function genesisHref(g: GenesisAgent) {
   return `/genesis/${g.slug}`;
+}
+
+/** Query before hash so HireWizard can read task / auto-buy. */
+export function genesisBuyHref(
+  g: GenesisAgent,
+  opts?: { task?: string; buy?: boolean },
+) {
+  const p = new URLSearchParams();
+  if (opts?.task?.trim()) p.set("task", opts.task.trim());
+  if (opts?.buy) p.set("buy", "1");
+  const q = p.toString();
+  return `/genesis/${g.slug}${q ? `?${q}` : ""}#buy`;
 }

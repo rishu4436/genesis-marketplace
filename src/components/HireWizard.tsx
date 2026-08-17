@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CategoryId } from "@/lib/categories";
-import {
-  DURATION_LABELS,
-  RISK_LABELS,
-  TASK_TEMPLATES,
-  type HireIntent,
-} from "@/lib/hire";
+import { defaultTaskForCategory, taskTemplatesFor } from "@/lib/hire";
 import type { HireJob } from "@/lib/hire-engine";
+import { getCategoryDepth } from "@/lib/category-depth";
+import {
+  commerceModesForAgent,
+  defaultRail,
+  type CommerceRail,
+} from "@/lib/commerce";
+import { BuyerContextPanel } from "@/components/BuyerContextPanel";
+import type { BuyerContext } from "@/lib/buyer-context";
 
 type Props = {
   chainId: number;
@@ -17,9 +20,14 @@ type Props = {
   agentName: string;
   categoryId?: CategoryId | null;
   genesisSlug?: string;
+  hireReady?: boolean;
+  priceUsd?: number;
+  etaMinutes?: number;
+  /** Seller lists x402 */
+  x402?: boolean;
 };
 
-function persistJob(job: HireJob) {
+function persistJobLocal(job: HireJob) {
   try {
     const prev = JSON.parse(
       localStorage.getItem("genesis-hires") || "[]",
@@ -31,29 +39,62 @@ function persistJob(job: HireJob) {
   }
 }
 
+type Phase = "idle" | "buying" | "working" | "done";
+
 export function HireWizard({
   chainId,
   tokenId,
   agentName,
   categoryId,
   genesisSlug,
+  hireReady,
+  priceUsd = 10,
+  etaMinutes = 2,
+  x402 = false,
 }: Props) {
-  const templates = categoryId ? TASK_TEMPLATES[categoryId] : [];
-  const [step, setStep] = useState(1);
-  const [task, setTask] = useState(templates[0] || "");
-  const [budgetUsd, setBudgetUsd] = useState("10");
-  const [duration, setDuration] = useState<HireIntent["duration"]>("once");
-  const [risk, setRisk] = useState<HireIntent["risk"]>("low");
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
+  const isHireReady = hireReady ?? Boolean(genesisSlug);
+  const templates = useMemo(
+    () => taskTemplatesFor(categoryId).slice(0, 3),
+    [categoryId],
+  );
+  const sample = categoryId ? getCategoryDepth(categoryId) : null;
+  const modes = useMemo(
+    () =>
+      commerceModesForAgent({
+        x402,
+        hireReady: isHireReady,
+        escrowAvailable: false,
+      }),
+    [x402, isHireReady],
+  );
+
+  const [task, setTask] = useState(() => defaultTaskForCategory(categoryId));
+  const [rail, setRail] = useState<CommerceRail>(() => defaultRail(modes));
+  const [buyerCtx, setBuyerCtx] = useState<BuyerContext | null>(null);
+  const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState<HireJob | null>(null);
+  const [sharePath, setSharePath] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const autobuyStarted = useRef(false);
 
-  const canContinue = useMemo(() => task.trim().length > 8, [task]);
+  const canBuy = useMemo(() => task.trim().length > 8, [task]);
+  const displayPrice = priceUsd > 0 ? priceUsd : 10;
+  const displayEta = etaMinutes > 0 ? etaMinutes : 2;
+  const loading = phase === "buying" || phase === "working";
 
-  async function runHire() {
-    setLoading(true);
+  async function buyAgent(taskOverride?: string) {
+    const brief = (taskOverride ?? task).trim();
+    if (brief.length <= 8) {
+      setError("Add a short job brief first");
+      return;
+    }
+    // free | full always available; escrow still produces full analysis + /fund note
+    setPhase("buying");
     setError(null);
+    setSharePath(null);
+    const workTimer = window.setTimeout(() => setPhase("working"), 450);
     try {
       const res = await fetch("/api/hire", {
         method: "POST",
@@ -64,72 +105,138 @@ export function HireWizard({
           agentName,
           genesisSlug,
           categoryId,
-          task,
-          budgetUsd,
-          duration,
-          risk,
-          notes,
+          task: brief,
+          budgetUsd: String(displayPrice),
+          duration: "once",
+          risk: buyerCtx?.risk === "conservative" ? "low" : buyerCtx?.risk === "aggressive" ? "high" : "medium",
+          notes: `tier:${rail}`,
           autoFulfill: true,
+          tier: rail,
+          buyerContext: rail === "free" ? null : buyerCtx,
         }),
       });
       const json = (await res.json()) as {
         success: boolean;
         data?: HireJob;
+        sharePath?: string;
         error?: string;
       };
       if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || "Hire request failed");
+        throw new Error(json.error || "Purchase failed");
       }
       setJob(json.data);
-      persistJob(json.data);
-      setStep(4);
+      persistJobLocal(json.data);
+      setSharePath(json.sharePath || `/jobs/${encodeURIComponent(json.data.id)}`);
+      // Best-effort dual persist
+      try {
+        await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job: json.data }),
+        });
+      } catch {
+        /* ok */
+      }
+      setPhase("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hire failed");
+      setError(e instanceof Error ? e.message : "Purchase failed");
+      setPhase("idle");
     } finally {
-      setLoading(false);
+      window.clearTimeout(workTimer);
     }
   }
 
-  if (job && step === 4) {
+  // Prefill ?task= ; ?buy=1 starts hire immediately (judge cold path)
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const t = (sp.get("task") || "").trim();
+      if (t.length > 8) setTask(t);
+      if (sp.get("buy") === "1" && !autobuyStarted.current) {
+        autobuyStarted.current = true;
+        const brief = t.length > 8 ? t : defaultTaskForCategory(categoryId);
+        void buyAgent(brief);
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function copyResult() {
+    if (!job?.deliverable) return;
     const d = job.deliverable;
+    const text = [
+      d.title,
+      d.summary,
+      "",
+      ...d.sections.map((s) => `## ${s.heading}\n${s.body}`),
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function copyShareLink() {
+    if (!sharePath && !job) return;
+    const path = sharePath || `/jobs/${encodeURIComponent(job!.id)}`;
+    const url = `${window.location.origin}${path}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (job && phase === "done") {
+    const d = job.deliverable;
+    const paid = job.quote?.priceUsd ?? displayPrice;
+    const path = sharePath || `/jobs/${encodeURIComponent(job.id)}`;
     return (
-      <div className="space-y-3">
-        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+      <div id="buy" className="space-y-3 scroll-mt-28">
+        <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 p-5 shadow-lg shadow-emerald-900/10">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs font-medium uppercase tracking-wider text-emerald-300">
-              Job {job.status}
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Ready
             </div>
-            <span className="font-mono text-[10px] text-white/35">{job.id}</span>
+            <span className="text-[11px] font-medium text-white/40">
+              Saved · shareable
+            </span>
           </div>
-          <h3 className="mt-2 text-lg font-semibold text-white">
-            {d?.title || "Hire complete"}
+          <h3 className="mt-3 text-lg font-semibold tracking-tight text-white">
+            {d?.title || `${agentName} result`}
           </h3>
-          <p className="mt-2 text-sm text-white/65">{d?.summary}</p>
+          <p className="mt-2 text-sm leading-relaxed text-white/65">
+            {d?.summary}
+          </p>
 
-          {job.quote && (
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-black/25 px-2 py-2">
-                <div className="text-[10px] text-white/40">Quote</div>
-                <div className="text-sm font-semibold text-white">
-                  ${job.quote.priceUsd}
-                </div>
-              </div>
-              <div className="rounded-lg bg-black/25 px-2 py-2">
-                <div className="text-[10px] text-white/40">ETA</div>
-                <div className="text-sm font-semibold text-white">
-                  {job.quote.etaMinutes}m
-                </div>
-              </div>
-              <div className="rounded-lg bg-black/25 px-2 py-2">
-                <div className="text-[10px] text-white/40">Protocol</div>
-                <div className="text-[11px] font-semibold text-amber-200">
-                  ERC-8183
-                </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg bg-black/25 px-2 py-2">
+              <div className="text-[10px] text-white/40">Paid</div>
+              <div className="text-sm font-semibold text-white">${paid}</div>
+            </div>
+            <div className="rounded-lg bg-black/25 px-2 py-2">
+              <div className="text-[10px] text-white/40">ETA</div>
+              <div className="text-sm font-semibold text-white">
+                {job.quote?.etaMinutes ?? displayEta}m
               </div>
             </div>
-          )}
+            <div className="rounded-lg bg-black/25 px-2 py-2">
+              <div className="text-[10px] text-white/40">Agent</div>
+              <div className="truncate text-[11px] font-semibold text-amber-100">
+                {agentName}
+              </div>
+            </div>
+          </div>
 
-          {d?.metrics && (
+          {d?.metrics && d.metrics.length > 0 && (
             <dl className="mt-4 space-y-1.5 rounded-xl border border-white/10 bg-black/20 p-3">
               {d.metrics.map((m) => (
                 <div
@@ -165,236 +272,239 @@ export function HireWizard({
         )}
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Link
-            href="/dashboard"
-            className="rounded-lg bg-[#F0B90B] px-3 py-2 text-xs font-semibold text-black"
-          >
+          <Link href={path} className="btn-primary !px-4 !py-2 !text-xs">
+            Open result page
+          </Link>
+          <Link href="/dashboard" className="btn-secondary !px-4 !py-2 !text-xs">
             My hires
           </Link>
           <button
             type="button"
+            onClick={copyResult}
+            className="rounded-full border border-white/12 px-3 py-2 text-xs font-medium text-white/70 hover:text-white"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            type="button"
+            onClick={copyShareLink}
+            className="rounded-full border border-white/12 px-3 py-2 text-xs font-medium text-white/70 hover:text-white"
+          >
+            {linkCopied ? "Link copied" : "Share link"}
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setJob(null);
-              setStep(1);
+              setPhase("idle");
+              setSharePath(null);
             }}
-            className="rounded-lg border border-white/15 px-3 py-2 text-xs text-white/70"
+            className="rounded-full px-3 py-2 text-xs font-medium text-white/50 hover:text-white/80"
           >
-            Hire again
+            Buy again
           </button>
         </div>
-
-        {job.timeline?.length > 0 && (
-          <details className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/50">
-            <summary className="cursor-pointer font-medium text-white/70">
-              Negotiate timeline
-            </summary>
-            <ul className="mt-2 space-y-1.5 border-l border-white/10 pl-3">
-              {job.timeline.map((t, i) => (
-                <li key={`${t.at}-${i}`}>
-                  <span className="text-amber-200/80">{t.status}</span> —{" "}
-                  {t.detail}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-400/10 to-white/[0.03] p-5">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-medium uppercase tracking-wider text-amber-200/80">
-          Hire · ERC-8183 · step {step}/3
+    <div
+      id="buy"
+      className="scroll-mt-28 rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-400/10 to-white/[0.03] p-5 shadow-lg shadow-amber-900/5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-wider text-amber-200/80">
+            Buy {agentName}
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+            {isHireReady
+              ? "Specialist · structured plan in minutes"
+              : "Listed agent · structured plan in minutes"}
+          </p>
         </div>
-        <div className="flex gap-1">
-          {[1, 2, 3].map((s) => (
-            <span
-              key={s}
-              className={`h-1.5 w-6 rounded-full ${
-                s <= step ? "bg-amber-400" : "bg-white/15"
-              }`}
-            />
-          ))}
+        <div className="text-right">
+          <div className="text-xl font-bold tabular-nums tracking-tight text-white">
+            ${displayPrice}
+          </div>
+          <div className="text-[10px] font-medium text-white/40">
+            ~{displayEta} min
+          </div>
         </div>
       </div>
 
-      {genesisSlug && (
-        <p className="mt-2 text-[10px] text-amber-200/70">
-          Genesis verified seller · full negotiate → deliver demo
+      {error && (
+        <p className="mt-3 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-200">
+          {error}
         </p>
       )}
 
-      {step === 1 && (
-        <div className="mt-4 space-y-3">
-          <h3 className="text-sm font-semibold text-white">What should it do?</h3>
-          {templates.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              {templates.map((t) => (
+      {loading && (
+        <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2.5">
+          <div className="flex items-center gap-2 text-xs font-medium text-amber-100">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-200/30 border-t-amber-200" />
+            {phase === "buying" ? "Confirming purchase…" : "Agent is working…"}
+          </div>
+          <div className="mt-2 flex gap-1">
+            {["Buy", "Work", "Result"].map((label, i) => {
+              const step = phase === "buying" ? 0 : phase === "working" ? 1 : 2;
+              const on = i <= step;
+              return (
+                <div key={label} className="flex flex-1 flex-col gap-1">
+                  <div
+                    className={`h-1 rounded-full ${
+                      on ? "bg-amber-400" : "bg-white/10"
+                    }`}
+                  />
+                  <span
+                    className={`text-[9px] ${
+                      on ? "text-amber-200/80" : "text-white/30"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        disabled={!canBuy || loading}
+        onClick={() => buyAgent()}
+        className="btn-primary mt-4 w-full disabled:opacity-40"
+      >
+        {loading
+          ? phase === "working"
+            ? "Analyzing…"
+            : "Starting…"
+          : rail === "free"
+            ? "Run free scan"
+            : rail === "escrow"
+              ? `Buy now · $${displayPrice}`
+              : `Buy now · $${displayPrice}`}
+      </button>
+      <p className="mt-2 text-center text-[10px] text-white/40">
+        One click · structured plan · no fund custody
+      </p>
+
+      {/* Tiers: Free scan | Full analysis | Escrow — stockanalyst-inspired */}
+      <div className="mt-4">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
+          Tier
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {modes.map((m) => {
+            const active = rail === m.rail;
+            // Escrow selectable — still delivers full analysis + fund path note
+            const enabled = m.rail === "escrow" || m.available;
+            return (
+              <button
+                key={m.rail}
+                type="button"
+                disabled={!enabled || loading}
+                title={m.reason || m.description}
+                onClick={() => enabled && setRail(m.rail)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                  active
+                    ? "bg-amber-400 text-black"
+                    : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
+                }`}
+              >
+                {m.short}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
+          {modes.find((m) => m.rail === rail)?.description}
+        </p>
+      </div>
+
+      {rail !== "free" && (
+        <div className="mt-3">
+          <BuyerContextPanel compact onChange={setBuyerCtx} />
+        </div>
+      )}
+
+      <ul className="mt-3 space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-[11px] text-white/55">
+        <li className="flex gap-2">
+          <span className="text-emerald-400">✓</span>
+          {rail === "free"
+            ? "Quick multi-source scan · metrics only"
+            : "Multi-source analysis · thesis · checklist"}
+        </li>
+        <li className="flex gap-2">
+          <span className="text-emerald-400">✓</span>
+          {rail === "free"
+            ? "0 cost · upgrade anytime"
+            : "Buyer-context aware · shareable result"}
+        </li>
+        <li className="flex gap-2">
+          <span className="text-emerald-400">✓</span>
+          Agent never moves your funds
+        </li>
+      </ul>
+
+      {sample && (
+        <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            Sample style
+          </div>
+          <p className="mt-1 text-[11px] leading-snug text-white/50 line-clamp-2">
+            {sample.sampleOutputBody}
+          </p>
+        </div>
+      )}
+
+      {templates.length > 0 && (
+        <div className="mt-4">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
+            Quick jobs
+          </div>
+          <div className="mt-1.5 flex flex-col gap-1.5">
+            {templates.map((t) => {
+              const selected = task === t;
+              return (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTask(t)}
-                  className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
-                    task === t
-                      ? "border-amber-400/50 bg-amber-400/10 text-amber-50"
-                      : "border-white/10 bg-white/5 text-white/60 hover:border-white/20"
-                  }`}
+                  disabled={loading}
+                  className={`rounded-lg border px-2.5 py-2 text-left text-[11px] leading-snug transition ${
+                    selected
+                      ? "border-amber-400/50 bg-amber-400/15 text-amber-50"
+                      : "border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white/75"
+                  } disabled:opacity-50`}
                 >
                   {t}
                 </button>
-              ))}
-            </div>
-          )}
-          <textarea
-            value={task}
-            onChange={(e) => setTask(e.target.value)}
-            rows={3}
-            placeholder="Describe the job…"
-            className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none ring-amber-400/30 focus:ring-2"
-          />
-          <button
-            type="button"
-            disabled={!canContinue}
-            onClick={() => setStep(2)}
-            className="w-full rounded-xl bg-[#F0B90B] py-2.5 text-sm font-semibold text-black disabled:opacity-40"
-          >
-            Continue
-          </button>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="mt-4 space-y-4">
-          <h3 className="text-sm font-semibold text-white">Budget & risk</h3>
-          <label className="block text-xs text-white/50">
-            Max budget (USD)
-            <input
-              type="number"
-              min={0}
-              step={1}
-              value={budgetUsd}
-              onChange={(e) => setBudgetUsd(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-400/30"
-            />
-          </label>
-          <div>
-            <div className="text-xs text-white/50">Duration</div>
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-              {(Object.keys(DURATION_LABELS) as HireIntent["duration"][]).map(
-                (d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDuration(d)}
-                    className={`rounded-lg px-2 py-2 text-[11px] ${
-                      duration === d
-                        ? "bg-amber-400 text-black"
-                        : "bg-white/10 text-white/65"
-                    }`}
-                  >
-                    {DURATION_LABELS[d]}
-                  </button>
-                ),
-              )}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-white/50">Risk posture</div>
-            <div className="mt-1.5 flex flex-col gap-1">
-              {(Object.keys(RISK_LABELS) as HireIntent["risk"][]).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRisk(r)}
-                  className={`rounded-lg px-3 py-2 text-left text-[11px] ${
-                    risk === r
-                      ? "bg-amber-400/20 text-amber-100 ring-1 ring-amber-400/40"
-                      : "bg-white/5 text-white/60"
-                  }`}
-                >
-                  {RISK_LABELS[r]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="flex-1 rounded-xl border border-white/15 py-2.5 text-sm text-white/70"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="flex-1 rounded-xl bg-[#F0B90B] py-2.5 text-sm font-semibold text-black"
-            >
-              Review
-            </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {step === 3 && (
-        <div className="mt-4 space-y-3">
-          <h3 className="text-sm font-semibold text-white">Confirm & hire</h3>
-          <div className="space-y-2 rounded-xl border border-white/10 bg-black/25 p-3 text-xs text-white/70">
-            <p>
-              <span className="text-white/40">Agent: </span>
-              {agentName}
-            </p>
-            <p>
-              <span className="text-white/40">Task: </span>
-              {task}
-            </p>
-            <p>
-              <span className="text-white/40">Budget: </span>${budgetUsd} ·{" "}
-              {DURATION_LABELS[duration]}
-            </p>
-            <p>
-              <span className="text-white/40">Risk: </span>
-              {RISK_LABELS[risk]}
-            </p>
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-            placeholder="Optional notes (pair, wallet, HF, bounds)…"
-            className="w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-400/30"
-          />
-          <p className="text-[10px] leading-relaxed text-white/40">
-            Flow: negotiate → quote → fund (simulated) → deliver. No user fund
-            custody on Genesis. Live ERC-8183 service endpoints plug in later.
-          </p>
-          {error && (
-            <p className="rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-200">
-              {error}
-            </p>
-          )}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              disabled={loading}
-              className="flex-1 rounded-xl border border-white/15 py-2.5 text-sm text-white/70"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={runHire}
-              disabled={loading}
-              className="flex-1 rounded-xl bg-[#F0B90B] py-2.5 text-sm font-semibold text-black disabled:opacity-50"
-            >
-              {loading ? "Negotiating…" : "Negotiate & hire"}
-            </button>
-          </div>
-        </div>
-      )}
+      <label className="mt-4 block">
+        <span className="text-xs font-medium text-white/55">
+          Or write your own brief
+        </span>
+        <textarea
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          rows={3}
+          disabled={loading}
+          placeholder="Describe what you need…"
+          className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none ring-amber-400/30 focus:ring-2 disabled:opacity-50"
+        />
+      </label>
+
+      <p className="mt-3 text-center text-[10px] leading-relaxed text-white/35">
+        Change the brief above, then Buy now. Agent never moves your funds.
+      </p>
     </div>
   );
 }

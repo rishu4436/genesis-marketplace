@@ -7,6 +7,9 @@ const BASE =
 /** BNB Smart Chain mainnet */
 export const BSC_CHAIN_ID = 56;
 
+/** Partner API timeout — never hang the UI forever */
+const FETCH_MS = 8_000;
+
 function headers(): HeadersInit {
   const h: HeadersInit = {
     Accept: "application/json",
@@ -16,6 +19,16 @@ function headers(): HeadersInit {
   return h;
 }
 
+function abortSignal(ms: number): AbortSignal {
+  // Node 18+ / modern browsers
+  if (typeof AbortSignal !== "undefined" && "timeout" in AbortSignal) {
+    return AbortSignal.timeout(ms);
+  }
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 async function getJson<T>(
   path: string,
   init?: RequestInit,
@@ -23,7 +36,9 @@ async function getJson<T>(
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { ...headers(), ...init?.headers },
-    next: { revalidate: 90 },
+    signal: init?.signal ?? abortSignal(FETCH_MS),
+    // Cache partner data briefly so pages don't re-hammer the API every click
+    next: { revalidate: 60 },
   });
 
   const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
@@ -31,8 +46,8 @@ async function getJson<T>(
   if (!res.ok) {
     const msg =
       body?.error?.message ||
-      (await Promise.resolve("")).toString() ||
-      res.statusText;
+      res.statusText ||
+      "request failed";
     throw new Error(`8004scan ${res.status}: ${msg} (${path})`);
   }
 
@@ -57,9 +72,13 @@ export async function safeGetJson<T>(
     const res = await getJson<T>(path);
     return { data: res.data ?? null, error: null, meta: res.meta };
   } catch (e) {
+    const msg = e instanceof Error ? e.message : "Request failed";
+    // Treat abort/timeout as soft error
     return {
       data: null,
-      error: e instanceof Error ? e.message : "Request failed",
+      error: msg.includes("abort") || msg.includes("Timeout")
+        ? "Partner data centre timed out — try again"
+        : msg,
     };
   }
 }
@@ -179,7 +198,9 @@ export function dedupeAgents(agents: Agent[]): Agent[] {
   const out: Agent[] = [];
   for (const a of agents) {
     const key =
-      a.agent_id || `${a.chain_id}:${a.token_id}` || a.id || a.name;
+      a.chain_id != null && a.token_id != null
+        ? `${a.chain_id}:${a.token_id}`
+        : a.agent_id || a.id || a.name;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(a);
@@ -195,7 +216,9 @@ export function agentKey(agent: Agent) {
   return `${agent.chain_id}:${agent.token_id}`;
 }
 
-export function parseAgentKey(key: string): { chainId: number; tokenId: string } | null {
+export function parseAgentKey(
+  key: string,
+): { chainId: number; tokenId: string } | null {
   const [c, t] = key.split(":");
   if (!c || !t) return null;
   const chainId = Number(c);
@@ -203,12 +226,12 @@ export function parseAgentKey(key: string): { chainId: number; tokenId: string }
   return { chainId, tokenId: t };
 }
 
-export function explorerAgentUrl(agent: Agent) {
-  return `https://8004scan.io/agents/bsc/${agent.token_id}`;
-}
-
 export function shortAddress(addr?: string | null, chars = 4) {
   if (!addr) return "—";
   if (addr.length < 12) return addr;
   return `${addr.slice(0, 2 + chars)}…${addr.slice(-chars)}`;
+}
+
+export function explorerAgentUrl(agent: Agent) {
+  return `https://8004scan.io/agents/bsc/${agent.token_id}`;
 }

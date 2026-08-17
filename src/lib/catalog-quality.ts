@@ -1,0 +1,103 @@
+/**
+ * Hireable-catalog gate for 8004scan noise.
+ * Hides collectible editions, Twitter-ensoul clones, and name-stutter spam
+ * so browse / category / home can rank real agents.
+ */
+
+import type { Agent } from "./types";
+
+export type CatalogDropReason =
+  | "empty"
+  | "name-stutter"
+  | "ticker-spam"
+  | "ensoul-social"
+  | "collectible-nft"
+  | "prompt-dump";
+
+const TICKER_NAME =
+  /^(8004ai|402ai|uuuai\d*|agentsai|onehaai|biuai)\b/i;
+
+const COLLECTIBLE_NAME =
+  /^(bort)\b|#\d{3,}\b/i;
+
+const COLLECTIBLE_DESC =
+  /yi he nexus|bap-578|3d interactive agent|edition\s+\d+\s*\/\s*\d+|cz series genesis/i;
+
+const ENSOUL =
+  /\bensoul\b/i;
+
+const PROMPT_DUMP =
+  /^(an evoevo ai agent)|you are an elite intp|when processing any crypto prediction/i;
+
+function hay(agent: Agent): { name: string; desc: string } {
+  return {
+    name: (agent.name || "").trim(),
+    desc: (agent.description || "").trim(),
+  };
+}
+
+/** Description is just the name pasted over and over. */
+export function isNameStutter(name: string, description: string): boolean {
+  const n = name.trim();
+  const d = description.trim();
+  if (n.length < 3 || d.length < n.length * 3) return false;
+  const needle = n.toLowerCase();
+  const haystack = d.toLowerCase();
+  let hits = 0;
+  let from = 0;
+  while (hits < 6) {
+    const i = haystack.indexOf(needle, from);
+    if (i < 0) break;
+    hits += 1;
+    from = i + needle.length;
+  }
+  if (hits >= 6) return true;
+  const compact = d.replace(/\s+/g, "").toLowerCase();
+  const token = n.replace(/\s+/g, "").toLowerCase();
+  return token.length >= 4 && compact.includes(token.repeat(3));
+}
+
+export function catalogDropReason(agent: Agent): CatalogDropReason | null {
+  const { name, desc } = hay(agent);
+  if (!name) return "empty";
+  if (name.length <= 2 && !agent.is_verified) return "empty";
+  if (/^\d+$/.test(name) || /^[?¿\s._-]+$/.test(name)) return "empty";
+  if (/^agentscan agent$/i.test(name)) return "ticker-spam";
+
+  if (TICKER_NAME.test(name)) return "ticker-spam";
+  if (isNameStutter(name, desc)) return "name-stutter";
+
+  if (ENSOUL.test(name) || ENSOUL.test(desc) || /^@[\w.]+/.test(name)) {
+    return "ensoul-social";
+  }
+
+  if (
+    COLLECTIBLE_NAME.test(name) ||
+    COLLECTIBLE_DESC.test(desc) ||
+    (/\b(legendary|epic|rare|uncommon)-tier\b/i.test(desc) &&
+      /edition\s+\d+/i.test(desc))
+  ) {
+    return "collectible-nft";
+  }
+
+  if (PROMPT_DUMP.test(desc)) return "prompt-dump";
+
+  return null;
+}
+
+export function isHireableCatalogAgent(agent: Agent): boolean {
+  return catalogDropReason(agent) == null;
+}
+
+export function filterHireableCatalog(agents: Agent[]): Agent[] {
+  return agents.filter(isHireableCatalogAgent);
+}
+
+export function catalogFilterStats(agents: Agent[]): {
+  kept: Agent[];
+  hidden: number;
+  raw: number;
+} {
+  const kept = filterHireableCatalog(agents);
+  return { kept, hidden: agents.length - kept.length, raw: agents.length };
+}

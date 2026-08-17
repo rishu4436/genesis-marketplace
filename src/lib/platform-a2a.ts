@@ -27,6 +27,28 @@ function env(name: string): string | undefined {
   return v && v.trim() ? v.trim() : undefined;
 }
 
+const LIVE_MS = 2_500;
+const DOWN_MS = 5 * 60 * 1000;
+const platformDownUntil = new Map<string, number>();
+
+export function markPlatformDown(slug: string, ms = DOWN_MS) {
+  platformDownUntil.set(slug, Date.now() + ms);
+}
+
+export function isPlatformDown(slug: string): boolean {
+  const until = platformDownUntil.get(slug) || 0;
+  return until > Date.now();
+}
+
+function abortMs(ms: number): AbortSignal {
+  if (typeof AbortSignal !== "undefined" && "timeout" in AbortSignal) {
+    return AbortSignal.timeout(ms);
+  }
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 /** All Genesis slugs that may have platform deploys */
 export const PLATFORM_AGENT_MAP: Record<string, PlatformAgentConfig> = {
   "range-keeper": {
@@ -83,6 +105,15 @@ export function getPlatformConfig(
   return cfg;
 }
 
+/** True when env has credentials for this platform agent (or global PLATFORM_*). */
+export function hasPlatformCredentials(genesisSlug?: string): boolean {
+  if (env("PLATFORM_CLIENT_ID") && env("PLATFORM_CLIENT_SECRET")) return true;
+  if (!genesisSlug) return false;
+  const cfg = PLATFORM_AGENT_MAP[genesisSlug];
+  if (!cfg) return false;
+  return Boolean(env(cfg.clientIdEnv) && env(cfg.clientSecretEnv));
+}
+
 export async function getPlatformAccessToken(
   scope: string,
   clientId?: string,
@@ -117,6 +148,7 @@ export async function getPlatformAccessToken(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
     cache: "no-store",
+    signal: abortMs(LIVE_MS),
   });
   const json = (await res.json().catch(() => ({}))) as {
     access_token?: string;
@@ -183,6 +215,7 @@ export async function a2aNegotiate(opts: {
       },
       body: JSON.stringify(rpc),
       cache: "no-store",
+      signal: abortMs(LIVE_MS),
     });
 
     const raw = await res.json().catch(async () => ({
@@ -260,6 +293,7 @@ export async function a2aNotifyFunded(opts: {
       },
       body: JSON.stringify(rpc),
       cache: "no-store",
+      signal: abortMs(LIVE_MS),
     });
     const raw = await res.json().catch(async () => ({
       text: await res.text().catch(() => ""),

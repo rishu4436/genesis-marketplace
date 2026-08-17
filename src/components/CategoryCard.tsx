@@ -1,27 +1,28 @@
 import Link from "next/link";
 import type { Category } from "@/lib/categories";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
+/** Compact category row/card — icon matches job type, not oversized. */
 export function CategoryCard({ category }: { category: Category }) {
   return (
     <Link
       href={`/categories/${category.id}`}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20 hover:bg-white/[0.06]"
+      className="group panel flex items-center gap-3.5 px-3.5 py-3 transition-colors hover:border-white/16 hover:bg-white/[0.045]"
     >
-      <div
-        className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${category.accent} text-lg font-bold text-black/80 shadow-lg`}
-      >
-        {category.icon}
+      <CategoryIcon id={category.id} size="md" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-sm font-semibold tracking-tight text-white group-hover:text-amber-50">
+            {category.name}
+          </h3>
+        </div>
+        <p className="mt-0.5 truncate text-xs text-white/45">
+          {category.tagline}
+        </p>
       </div>
-      <h3 className="text-base font-semibold text-white group-hover:text-amber-200">
-        {category.name}
-      </h3>
-      <p className="mt-1 text-xs font-medium text-white/45">{category.tagline}</p>
-      <p className="mt-3 text-xs leading-relaxed text-white/55">
-        {category.agentDoes}
-      </p>
-      <div className="mt-4 text-xs font-semibold text-amber-300">
-        Browse agents →
-      </div>
+      <span className="shrink-0 text-xs font-semibold text-amber-300/80 transition group-hover:translate-x-0.5 group-hover:text-amber-300">
+        →
+      </span>
     </Link>
   );
 }

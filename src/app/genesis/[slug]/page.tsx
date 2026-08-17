@@ -4,12 +4,27 @@ import {
   getGenesisAgent,
   GENESIS_AGENTS,
   allGenesisAgents,
+  genesisToAgentCard,
 } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 import { HireWizard } from "@/components/HireWizard";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
+import { ScoreAxisList, ScorePentagon } from "@/components/ScorePentagon";
+import { TrustPassport } from "@/components/TrustPassport";
+import { AgentLiveBadge } from "@/components/AgentLiveBadge";
+import { CategoryDepthPanel } from "@/components/CategoryDepthPanel";
 import { getPlatformConfig } from "@/lib/platform-a2a";
 import { getPin } from "@/lib/pins";
+import { BRAND } from "@/lib/brand";
+import { getCategoryDepth } from "@/lib/category-depth";
+import { taskFitForGenesis } from "@/lib/task-fit";
+import { TaskFitBadge } from "@/components/TaskFitBadge";
+import { AltanaPanel } from "@/components/AltanaPanel";
+import { defaultTaskForCategory } from "@/lib/hire";
+import {
+  compositeFromAxes,
+  computeAxes,
+} from "@/lib/marketplace-score";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -23,7 +38,9 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const agent = getGenesisAgent(slug);
   return {
-    title: agent ? `${agent.name} · Genesis verified` : "Genesis agent",
+    title: agent
+      ? `${agent.name} · ${BRAND.byBadge}`
+      : BRAND.specialistLabel,
     description: agent?.description,
   };
 }
@@ -37,6 +54,28 @@ export default async function GenesisAgentPage({ params }: Props) {
   const others = allGenesisAgents().filter((a) => a.slug !== agent.slug);
   const platform = getPlatformConfig(agent.slug);
   const pin = getPin(agent.slug);
+
+  const card = genesisToAgentCard(agent);
+  const axes = computeAxes(card).map((ax) => {
+    if (ax.id === "commerce") {
+      return {
+        ...ax,
+        value: Math.min(100, ax.value + 25),
+        source: "marketplace specialist · hire-ready",
+      };
+    }
+    if (ax.id === "trust") {
+      return {
+        ...ax,
+        value: Math.min(100, ax.value + 20),
+        source: "operated by Genesis",
+      };
+    }
+    return ax;
+  });
+  const composite = compositeFromAxes(axes);
+  const defaultTask = defaultTaskForCategory(agent.categoryId);
+  const fit = taskFitForGenesis(agent, defaultTask);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -57,29 +96,64 @@ export default async function GenesisAgentPage({ params }: Props) {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-white">
+                <h1 className="font-display text-3xl font-bold tracking-tight text-white">
                   {agent.name}
                 </h1>
                 <span className="rounded-full bg-[#F0B90B] px-2.5 py-0.5 text-[11px] font-bold text-black">
-                  Genesis verified
+                  {BRAND.byBadge}
                 </span>
-                {platform ? (
-                  <span className="rounded-full bg-sky-500/20 px-2.5 py-0.5 text-[11px] font-medium text-sky-200">
-                    Platform live · ERC-8004
-                    {pin.tokenId ? ` #${pin.tokenId}` : ""}
-                  </span>
-                ) : (
+                <AgentLiveBadge slug={agent.slug} />
+                {pin.tokenId && (
                   <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/60">
-                    Local APEX hire
+                    Token #{pin.tokenId}
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-sm text-amber-100/80">{agent.tagline}</p>
-              <p className="mt-3 text-sm leading-relaxed text-white/65">
-                {agent.description}
+              <p className="mt-2 text-sm font-medium text-white/50">
+                {BRAND.specialistLabel} · built & operated by {BRAND.name}
               </p>
+              <p className="mt-1 text-sm text-amber-100/80">{agent.tagline}</p>
+              <p className="body mt-3 max-w-2xl">{agent.description}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <a
+                  href="#buy"
+                  className="btn-primary !px-4 !py-2 !text-sm"
+                >
+                  Buy · ${agent.basePriceUsd}
+                </a>
+                <span className="text-xs text-white/45">
+                  ~{agent.etaMinutes}m · plan only · no fund custody
+                </span>
+              </div>
             </div>
           </div>
+
+          <section
+            id="score"
+            className="mt-8 scroll-mt-24 rounded-2xl border border-amber-400/20 bg-white/[0.03] p-5 sm:p-6"
+          >
+            <p className="section-label">Marketplace score</p>
+            <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white">
+              Pentagon index
+            </h2>
+            <p className="body-sm mt-1.5 max-w-xl">
+              Genesis 5-axis score for this {BRAND.byBadge} specialist.
+            </p>
+            <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
+              <div className="flex flex-col items-center">
+                <ScorePentagon
+                  axes={axes}
+                  composite={composite}
+                  size={260}
+                  title={agent.name}
+                  gradientId={`genesis-detail-${agent.slug}`}
+                />
+              </div>
+              <div className="max-w-md">
+                <ScoreAxisList axes={axes} />
+              </div>
+            </div>
+          </section>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -87,10 +161,8 @@ export default async function GenesisAgentPage({ params }: Props) {
               { label: "ETA", value: `~${agent.etaMinutes}m` },
               { label: "Category", value: cat?.shortName || "—" },
               {
-                label: "On-chain pin",
-                value: agent.tokenId
-                  ? `${agent.chainId}:${agent.tokenId}`
-                  : "Pending Studio",
+                label: "Composite",
+                value: String(Math.round(composite)),
               },
             ].map((m) => (
               <div
@@ -107,50 +179,70 @@ export default async function GenesisAgentPage({ params }: Props) {
             ))}
           </div>
 
-          <section className="mt-10">
-            <h2 className="text-lg font-semibold text-white">Skills</h2>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {agent.skills.map((s) => (
-                <li
-                  key={s}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/70"
-                >
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </section>
+          <div className="mt-10">
+            <CategoryDepthPanel categoryId={agent.categoryId} />
+          </div>
 
-          <section className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-white/40">
-              APEX service
-            </h2>
-            <p className="mt-2 break-all font-mono text-[11px] text-amber-200/90">
-              {agent.serviceUrl || "—"}
-            </p>
-            <p className="mt-1 text-[10px] text-white/40">
-              Hire uses POST …/negotiate (Studio Layer B shape). External URL via
-              config/pins.json after bag deploy.
-            </p>
-          </section>
-
-          <section className="mt-10">
-            <h2 className="text-lg font-semibold text-white">Why hire</h2>
-            <ul className="mt-3 space-y-2 text-sm text-white/60">
-              <li>· Built for the {cat?.name} marketplace shelf (equal depth)</li>
-              <li>· Full hire path: negotiate → quote → deliver in-product</li>
-              <li>· No user fund custody — plans and simulations only</li>
-              {agent.pcsRelated && (
-                <li>· PancakeSwap-aware (LP / farm / pool context)</li>
-              )}
-              <li>· x402 + ERC-8183 shaped for Agent Studio sellers</li>
-            </ul>
-          </section>
+          <div className="mt-10">
+            <TrustPassport
+              registered={Boolean(platform || pin.tokenId || agent.tokenId)}
+              registrationDetail={
+                platform
+                  ? `Live on BNB Agent Studio · ERC-8004 token${
+                      pin.tokenId ? ` #${pin.tokenId}` : ""
+                    }.`
+                  : pin.tokenId || agent.tokenId
+                    ? `Pinned identity token #${pin.tokenId || agent.tokenId}. Ready to buy on Genesis.`
+                    : "Specialist configured in marketplace — buy returns a structured plan."
+              }
+              features={[
+                {
+                  label: "By Genesis specialist",
+                  detail: "Operated + pinned by Genesis",
+                  active: true,
+                },
+                {
+                  label: "Live platform",
+                  detail: platform
+                    ? "Seller endpoint registered"
+                    : "Local ready path",
+                  active: Boolean(platform),
+                },
+                {
+                  label: "x402 payments",
+                  detail: agent.x402 ? "Listed" : "Not listed",
+                  active: agent.x402,
+                },
+                {
+                  label: "Protocols",
+                  detail: agent.protocols.join(", "),
+                  active: agent.protocols.length > 0,
+                },
+                {
+                  label: "PancakeSwap-aware",
+                  detail: agent.pcsRelated
+                    ? "LP / farm / pool context"
+                    : "Not PCS-specific",
+                  active: agent.pcsRelated,
+                },
+                {
+                  label: "Service endpoint",
+                  detail: agent.serviceUrl || pin.serviceUrl || "Marketplace path",
+                  active: Boolean(agent.serviceUrl || pin.serviceUrl),
+                },
+              ]}
+              skills={agent.skills}
+              samplePreview={{
+                title: getCategoryDepth(agent.categoryId).sampleOutputTitle,
+                body: getCategoryDepth(agent.categoryId).sampleOutputBody,
+              }}
+            />
+          </div>
 
           {others.length > 0 && (
             <section className="mt-12">
               <h2 className="text-lg font-semibold text-white">
-                Other Genesis agents
+                More specialists by {BRAND.name}
               </h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 {others.map((a) => (
@@ -161,14 +253,26 @@ export default async function GenesisAgentPage({ params }: Props) {
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/90">
+            <span className="font-bold text-[#F0B90B]">Hire-ready</span>
+            {" — "}
+            {BRAND.byBadge} seller we operate. Buy now returns a structured
+            plan in about {agent.etaMinutes}m.
+          </div>
+          <TaskFitBadge fit={fit} />
           <HireWizard
             chainId={agent.chainId ?? 56}
             tokenId={agent.tokenId || `genesis:${agent.slug}`}
             agentName={agent.name}
             categoryId={agent.categoryId}
             genesisSlug={agent.slug}
+            hireReady
+            priceUsd={agent.basePriceUsd}
+            etaMinutes={agent.etaMinutes}
+            x402={agent.x402}
           />
+          <AltanaPanel defaultAgent={agent.slug} compact />
         </aside>
       </div>
     </div>

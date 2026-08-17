@@ -175,8 +175,8 @@ bag deploy verify --endpoint <A2A_URL>
           After expiry: cloud runtimes deleted; marketplace + local APEX remain.
           Waiting on BNB team whether free redeploy is allowed.
         </p>
-        <Link href="/demo" className="mt-3 inline-block text-amber-300">
-          Demo checklist →
+        <Link href="/termix" className="mt-3 inline-block text-amber-300">
+          TermiX report →
         </Link>
       </div>
     </div>

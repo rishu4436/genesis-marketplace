@@ -27,28 +27,41 @@ export const RISK_LABELS: Record<HireIntent["risk"], string> = {
 
 export const TASK_TEMPLATES: Record<CategoryId, string[]> = {
   rebalancing: [
-    "Monitor my PCS V3 LP and suggest rebalance when out of range",
-    "Reset LP range around current price with ±X% width",
-    "Report fee APR vs IL for my position over last 7 days",
+    "Rebalance my PCS V3 CAKE/USDT LP — propose ±6% band, fee APR vs IL, gas budget $2",
+    "Reset CAKE-USDT concentrated range around mark with ±5% width and 10% dry powder",
+    "PCS V3 BNB/USDT out of range 40% of day — new fee-first bands + execution checklist",
   ],
   "grid-trading": [
-    "Run a grid between low and high with N levels on BSC pair",
-    "Pause grid if drawdown exceeds X%",
-    "Summarize filled grid orders and PnL for last 24h",
+    "Design a 12-level geometric grid on BNB/USDT between 0.94 and 1.06 with 6% DD pause",
+    "Grid CAKE/USDT with 16 levels, $500 budget, pause if drawdown exceeds 5%",
+    "BSC pair grid: 10 levels, geometric spacing, 50/50 inventory, 24h fill sketch",
   ],
   "yield-optimisation": [
-    "Find highest safe APR venues for USDT on BSC",
-    "Compare yield on PCS farms vs lending for my asset",
-    "Propose a reallocation plan under $Y gas budget",
+    "Best risk-adjusted APR for USDT on BSC under $2000 — lending vs PCS farms, gas <$3",
+    "Route idle 5000 USDT: 60% Venus-style lending, satellite farm sleeve, 48h recheck",
+    "Compare PCS farm vs lending for USDT under medium risk; propose split and IL stops",
   ],
   "health-factor": [
-    "Watch my Venus/Aave health factor and alert below 1.3",
-    "Simulate HF after price drop of X% on collateral",
-    "Suggest repay vs add-collateral options before liquidation",
+    "Venus HF ≈ 1.45 — simulate −15% collateral shock; repay vs add-collateral ladder",
+    "Health factor protection: soft alert 1.30, hard 1.20, −20% collateral stress test",
+    "Aave-style loan on BSC — HF plan after −10% and −15% collateral drops with sizing",
   ],
 };
 
+/** Always available so every listed agent is hireable */
+export const GENERIC_TASK_TEMPLATES: string[] = [
+  "Summarize what you can do for my BSC wallet and positions",
+  "Propose a one-shot job plan given my notes and budget",
+  "Review risks and next actions for my DeFi setup on BNB Chain",
+];
+
+export function taskTemplatesFor(categoryId?: CategoryId | null): string[] {
+  if (categoryId && TASK_TEMPLATES[categoryId]?.length) {
+    return TASK_TEMPLATES[categoryId];
+  }
+  return GENERIC_TASK_TEMPLATES;
+}
+
 export function defaultTaskForCategory(categoryId?: CategoryId | null): string {
-  if (!categoryId) return "Describe the job you want this agent to run on BSC.";
-  return TASK_TEMPLATES[categoryId][0];
+  return taskTemplatesFor(categoryId)[0];
 }

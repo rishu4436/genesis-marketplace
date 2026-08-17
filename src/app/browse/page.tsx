@@ -1,16 +1,21 @@
 import { AgentCard } from "@/components/AgentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterBar, type BrowseFilters } from "@/components/FilterBar";
+import { JobFloor } from "@/components/JobFloor";
 import {
   listAgentsSafe,
   searchAgentsSafe,
   dedupeAgents,
 } from "@/lib/scan";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
+import { agentScore, compareByScore } from "@/lib/agent-score";
+import { catalogFilterStats } from "@/lib/catalog-quality";
+import { sortForDestination } from "@/lib/hire-class";
 import type { Agent } from "@/lib/types";
 import Link from "next/link";
 
-export const revalidate = 90;
+/** Browse uses searchParams; light revalidate via partner fetch cache */
+export const dynamic = "force-dynamic";
 
 type Props = {
   searchParams: Promise<{
@@ -23,76 +28,178 @@ type Props = {
   }>;
 };
 
+function buildBrowseHref(
+  filters: BrowseFilters,
+  patch: Partial<BrowseFilters> = {},
+) {
+  const next = { ...filters, ...patch };
+  const p = new URLSearchParams();
+  if (next.q) p.set("q", next.q);
+  // Always keep sort in the URL when set (including when paging)
+  if (next.sort) p.set("sort", next.sort);
+  if (next.x402 === "1") p.set("x402", "1");
+  if (next.verified === "1") p.set("verified", "1");
+  if (next.feedback === "1") p.set("feedback", "1");
+  if (next.page && next.page !== "1") p.set("page", next.page);
+  const s = p.toString();
+  return s ? `/browse?${s}` : "/browse";
+}
+
+async function fetchBrowsePool(opts: {
+  q?: string;
+  sortMode: "rank" | "score" | "newest" | "feedback";
+}): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
+  const collected: Agent[] = [];
+  let error: string | null = null;
+  let apiTotal: number | null = null;
+
+  if (opts.q) {
+    const [semantic, listed, listed2] = await Promise.all([
+      searchAgentsSafe({ q: opts.q, limit: 80, chainId: 56 }),
+      listAgentsSafe({
+        chainId: 56,
+        search: opts.q,
+        limit: 80,
+        page: 1,
+        sortBy: "total_score",
+        sortOrder: "desc",
+      }),
+      listAgentsSafe({
+        chainId: 56,
+        search: opts.q,
+        limit: 80,
+        page: 2,
+        sortBy: "total_score",
+        sortOrder: "desc",
+      }),
+    ]);
+    for (const r of [semantic, listed, listed2]) {
+      if (r.data) collected.push(...r.data);
+      if (r.error && !error) error = r.error;
+    }
+    apiTotal = listed.meta?.pagination?.total ?? null;
+  } else {
+    // Always pull multiple pages; we re-sort in memory so order is correct
+    const apiSort =
+      opts.sortMode === "newest" ? "created_at" : "total_score";
+    // Keep this small — too many parallel partner calls freezes the page
+    const maxPages = 3;
+
+    const pages = await Promise.all(
+      Array.from({ length: maxPages }, (_, i) =>
+        listAgentsSafe({
+          chainId: 56,
+          page: i + 1,
+          limit: 40,
+          sortBy: apiSort as "total_score" | "created_at",
+          sortOrder: "desc",
+        }),
+      ),
+    );
+
+    for (const res of pages) {
+      if (res.data?.length) collected.push(...res.data);
+      if (res.error && !error) error = res.error;
+      if (res.meta?.pagination?.total != null) {
+        apiTotal = res.meta.pagination.total;
+      }
+    }
+  }
+
+  return {
+    agents: dedupeAgents(collected),
+    error: collected.length ? null : error,
+    apiTotal,
+  };
+}
+
 export default async function BrowsePage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = (sp.q || "").trim();
   const page = Math.max(1, Number(sp.page || "1") || 1);
-  const limit = 24;
+  const pageSize = 24;
+
+  const sortMode =
+    sp.sort === "score" || sp.sort === "newest" || sp.sort === "feedback"
+      ? sp.sort
+      : "rank";
+
+  // Keep sort in filters even for "rank" as empty — for score always "score"
   const filters: BrowseFilters = {
     q: q || undefined,
     page: String(page),
-    sort: sp.sort,
+    sort: sortMode === "rank" ? undefined : sortMode,
     x402: sp.x402,
     verified: sp.verified,
     feedback: sp.feedback,
   };
 
-  let agents: Agent[] = [];
-  let total: number | null = null;
-  let hasMore = false;
-  let error: string | null = null;
+  const pool = await fetchBrowsePool({ q: q || undefined, sortMode });
+  const quality = catalogFilterStats(pool.agents);
 
-  if (q) {
-    const [semantic, listed] = await Promise.all([
-      searchAgentsSafe({ q, limit: 40, chainId: 56 }),
-      listAgentsSafe({
-        chainId: 56,
-        search: q,
-        limit: 40,
-        sortBy: "total_score",
-        sortOrder: "desc",
-      }),
-    ]);
-    agents = dedupeAgents([...(semantic.data || []), ...(listed.data || [])]);
-    error = agents.length ? null : semantic.error || listed.error;
-    total = agents.length;
-  } else {
-    const res = await listAgentsSafe({
-      chainId: 56,
-      page,
-      limit: 48,
-      sortBy: "total_score",
-      sortOrder: "desc",
-    });
-    agents = res.data || [];
-    total = res.meta?.pagination?.total ?? null;
-    hasMore = Boolean(res.meta?.pagination?.hasMore);
-    error = res.error;
-  }
-
-  const sortMode =
-    filters.sort === "score" ||
-    filters.sort === "newest" ||
-    filters.sort === "feedback"
-      ? filters.sort
-      : "rank";
-
-  agents = filterAgents(agents, {
+  let agents = filterAgents(quality.kept, {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasFeedback: filters.feedback === "1",
   });
-  agents = sortAgents(agents, { mode: sortMode }).slice(0, limit);
+
+  // CRITICAL: sort the FULL list, then slice — never sort one API page alone
+  if (sortMode === "score") {
+    agents = [...agents].sort(compareByScore);
+  } else if (sortMode === "rank" && !q) {
+    agents = sortForDestination(agents);
+  } else {
+    agents = sortAgents(agents, { mode: sortMode });
+  }
+
+  // Sanity: enforce score order if mode is score (guards against bugs)
+  if (sortMode === "score" && agents.length > 1) {
+    for (let i = 1; i < agents.length; i++) {
+      if (agentScore(agents[i]) > agentScore(agents[i - 1])) {
+        agents = [...agents].sort(compareByScore);
+        break;
+      }
+    }
+  }
+
+  const totalFiltered = agents.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * pageSize;
+  const pageAgents = agents.slice(start, start + pageSize);
+  const hasPrev = safePage > 1;
+  const hasNext = safePage < totalPages;
+
+  const pageMin =
+    pageAgents.length > 0
+      ? Math.min(...pageAgents.map(agentScore))
+      : 0;
+  const pageMax =
+    pageAgents.length > 0
+      ? Math.max(...pageAgents.map(agentScore))
+      : 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold tracking-tight text-white">
-          Marketplace
-        </h1>
-        <p className="mt-2 text-sm text-white/55">
-          Live ERC-8004 agents on BNB Smart Chain. Search, filter, compare, hire.
+        <p className="section-label">Marketplace</p>
+        <h1 className="display-section mt-3 text-white">Marketplace</h1>
+        <p className="lead mt-3">
+          Start on the job floor. Search the hireable index when you need a
+          name. Collectible and stutter listings stay hidden.
         </p>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href="/browse" className="btn-primary !py-2 !text-sm">
+          All agents
+        </Link>
+        <Link href="/categories" className="btn-secondary !py-2 !text-sm">
+          By job category
+        </Link>
+        <Link href="/hire" className="btn-secondary !py-2 !text-sm">
+          Hire specialists
+        </Link>
       </div>
 
       <form className="mt-8 flex flex-col gap-3 sm:flex-row" action="/browse">
@@ -106,10 +213,14 @@ export default async function BrowsePage({ searchParams }: Props) {
         {filters.sort && (
           <input type="hidden" name="sort" value={filters.sort} />
         )}
-        <button
-          type="submit"
-          className="rounded-xl bg-[#F0B90B] px-5 py-3 text-sm font-semibold text-black hover:bg-amber-300"
-        >
+        {filters.x402 === "1" && <input type="hidden" name="x402" value="1" />}
+        {filters.verified === "1" && (
+          <input type="hidden" name="verified" value="1" />
+        )}
+        {filters.feedback === "1" && (
+          <input type="hidden" name="feedback" value="1" />
+        )}
+        <button type="submit" className="btn-primary !rounded-xl !py-3">
           Search
         </button>
       </form>
@@ -125,7 +236,10 @@ export default async function BrowsePage({ searchParams }: Props) {
         ].map((chip) => (
           <Link
             key={chip}
-            href={`/browse?q=${encodeURIComponent(chip)}`}
+            href={buildBrowseHref(
+              { ...filters, q: chip, page: "1" },
+              {},
+            )}
             className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60 transition hover:border-amber-400/40 hover:text-amber-200"
           >
             {chip}
@@ -133,19 +247,39 @@ export default async function BrowsePage({ searchParams }: Props) {
         ))}
       </div>
 
+      {!q && (
+        <div className="mt-10">
+          <JobFloor perShelf={3} />
+        </div>
+      )}
+
       <div className="mt-6">
         <FilterBar filters={filters} />
       </div>
 
-      <div className="mt-6 flex items-center justify-between text-xs text-white/45">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-white/45">
         <span>
-          {error && agents.length === 0
+          {pool.error && pageAgents.length === 0
             ? "—"
-            : q
-              ? `${agents.length} result${agents.length === 1 ? "" : "s"} for “${q}”`
-              : total != null
-                ? `Showing ${agents.length} · ~${total.toLocaleString()} on BSC`
-                : `${agents.length} agents`}
+            : `${q ? "Search" : "Hireable index"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+          {sortMode === "score" && pageAgents.length > 0 && (
+            <span className="ml-1 text-amber-200/70">
+              · sorted by score high→low · this page {pageMax.toFixed(0)}–
+              {pageMin.toFixed(0)}
+            </span>
+          )}
+          {quality.hidden > 0 && (
+            <span className="text-white/30">
+              {" "}
+              · {quality.hidden} low-signal hidden
+            </span>
+          )}
+          {pool.apiTotal != null && (
+            <span className="text-white/30">
+              {" "}
+              · ~{pool.apiTotal.toLocaleString()} on BSC index
+            </span>
+          )}
         </span>
         <div className="flex gap-3">
           <Link href="/compare" className="text-amber-300 hover:text-amber-200">
@@ -160,48 +294,54 @@ export default async function BrowsePage({ searchParams }: Props) {
         </div>
       </div>
 
-      {error && agents.length === 0 && (
+      {pool.error && pageAgents.length === 0 && (
         <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          {error}
-          <span className="mt-1 block text-xs text-rose-200/70">
-            Tip: set SCAN_API_KEY in .env.local for higher rate limits.
-          </span>
+          {pool.error}
         </div>
       )}
 
-      {agents.length > 0 ? (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {agents.map((a) => (
+      {pageAgents.length > 0 ? (
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {pageAgents.map((a) => (
             <AgentCard key={a.id || a.agent_id} agent={a} />
           ))}
         </div>
       ) : (
-        !error && (
+        !pool.error && (
           <div className="mt-10">
             <EmptyState
               title="No agents match"
-              body="Try clearing filters or a broader search. Categories always show curated shelves."
-              actionHref="/categories"
-              actionLabel="Browse categories"
+              body="Try clearing filters or a broader search."
+              actionHref="/browse"
+              actionLabel="Clear browse"
             />
           </div>
         )
       )}
 
-      {!q && (page > 1 || hasMore) && (
-        <div className="mt-10 flex justify-center gap-3">
-          {page > 1 && (
+      {(hasPrev || hasNext) && (
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          {hasPrev && (
             <Link
-              href={`/browse?page=${page - 1}`}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+              href={buildBrowseHref(filters, {
+                page: String(safePage - 1),
+                sort: filters.sort,
+              })}
+              className="btn-secondary !py-2 !text-sm"
             >
               ← Previous
             </Link>
           )}
-          {hasMore && (
+          <span className="flex items-center text-xs text-white/40">
+            Page {safePage} / {totalPages}
+          </span>
+          {hasNext && (
             <Link
-              href={`/browse?page=${page + 1}`}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+              href={buildBrowseHref(filters, {
+                page: String(safePage + 1),
+                sort: filters.sort,
+              })}
+              className="btn-primary !py-2 !text-sm"
             >
               Next →
             </Link>

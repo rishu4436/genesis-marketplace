@@ -2,18 +2,16 @@ import Link from "next/link";
 import type { Agent } from "@/lib/types";
 import { agentHref, agentKey, shortAddress } from "@/lib/scan";
 import { CompareToggle } from "@/components/CompareTray";
+import { AgentAvatar } from "@/components/AgentAvatar";
+import { ScorePentagon } from "@/components/ScorePentagon";
 import type { CategoryId } from "@/lib/categories";
 import { getCategory } from "@/lib/categories";
-
-function scoreLabel(agent: Agent) {
-  if (agent.average_score && agent.average_score > 0) {
-    return `${agent.average_score.toFixed(1)}★`;
-  }
-  if (agent.total_score && agent.total_score > 0) {
-    return `Score ${Number(agent.total_score).toFixed(0)}`;
-  }
-  return "New";
-}
+import {
+  compositeFromAxes,
+  computeAxes,
+} from "@/lib/marketplace-score";
+import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
+import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
 
 export function AgentCard({
   agent,
@@ -28,26 +26,19 @@ export function AgentCard({
     agent.description?.trim() ||
     "On-chain agent registered under ERC-8004 on BNB Smart Chain.";
   const cat = categoryId ? getCategory(categoryId) : null;
+  const axes = computeAxes(agent);
+  const composite = compositeFromAxes(axes);
+  const gid = `card-${agent.chain_id}-${String(agent.token_id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-amber-400/40 hover:bg-white/[0.06]">
+    <div className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-amber-400/35 hover:bg-white/[0.06]">
       <div className="flex items-start gap-3">
-        <Link
-          href={agentHref(agent)}
-          className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white/10"
-        >
-          {agent.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={agent.image_url}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-lg text-amber-300">
-              ◆
-            </div>
-          )}
+        <Link href={agentHref(agent)} className="shrink-0">
+          <AgentAvatar
+            src={agent.image_url}
+            name={agent.name || `Agent #${agent.token_id}`}
+            size="sm"
+          />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
@@ -56,8 +47,11 @@ export function AgentCard({
                 {agent.name || `Agent #${agent.token_id}`}
               </h3>
             </Link>
-            <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/70">
-              {scoreLabel(agent)}
+            <span
+              className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-200"
+              title="Genesis 5-axis composite"
+            >
+              {Math.round(composite)}
             </span>
           </div>
           <p className="mt-0.5 text-[11px] text-white/40">
@@ -66,13 +60,54 @@ export function AgentCard({
               <span className="text-white/30"> · {cat.shortName}</span>
             )}
           </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {(agent.agent_id || agent.token_id != null) && (
+              <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
+                Registered
+              </span>
+            )}
+            {(() => {
+              const cls = hireClassForAgent(agent);
+              if (cls === "live" || isFeaturedThirdParty(agent.chain_id, agent.token_id)) {
+                return (
+                  <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
+                    {hireClassLabel("live")}
+                  </span>
+                );
+              }
+              return (
+                <span className="text-[10px] text-white/35">
+                  {hireClassLabel("indexed")}
+                </span>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
-      <Link href={agentHref(agent)} className="mt-3 flex-1">
-        <p className="line-clamp-2 text-xs leading-relaxed text-white/55">
-          {desc}
-        </p>
+      {/* Per-agent pentagon + blurb */}
+      <Link
+        href={agentHref(agent)}
+        className="mt-3 flex flex-1 items-start gap-3"
+      >
+        <div className="shrink-0 rounded-xl border border-amber-400/15 bg-[#080a10] p-1">
+          <ScorePentagon
+            axes={axes}
+            composite={composite}
+            size={88}
+            showLabels={false}
+            variant="compact"
+            gradientId={gid}
+          />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="line-clamp-3 text-xs leading-relaxed text-white/55">
+            {desc}
+          </p>
+          <p className="mt-2 line-clamp-1 text-[10px] tabular-nums text-white/30">
+            {axes.map((a) => `${a.short} ${Math.round(a.value)}`).join(" · ")}
+          </p>
+        </div>
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -94,10 +129,10 @@ export function AgentCard({
         <div className="ml-auto flex items-center gap-2">
           {showCompare && <CompareToggle agentKey={agentKey(agent)} />}
           <Link
-            href={agentHref(agent)}
-            className="text-[11px] font-medium text-amber-300/90"
+            href={`${agentHref(agent)}#buy`}
+            className="rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-semibold text-black transition hover:bg-amber-300"
           >
-            Hire →
+            Buy
           </Link>
         </div>
       </div>

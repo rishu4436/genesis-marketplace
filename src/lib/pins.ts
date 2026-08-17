@@ -1,5 +1,10 @@
-import { readFileSync, existsSync } from "fs";
-import path from "path";
+/**
+ * Agent pins — client-safe.
+ * Uses a static JSON import (no Node `fs`) so client components can call getPin.
+ * Env overrides still apply on the server when present.
+ */
+
+import pinsJson from "../../config/pins.json";
 
 export type AgentPin = {
   tokenId?: string;
@@ -8,30 +13,31 @@ export type AgentPin = {
   walletAddress?: string;
   agentId?: string;
   notes?: string;
+  platformSlug?: string;
 };
 
 export type PinsFile = {
   network?: string;
   chainId?: number;
+  platform_quota?: number;
   agents: Record<string, AgentPin>;
+  $schema_note?: string;
 };
 
 function loadPinsFile(): PinsFile {
-  try {
-    const file = path.join(process.cwd(), "config", "pins.json");
-    if (!existsSync(file)) return { agents: {} };
-    const raw = readFileSync(file, "utf8");
-    const parsed = JSON.parse(raw) as PinsFile;
-    return { ...parsed, agents: parsed.agents || {} };
-  } catch {
-    return { agents: {} };
-  }
+  const parsed = pinsJson as PinsFile;
+  return { ...parsed, agents: parsed.agents || {} };
 }
 
 function envPin(slug: string): AgentPin {
   const key = slug.replace(/-/g, "_").toUpperCase();
-  const pin = process.env[`GENESIS_PIN_${key}`];
-  const service = process.env[`GENESIS_SERVICE_${key}`];
+  // NEXT_PUBLIC_ allows optional client-visible overrides; server env still wins in Node
+  const pin =
+    process.env[`GENESIS_PIN_${key}`] ||
+    process.env[`NEXT_PUBLIC_GENESIS_PIN_${key}`];
+  const service =
+    process.env[`GENESIS_SERVICE_${key}`] ||
+    process.env[`NEXT_PUBLIC_GENESIS_SERVICE_${key}`];
   const out: AgentPin = {};
   if (pin) {
     const [c, t] = pin.split(":");
@@ -52,9 +58,7 @@ export function getPin(slug: string): AgentPin {
   return {
     ...fromFile,
     ...Object.fromEntries(
-      Object.entries(fromEnv).filter(
-        ([, v]) => v !== undefined && v !== "",
-      ),
+      Object.entries(fromEnv).filter(([, v]) => v !== undefined && v !== ""),
     ),
   };
 }

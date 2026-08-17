@@ -4,10 +4,31 @@
 
 Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, grid trading, yield optimisation, and health-factor monitoring.
 
+## Live URL
+
+**Production:** https://genesis-marketplace-one.vercel.app  
+
+**Judge path:** https://genesis-marketplace-one.vercel.app/judge  
+
 ## Product deadline
 
 - **Product ready:** 31 August 2026  
 - **Submit by:** 9 September 2026  
+
+## Hackathon-ready buyer path
+
+1. **Job-first** on `/` — describe a job or pick a chip → ranked agents  
+2. **Buy** a By Genesis specialist (`/genesis/range-keeper#buy`) → deliverable  
+3. Open shareable result `/jobs/[id]` · My hires `/dashboard` · proof `/advantage` · TermiX `/termix`  
+
+| Concept | Meaning |
+|---------|---------|
+| **Hire-ready (By Genesis)** | Sellers we operate + pin |
+| **Indexed** | ERC-8004 identity from partner catalog — buy still works |
+| **Instant plan** | Task → deliverable · **no payment / no escrow** |
+| **On-chain escrow** | Optional `/fund` · blocked until testnet policy whitelist |
+
+Agents return a **structured plan/report**. They do not move buyer funds.
 
 ## Stack
 
@@ -38,7 +59,18 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/api/hire` | Negotiate → quote → deliver (ERC-8183-sim) |
 | `/compare` | Side-by-side compare (up to 3 agents) |
 | `/dashboard` | Hire jobs + deliverables (“My hires”) |
-| `/hire` | Hire flow explainer |
+| `/hire` | Buy specialists |
+| `/advantage` | Agent Advantage Report (TermiX) |
+| `/jobs/[id]` | Shareable job result |
+| `/api/agents/health` | Live specialist health |
+| `/api/match` | Job → ranked agents |
+| `/packages` | Multi-agent job bundles |
+| `/sell` | Claim & list ERC-8004 agent |
+| `/api/v1/agents` | Machine catalog (agent buyers) |
+| `/api/outcomes` | Outcomes ledger |
+| `/api/packages/buy` | Buy multi-agent package |
+| `/altana` | Altana session keys (partner track) |
+| `/api/altana/sessions` | Grant / list Altana sessions |
 
 ### Genesis verified agents
 
@@ -57,8 +89,15 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 |---|----------|--------|
 | 1 | Studio agents + pins | **3 live** on BNB free platform (max 3) + Gridwright local APEX |
 | 2 | Live hire negotiate | Platform A2A + local APEX fallback |
-| 3 | TermiX report | `/termix` workbench |
-| 4 | Public URL | Deferred to end |
+| 3 | TermiX report | `/termix` workbench + copy / **download .md** |
+| 4 | Buyer funding | **0.1 tBNB + 10 $U** on RangeKeeper buyer |
+| 5 | On-chain ERC-8183 fund | **Blocked** — testnet `PolicyNotWhitelisted` (job **#445** create+budget done). Resume: `scripts/resume-job-445.ps1` |
+| 6 | Public URL | Deferred to end |
+
+### Next (while whitelist blocked)
+
+1. Soft-hire via `/hire` or `/genesis/*` + TermiX “Run all with agent” + download report  
+2. When policy is whitelisted: `scripts/resume-job-445.ps1` → notify_funded → settle after 24h
 
 ### Live Studio sellers (free platform trial)
 
@@ -75,10 +114,17 @@ Trial expires ~**2026-08-08T15:28Z**. Redeploy while active: `scripts/redeploy-p
 
 | Path | URL |
 |------|-----|
-| Demo checklist | `/demo` |
-| Ops / pins | `/ops` |
+| **90s judge script** | **`/judge`** |
+| Job-first home | `/` |
+| Buy specialists | `/hire` |
+| Advantage report | `/advantage` |
+| Seeded proof jobs | `/jobs/job_msigjtrw_99syy1` (etc.) |
 | TermiX report | `/termix` |
-| Hire RangeKeeper | `/genesis/range-keeper` |
+| Packages | `/packages` |
+| Machine API | `/api/v1/agents` |
+| Buy RangeKeeper | `/genesis/range-keeper#buy` |
+
+Full script: `docs/JUDGE_DEMO.md`
 
 Product ready target: **31 Aug 2026**. Submit: **9 Sep 2026**.
 

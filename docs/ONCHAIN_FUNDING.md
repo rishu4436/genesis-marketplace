@@ -57,3 +57,40 @@ bag erc8183 settle <job_id> --action approve
 - Studio v1 is **seller-first**; buy CLI is the supported buyer path for tests.  
 - Free platform trial expiry does **not** remove on-chain jobs already funded.  
 - If buy fails with 0 balance, faucets are the blocker — not the marketplace code.
+
+## Known testnet issue (2026-08-06)
+
+`bag erc8183 buy` does: **create → register → set_budget → fund**.
+
+On BSC testnet the default OptimisticPolicy is **not whitelisted** on EvaluatorRouter:
+
+| Item | Value |
+|------|--------|
+| Router | `0xd7d36d66d2f1b608a0f943f722d27e3744f66f25` |
+| Policy (SDK) | `0x4f4678d4439fec812ac7674bb3efb4c8f5fb78a6` |
+| `policyWhitelist(policy)` | **false** |
+| Revert on `registerJob` | `PolicyNotWhitelisted()` (`0xc94463e3`) |
+| Revert on `fund` without register | `PolicyNotSet()` (`0x32d53d69`) |
+
+So create + set_budget can succeed, but **register + fund cannot** until BNB re-whitelists the policy (protocol admin). Soft hire (A2A quote only) is unaffected.
+
+### Partial job from our e2e attempt
+
+| Field | Value |
+|-------|--------|
+| job_id | **445** |
+| buyer | `0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133` |
+| provider (YieldRouter) | `0xe588cD118A7D960a5f64788Ed2F61e873daC97E4` |
+| budget | 0.5 U (set on-chain) |
+| status | OPEN (not funded; no policy) |
+| buyer balances after | ~0.1 tBNB, **10 U** (escrow not taken) |
+
+When whitelist is fixed, resume with:
+
+```powershell
+cd studio/RangeKeeper/app/agent
+# WALLET_PASSWORD loaded
+python -c "from bnbagent_studio_core.erc8183.client import get_8183_client; from bnbagent_studio_core.wallet import get_wallet; get_wallet(); c=get_8183_client('bsc-testnet'); print(c.register_job(445)); print(c.fund(445, 5*10**17, approve_floor=5*10**17))"
+```
+
+Then marketplace `notify_funded` + `bag erc8183 status 445` + fetch/settle.
