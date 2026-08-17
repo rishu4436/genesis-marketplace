@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { HireJob, HireStatus } from "@/lib/hire-engine";
 import { BRAND } from "@/lib/brand";
 
@@ -52,6 +52,85 @@ function formatWhen(iso?: string) {
   } catch {
     return "";
   }
+}
+
+function persistRecovered(job: HireJob) {
+  try {
+    const prev = JSON.parse(
+      localStorage.getItem("genesis-hires") || "[]",
+    ) as HireJob[];
+    const next = [job, ...prev.filter((j) => j.id !== job.id)].slice(0, 30);
+    localStorage.setItem("genesis-hires", JSON.stringify(next));
+    return next;
+  } catch {
+    return [job];
+  }
+}
+
+function RecoverBox({
+  onRecovered,
+}: {
+  onRecovered: (jobs: HireJob[]) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function recover(e: FormEvent) {
+    e.preventDefault();
+    const raw = q.trim();
+    if (!raw) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/jobs?q=${encodeURIComponent(raw)}`);
+      const json = (await res.json()) as {
+        success?: boolean;
+        data?: HireJob;
+        error?: string;
+      };
+      if (!res.ok || !json.data) {
+        throw new Error(json.error || "No hire found for that receipt");
+      }
+      onRecovered(persistRecovered(json.data));
+      setQ("");
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : "Lookup failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={recover}
+      className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4"
+    >
+      <p className="text-xs font-semibold text-amber-100">
+        Recover a hire on this device
+      </p>
+      <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+        Paste your result link or claim code (GX-XXX-XXX). You do not buy
+        again. This browser list is only a cache.
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="GX-7K2-M9P or /jobs/job_…"
+          className="w-full flex-1 rounded-xl border border-white/15 bg-black/30 px-3 py-2 font-mono text-sm text-white outline-none ring-amber-400/30 focus:ring-2"
+        />
+        <button
+          type="submit"
+          disabled={busy || !q.trim()}
+          className="btn-primary !rounded-xl !py-2 !text-sm disabled:opacity-40"
+        >
+          {busy ? "Looking…" : "Open receipt"}
+        </button>
+      </div>
+      {err && <p className="mt-2 text-xs text-rose-200">{err}</p>}
+    </form>
+  );
 }
 
 export function HireDashboard() {
@@ -106,13 +185,22 @@ export function HireDashboard() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 font-display text-xl text-amber-300">
             ∅
           </div>
-          <h2 className="card-title mt-6 text-xl">No purchases yet</h2>
+          <h2 className="card-title mt-6 text-xl">No hires on this device</h2>
           <p className="body mx-auto mt-3 max-w-sm">
-            Buy an agent to see the deliverable land here under My hires.
+            New phone? Recover with the claim code or result link from your
+            last plan. You do not buy again.
           </p>
+          <div className="mx-auto mt-6 max-w-md text-left">
+            <RecoverBox
+              onRecovered={(next) => {
+                setJobs(next);
+                if (next[0]) setOpenId(next[0].id);
+              }}
+            />
+          </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/hire" className="btn-primary">
-              Buy an agent
+              Get a new plan
             </Link>
             <Link href="/categories" className="btn-secondary">
               Browse categories
@@ -141,9 +229,16 @@ export function HireDashboard() {
         ))}
       </div>
 
+      <RecoverBox
+        onRecovered={(next) => {
+          setJobs(next);
+          if (next[0]) setOpenId(next[0].id);
+        }}
+      />
+
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-white/45">
-          {jobs.length} job{jobs.length === 1 ? "" : "s"} in this browser
+          {jobs.length} job{jobs.length === 1 ? "" : "s"} cached on this device
         </p>
         <button
           type="button"

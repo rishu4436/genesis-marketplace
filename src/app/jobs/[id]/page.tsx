@@ -26,8 +26,7 @@ export default async function JobPage({ params }: Props) {
       <div className="mx-auto max-w-2xl px-5 py-16 sm:px-8">
         <h1 className="display-section text-white">Job not found</h1>
         <p className="body mt-3">
-          This share link has no durable record on this server. If you bought
-          in this browser, open{" "}
+          This receipt is not on this server. Recover it from{" "}
           <Link href="/dashboard" className="text-amber-300 hover:underline">
             My hires
           </Link>
@@ -56,6 +55,11 @@ export default async function JobPage({ params }: Props) {
           {job.status === "delivered" ? "Delivered" : job.status}
         </span>
         <span className="font-mono text-[11px] text-white/30">{job.id}</span>
+        {job.claimCode && (
+          <span className="rounded-full border border-amber-400/25 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-200">
+            {job.claimCode}
+          </span>
+        )}
       </div>
 
       <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-white">

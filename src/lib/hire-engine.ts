@@ -57,6 +57,8 @@ export type HireDeliverable = {
 
 export type HireJob = {
   id: string;
+  /** Short code so a buyer can open this hire on another device */
+  claimCode?: string;
   createdAt: string;
   updatedAt: string;
   status: HireStatus;
@@ -85,6 +87,20 @@ function nowIso() {
 
 function jobId() {
   return `job_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+const CLAIM_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+export function makeClaimCode(): string {
+  let raw = "";
+  for (let i = 0; i < 6; i++) {
+    raw += CLAIM_ALPHABET[Math.floor(Math.random() * CLAIM_ALPHABET.length)];
+  }
+  return `GX-${raw.slice(0, 3)}-${raw.slice(3)}`;
+}
+
+export function normalizeClaimCode(raw: string): string {
+  return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
 
 function pushTimeline(
@@ -160,6 +176,7 @@ export function createNegotiatedJob(input: {
   const createdAt = nowIso();
   let job: HireJob = {
     id,
+    claimCode: makeClaimCode(),
     createdAt,
     updatedAt: createdAt,
     status: "negotiating",
@@ -219,6 +236,7 @@ export async function createJobWithLiveNegotiate(input: {
   const createdAt = nowIso();
   let job: HireJob = {
     id,
+    claimCode: makeClaimCode(),
     createdAt,
     updatedAt: createdAt,
     status: "negotiating",

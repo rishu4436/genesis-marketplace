@@ -75,6 +75,7 @@ export async function POST(req: Request) {
       success: true,
       data: job,
       sharePath: `/jobs/${encodeURIComponent(job.id)}`,
+      claimCode: job.claimCode,
       model: "genesis-v2-stockanalyst-inspired",
       tier,
     });

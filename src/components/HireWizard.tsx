@@ -207,7 +207,7 @@ export function HireWizard({
               Ready
             </div>
             <span className="text-[11px] font-medium text-white/40">
-              Saved · shareable
+              Delivered · this is your receipt
             </span>
           </div>
           <h3 className="mt-3 text-lg font-semibold tracking-tight text-white">
@@ -217,9 +217,23 @@ export function HireWizard({
             {d?.summary}
           </p>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="mt-4 rounded-xl border border-amber-400/25 bg-black/30 px-3 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/70">
+              Where you receive this
+            </p>
+            <p className="mt-1 font-mono text-lg font-bold tracking-widest text-white">
+              {job.claimCode || job.id}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+              This plan lives at the result page. Bookmark the link or keep
+              this claim code. Another phone: open My hires → Recover. You do
+              not buy again.
+            </p>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-black/25 px-2 py-2">
-              <div className="text-[10px] text-white/40">Paid</div>
+              <div className="text-[10px] text-white/40">Listed</div>
               <div className="text-sm font-semibold text-white">${paid}</div>
             </div>
             <div className="rounded-lg bg-black/25 px-2 py-2">
@@ -320,8 +334,8 @@ export function HireWizard({
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-white/50">
             {isHireReady
-              ? "Specialist · structured plan in minutes"
-              : "Listed agent · structured plan in minutes"}
+              ? "You receive a plan at a link + claim code — any device"
+              : "You receive a plan at a link + claim code — any device"}
           </p>
         </div>
         <div className="text-right">
@@ -383,12 +397,10 @@ export function HireWizard({
             : "Starting…"
           : rail === "free"
             ? "Run free scan"
-            : rail === "escrow"
-              ? `Buy now · $${displayPrice}`
-              : `Buy now · $${displayPrice}`}
+            : "Get plan · keep receipt"}
       </button>
       <p className="mt-2 text-center text-[10px] text-white/40">
-        One click · structured plan · no fund custody
+        No wallet · no charge yet · result is a receipt you keep
       </p>
 
       {/* Tiers: Free scan | Full analysis | Escrow — stockanalyst-inspired */}
@@ -503,7 +515,7 @@ export function HireWizard({
       </label>
 
       <p className="mt-3 text-center text-[10px] leading-relaxed text-white/35">
-        Change the brief above, then Buy now. Agent never moves your funds.
+        You get a result page + claim code. Open that on any phone — do not buy again.
       </p>
     </div>
   );

@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
-import { listJobs, saveJob } from "@/lib/job-store";
+import { findJobReceipt, listJobs, saveJob } from "@/lib/job-store";
 import type { HireJob } from "@/lib/hire-engine";
 
 export const runtime = "nodejs";
 
-/** GET /api/jobs — recent durable jobs */
-export async function GET() {
+/** GET /api/jobs — recent jobs, or ?claim= / ?q= to recover a receipt */
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const q = (url.searchParams.get("claim") || url.searchParams.get("q") || "").trim();
+  if (q) {
+    const job = await findJobReceipt(q);
+    if (!job) {
+      return NextResponse.json(
+        { success: false, error: "No hire found for that receipt" },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({ success: true, data: job });
+  }
   const jobs = await listJobs(40);
   return NextResponse.json({ success: true, data: jobs });
 }
