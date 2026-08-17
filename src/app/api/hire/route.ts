@@ -4,6 +4,8 @@ import type { CategoryId } from "@/lib/categories";
 import type { HireIntent } from "@/lib/hire";
 import { getGenesisAgent } from "@/lib/genesis-agents";
 import { saveJob } from "@/lib/job-store";
+import { attachJob } from "@/lib/accounts";
+import { currentAccount } from "@/lib/session";
 import type { CommerceTier } from "@/lib/agent-model";
 import type { BuyerContext } from "@/lib/buyer-context";
 import type { DemoPayment } from "@/lib/demo-pay";
@@ -84,6 +86,11 @@ export async function POST(req: Request) {
     }
 
     try {
+      const acc = await currentAccount();
+      if (acc) {
+        job.ownerId = acc.id;
+        await attachJob(acc.id, job.id);
+      }
       await saveJob(job);
     } catch {
       /* still return job */

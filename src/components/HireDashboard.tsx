@@ -139,14 +139,31 @@ export function HireDashboard() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let local: HireJob[] = [];
     try {
       const raw = localStorage.getItem("genesis-hires");
       const arr = raw ? (JSON.parse(raw) as HireJob[]) : [];
-      setJobs(Array.isArray(arr) ? arr : []);
+      local = Array.isArray(arr) ? arr : [];
     } catch {
-      setJobs([]);
+      local = [];
     }
-    setReady(true);
+    setJobs(local);
+    fetch("/api/profile/hires")
+      .then((r) => r.json())
+      .then((j: { data?: HireJob[] }) => {
+        if (!Array.isArray(j.data)) return;
+        const map = new Map<string, HireJob>();
+        for (const job of [...j.data, ...local]) map.set(job.id, job);
+        const merged = [...map.values()].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        setJobs(merged);
+      })
+      .catch(() => {
+        /* stay on local cache */
+      })
+      .finally(() => setReady(true));
   }, []);
 
   const stats = useMemo(() => {

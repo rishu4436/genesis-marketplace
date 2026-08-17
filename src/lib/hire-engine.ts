@@ -60,6 +60,8 @@ export type HireJob = {
   id: string;
   /** Short code so a buyer can open this hire on another device */
   claimCode?: string;
+  /** Signed-in buyer who owns this hire */
+  ownerId?: string;
   createdAt: string;
   updatedAt: string;
   status: HireStatus;

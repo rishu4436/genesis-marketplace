@@ -112,13 +112,31 @@ export async function switchToBsc(eth: EthProvider): Promise<void> {
   }
 }
 
-export async function connectProvider(eth: EthProvider): Promise<string> {
+export async function requestAccounts(eth: EthProvider): Promise<string> {
   const accs = (await eth.request({
     method: "eth_requestAccounts",
   })) as string[];
   if (!accs?.[0]) throw new Error("No account returned from wallet");
-  await switchToBsc(eth);
   return accs[0];
+}
+
+export async function signLoginMessage(
+  eth: EthProvider,
+  address: string,
+  message: string,
+): Promise<string> {
+  const sig = (await eth.request({
+    method: "personal_sign",
+    params: [message, address],
+  })) as string;
+  if (!sig) throw new Error("Wallet did not return a signature");
+  return sig;
+}
+
+export async function connectProvider(eth: EthProvider): Promise<string> {
+  const addr = await requestAccounts(eth);
+  await switchToBsc(eth);
+  return addr;
 }
 
 export async function sendBnbHire(
