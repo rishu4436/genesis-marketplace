@@ -57,7 +57,7 @@ export function FilterBar({
           sort: "rank",
         })}
         {chip(filters.sort === "score", "Score", { sort: "score" })}
-        {chip(filters.sort === "feedback", "Feedback", { sort: "feedback" })}
+        {chip(filters.sort === "feedback", "Ratings", { sort: "feedback" })}
         {chip(filters.sort === "newest", "Newest", { sort: "newest" })}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -70,7 +70,7 @@ export function FilterBar({
         {chip(filters.verified === "1", "Verified", {
           verified: filters.verified === "1" ? undefined : "1",
         })}
-        {chip(filters.feedback === "1", "Has feedback", {
+        {chip(filters.feedback === "1", "Has ratings", {
           feedback: filters.feedback === "1" ? undefined : "1",
         })}
         {(filters.x402 || filters.verified || filters.feedback || filters.sort) && (

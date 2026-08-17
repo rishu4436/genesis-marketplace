@@ -157,7 +157,7 @@ export function featuresFromAgent(agent: Agent): ListingFeature[] {
       label: "Verified",
       detail: agent.is_verified
         ? "Marked verified in partner index"
-        : "Not verified — inspect owner & feedback",
+        : "Not verified — inspect owner & ratings",
       active: Boolean(agent.is_verified),
     },
     {
@@ -176,15 +176,15 @@ export function featuresFromAgent(agent: Agent): ListingFeature[] {
       active: protocols.length > 0,
     },
     {
-      label: "Feedback",
+      label: "Ratings",
       detail:
         (agent.total_feedbacks ?? 0) > 0
-          ? `${agent.total_feedbacks} signals · avg ${
+          ? `${agent.total_feedbacks} on-chain · avg ${
               agent.average_score != null
                 ? formatAverageScore(agent.average_score)
                 : "—"
             }`
-          : "No feedback yet",
+          : "No ratings yet",
       active: (agent.total_feedbacks ?? 0) > 0,
     },
     {

@@ -134,7 +134,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   const values: Record<ScoreAxisId, { value: number; source: string }> = {
     reputation: {
       value: reputation,
-      source: `avg ${avg ? formatAverageScore(avg) : "—"} · ${feedbacks} feedbacks`,
+      source: `avg ${avg ? formatAverageScore(avg) : "—"} · ${feedbacks} ratings`,
     },
     trust: {
       value: trust,
@@ -142,7 +142,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
     },
     reach: {
       value: reach,
-      source: `${stars} stars · ${feedbacks} feedbacks`,
+      source: `${stars} stars · ${feedbacks} ratings`,
     },
     commerce: {
       value: commerce,

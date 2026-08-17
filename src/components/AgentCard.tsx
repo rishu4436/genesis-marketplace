@@ -123,7 +123,8 @@ export function AgentCard({
         )}
         {(agent.total_feedbacks ?? 0) > 0 && (
           <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] text-white/60">
-            {agent.total_feedbacks} feedback
+            {agent.total_feedbacks}{" "}
+            {agent.total_feedbacks === 1 ? "rating" : "ratings"}
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">

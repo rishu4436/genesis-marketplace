@@ -193,11 +193,11 @@ export default async function AgentDetailPage({ params }: Props) {
                           : "—",
                     },
                     {
-                      label: "Avg feedback",
+                      label: "Avg rating",
                       value: formatAverageScore(agent.average_score),
                     },
                     {
-                      label: "Feedbacks",
+                      label: "Ratings",
                       value: String(agent.total_feedbacks ?? 0),
                     },
                     {
@@ -278,11 +278,14 @@ export default async function AgentDetailPage({ params }: Props) {
           </section>
 
           <section className="mt-10">
-            <h2 className="text-lg font-semibold text-white">Recent feedback</h2>
+            <h2 className="text-lg font-semibold text-white">Recent ratings</h2>
+            <p className="mt-1 text-xs text-white/40">
+              On-chain 8004scan scores (usually 0–100). Written comments show
+              only when the rater left one.
+            </p>
             {feedbacks.length === 0 ? (
               <p className="mt-3 text-sm text-white/45">
-                No feedback indexed yet. Reputation builds as hirers leave
-                on-chain signals.
+                No ratings indexed yet.
               </p>
             ) : (
               <ul className="mt-4 space-y-3">
@@ -293,7 +296,7 @@ export default async function AgentDetailPage({ params }: Props) {
                   >
                     <div className="flex items-center justify-between text-xs text-white/45">
                       <span className="font-medium text-amber-200">
-                        {formatFeedbackScore(f.score)}
+                        Rating {formatFeedbackScore(f.score)}
                       </span>
                       <span>
                         {f.user_address
@@ -304,8 +307,12 @@ export default async function AgentDetailPage({ params }: Props) {
                           : ""}
                       </span>
                     </div>
-                    {f.comment && (
+                    {f.comment ? (
                       <p className="mt-2 text-sm text-white/70">{f.comment}</p>
+                    ) : (
+                      <p className="mt-2 text-xs text-white/35">
+                        Score only — no written review
+                      </p>
                     )}
                   </li>
                 ))}

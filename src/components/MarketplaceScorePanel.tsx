@@ -81,7 +81,7 @@ export async function MarketplaceScorePanel() {
               {snap.partner.totalFeedbacks != null && (
                 <>
                   {" "}
-                  · {snap.partner.totalFeedbacks.toLocaleString()} feedbacks
+                  · {snap.partner.totalFeedbacks.toLocaleString()} ratings
                 </>
               )}
             </p>

@@ -81,7 +81,7 @@ export function taskFitForAgent(
   }
   if ((agent.total_feedbacks ?? 0) > 0) {
     score += Math.min(12, (agent.total_feedbacks ?? 0) * 2);
-    reasons.push(`${agent.total_feedbacks} feedback signals`);
+    reasons.push(`${agent.total_feedbacks} ratings`);
   }
 
   const blob = `${agent.name} ${agent.description}`.toLowerCase();

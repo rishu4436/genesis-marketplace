@@ -59,7 +59,7 @@ export default async function ComparePage({ searchParams }: Props) {
       values: agents.map((a) => formatAverageScore(a.average_score)),
     });
     rows.push({
-      label: "Feedbacks",
+      label: "Ratings",
       values: agents.map((a) => String(a.total_feedbacks ?? 0)),
     });
     rows.push({
