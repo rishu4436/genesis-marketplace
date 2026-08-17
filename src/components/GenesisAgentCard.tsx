@@ -82,7 +82,11 @@ export function GenesisAgentCard({ agent }: { agent: GenesisAgent }) {
             {agent.tagline}
           </p>
           <p className="mt-2 line-clamp-1 text-[10px] tabular-nums text-white/35">
-            {axes.map((a) => `${a.short} ${Math.round(a.value)}`).join(" · ")}
+            {axes
+              .map((a) =>
+                a.absent ? `${a.short} —` : `${a.short} ${Math.round(a.value)}`,
+              )
+              .join(" · ")}
           </p>
         </div>
       </div>
@@ -95,6 +99,9 @@ export function GenesisAgentCard({ agent }: { agent: GenesisAgent }) {
         )}
         <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] text-white/55">
           Ready
+        </span>
+        <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35">
+          Unrated
         </span>
         <span className="ml-auto rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-semibold text-black">
           Buy · ${agent.basePriceUsd}

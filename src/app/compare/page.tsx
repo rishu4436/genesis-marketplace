@@ -5,7 +5,7 @@ import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
-import { formatAverageScore } from "@/lib/feedback-score";
+import { formatOnchainRating } from "@/lib/feedback-score";
 import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
 import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
@@ -49,7 +49,7 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "5-axis rating",
+      label: "Hire readiness",
       values: agents.map((a) =>
         String(Math.round(compositeFromAxes(computeAxes(a)))),
       ),
@@ -62,8 +62,8 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "Avg rating",
-      values: agents.map((a) => formatAverageScore(a.average_score)),
+      label: "On-chain rating",
+      values: agents.map((a) => formatOnchainRating(a)),
     });
     rows.push({
       label: "Ratings",

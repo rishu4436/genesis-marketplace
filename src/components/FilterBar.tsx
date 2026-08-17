@@ -56,8 +56,8 @@ export function FilterBar({
         {chip(!filters.sort || filters.sort === "rank", "Best match", {
           sort: "rank",
         })}
-        {chip(filters.sort === "score", "Score", { sort: "score" })}
-        {chip(filters.sort === "ratings", "Ratings", { sort: "ratings" })}
+        {chip(filters.sort === "score", "Ready", { sort: "score" })}
+        {chip(filters.sort === "ratings", "Rated only", { sort: "ratings" })}
         {chip(filters.sort === "newest", "Newest", { sort: "newest" })}
       </div>
       <div className="flex flex-wrap items-center gap-2">

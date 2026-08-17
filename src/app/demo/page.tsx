@@ -38,8 +38,8 @@ const STEPS = [
     href: "/termix",
   },
   {
-    t: "Ratings (optional)",
-    d: "Dashboard rating pentagon + per-agent radar on cards.",
+    t: "Readiness (optional)",
+    d: "Dashboard hire-readiness pentagon + per-agent radar on cards.",
     href: "/dashboard#pentagon",
   },
 ];
@@ -58,7 +58,7 @@ export default function DemoPage() {
         <h2 className="text-sm font-semibold text-amber-100">Pitch (15 sec)</h2>
         <p className="mt-2 text-sm leading-relaxed text-white/70">
           Genesis is the buyer front door for BNB Agent Studio: discover DeFi
-          agents by job type, compare with a 5-axis rating, and soft-hire for a
+          agents by job type, compare hire readiness, and soft-hire for a
           structured deliverable. Hire-ready sellers are{" "}
           <strong className="text-white">By Genesis</strong> specialists we
           operate. The catalog also indexes the public ERC-8004 graph. Soft hire

@@ -8,7 +8,12 @@ import {
   dedupeAgents,
 } from "@/lib/scan";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
-import { agentScore, compareByScore } from "@/lib/agent-score";
+import { agentScore } from "@/lib/agent-score";
+import {
+  compareByReadiness,
+  compositeFromAxes,
+  computeAxes,
+} from "@/lib/marketplace-score";
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { sortForDestination } from "@/lib/hire-class";
 import type { Agent } from "@/lib/types";
@@ -149,26 +154,16 @@ export default async function BrowsePage({ searchParams }: Props) {
   let agents = filterAgents(quality.kept, {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
-    hasRatings: filters.ratings === "1",
+    hasRatings: filters.ratings === "1" || sortMode === "ratings",
   });
 
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
   if (sortMode === "score") {
-    agents = [...agents].sort(compareByScore);
+    agents = [...agents].sort(compareByReadiness);
   } else if (sortMode === "rank" && !q) {
     agents = sortForDestination(agents);
   } else {
     agents = sortAgents(agents, { mode: sortMode });
-  }
-
-  // Sanity: enforce score order if mode is score (guards against bugs)
-  if (sortMode === "score" && agents.length > 1) {
-    for (let i = 1; i < agents.length; i++) {
-      if (agentScore(agents[i]) > agentScore(agents[i - 1])) {
-        agents = [...agents].sort(compareByScore);
-        break;
-      }
-    }
   }
 
   const totalFiltered = agents.length;
@@ -181,11 +176,23 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const pageMin =
     pageAgents.length > 0
-      ? Math.min(...pageAgents.map(agentScore))
+      ? Math.min(
+          ...pageAgents.map((a) =>
+            sortMode === "score"
+              ? compositeFromAxes(computeAxes(a))
+              : agentScore(a),
+          ),
+        )
       : 0;
   const pageMax =
     pageAgents.length > 0
-      ? Math.max(...pageAgents.map(agentScore))
+      ? Math.max(
+          ...pageAgents.map((a) =>
+            sortMode === "score"
+              ? compositeFromAxes(computeAxes(a))
+              : agentScore(a),
+          ),
+        )
       : 0;
 
   return (
@@ -273,7 +280,7 @@ export default async function BrowsePage({ searchParams }: Props) {
             : `${q ? "Search" : "Hireable index"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
-              · sorted by score high→low · this page {pageMax.toFixed(0)}–
+              · sorted by hire readiness · this page {pageMax.toFixed(0)}–
               {pageMin.toFixed(0)}
             </span>
           )}

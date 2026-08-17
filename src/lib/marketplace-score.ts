@@ -5,7 +5,7 @@
  * and normalized into 0–100 axes for radar display + a single composite.
  *
  * Axes (pentagon):
- *  1. Reputation  — on-chain average on 0–100 (0–5 scaled); unrated uses a listing floor, not 0
+ *  1. Reputation  — real 8004scan average only; unrated is absent, never invented
  *  2. Trust       — verification + on-chain identity signals
  *  3. Reach       — stars / social proof
  *  4. Commerce    — x402 + protocols (can get paid / interoperable)
@@ -32,6 +32,8 @@ export type ScoreAxis = {
   value: number;
   /** Where the number came from (partner fields) */
   source: string;
+  /** True when this axis has no real signal — omit from readiness, do not invent a score */
+  absent?: boolean;
 };
 
 export type MarketplaceScorecard = {
@@ -101,24 +103,16 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
     Boolean(agent.owner_address) ||
     Boolean(agent.description && agent.description.length > 40);
 
-  // Reputation: real ratings on 0–100. Unrated is a listing floor, not 0/100.
-  let reputation: number;
-  let reputationSource: string;
-  if (avg100 > 0) {
-    reputation = clamp01(avg100 * 0.9 + Math.min(feedbacks, 20) * 0.5);
-    reputationSource = `avg ${formatAverageScore(avg)} · ${feedbacks} ratings`;
-  } else if (feedbacks > 0) {
-    reputation = clamp01(40 + Math.min(feedbacks, 20) * 2);
-    reputationSource = `${feedbacks} ratings · no average yet`;
-  } else {
-    let floor = 32;
-    if (agent.owner_address) floor += 8;
-    if (agent.description && agent.description.length > 60) floor += 8;
-    if (agent.image_url) floor += 6;
-    if (protocols > 0) floor += 4;
-    reputation = clamp01(floor);
-    reputationSource = "no on-chain ratings yet · listing floor";
-  }
+  // Reputation: only a real 8004scan average. Unrated is absent — never a fake floor.
+  const rated = avg100 > 0 && feedbacks > 0;
+  const reputation = rated
+    ? clamp01(avg100 * 0.9 + Math.min(feedbacks, 20) * 0.5)
+    : 0;
+  const reputationSource = rated
+    ? `avg ${formatAverageScore(avg)} · ${feedbacks} ratings`
+    : feedbacks > 0
+      ? `${feedbacks} ratings · no average yet`
+      : "Unrated — no on-chain ratings";
 
   // Trust: verified identity + owner presence + non-empty listing
   let trust = 20;
@@ -129,10 +123,11 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   if (agent.agent_id || agent.token_id != null) trust += 6;
   trust = clamp01(trust);
 
-  // Reach: listed agents start above 0; stars/ratings add proof
-  const reach = clamp01(
-    18 + Math.min(stars, 80) * 0.65 + Math.min(feedbacks, 40) * 0.85,
-  );
+  // Reach: stars + rating volume only. No invented floor.
+  const reachRaw =
+    Math.min(stars, 80) * 0.65 + Math.min(feedbacks, 40) * 0.85;
+  const reach = clamp01(reachRaw);
+  const reachAbsent = stars <= 0 && feedbacks <= 0;
 
   // Commerce: can take payments / multi-protocol
   let commerce = 15;
@@ -151,10 +146,14 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
       (agent.description && agent.description.length > 100 ? 6 : 0),
   );
 
-  const values: Record<ScoreAxisId, { value: number; source: string }> = {
+  const values: Record<
+    ScoreAxisId,
+    { value: number; source: string; absent?: boolean }
+  > = {
     reputation: {
       value: reputation,
       source: reputationSource,
+      absent: !rated,
     },
     trust: {
       value: trust,
@@ -162,7 +161,10 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
     },
     reach: {
       value: reach,
-      source: `${stars} stars · ${feedbacks} ratings`,
+      source: reachAbsent
+        ? "Unrated — no stars or ratings"
+        : `${stars} stars · ${feedbacks} ratings`,
+      absent: reachAbsent,
     },
     commerce: {
       value: commerce,
@@ -182,6 +184,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
     short: m.short,
     value: Math.round(values[m.id].value * 10) / 10,
     source: values[m.id].source,
+    absent: values[m.id].absent,
   }));
 }
 
@@ -190,11 +193,16 @@ export function compositeFromAxes(axes: ScoreAxis[]): number {
   let wsum = 0;
   for (const m of AXIS_META) {
     const ax = axes.find((a) => a.id === m.id);
-    const v = ax?.value ?? 0;
-    sum += v * m.weight;
+    if (!ax || ax.absent) continue;
+    sum += ax.value * m.weight;
     wsum += m.weight;
   }
+  if (wsum <= 0) return 0;
   return Math.round((sum / wsum) * 10) / 10;
+}
+
+export function compareByReadiness(a: Agent, b: Agent): number {
+  return compositeFromAxes(computeAxes(b)) - compositeFromAxes(computeAxes(a));
 }
 
 export function scoreAgent(
@@ -227,17 +235,27 @@ function averageAxes(cards: MarketplaceScorecard[]): ScoreAxis[] {
     }));
   }
   return AXIS_META.map((m) => {
+    const present = cards
+      .map((c) => c.axes.find((a) => a.id === m.id))
+      .filter((ax): ax is ScoreAxis => ax != null && !ax.absent);
+    if (present.length === 0) {
+      return {
+        id: m.id,
+        label: m.label,
+        short: m.short,
+        value: 0,
+        source: "Unrated — no sample",
+        absent: true,
+      };
+    }
     const avg =
-      cards.reduce(
-        (s, c) => s + (c.axes.find((a) => a.id === m.id)?.value ?? 0),
-        0,
-      ) / cards.length;
+      present.reduce((s, ax) => s + ax.value, 0) / present.length;
     return {
       id: m.id,
       label: m.label,
       short: m.short,
       value: Math.round(avg * 10) / 10,
-      source: `avg of ${cards.length} agents`,
+      source: `avg of ${present.length} agents`,
     };
   });
 }

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 function ScorePanelFallback() {
   return (
     <div className="panel-strong px-5 py-12 text-center sm:px-6">
-      <p className="text-sm text-white/45">Loading marketplace ratings…</p>
+      <p className="text-sm text-white/45">Loading hire readiness…</p>
       <p className="mt-1 text-xs text-white/30">
         Fetching partner index (timeout 8s)
       </p>
@@ -29,8 +29,9 @@ export default function DashboardPage() {
           <p className="section-label">Dashboard</p>
           <h1 className="display-section mt-3 text-white">Marketplace hub</h1>
           <p className="lead mt-4 max-w-xl">
-            Market-wide rating pentagon from the partner index. Every agent card
-            in Browse and Categories shows its own 5-axis rating.
+            Market-wide hire readiness from the partner index. Every agent card
+            in Browse and Categories shows its own 5-axis pentagon. On-chain
+            ratings stay Unrated until 8004scan has real reviews.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

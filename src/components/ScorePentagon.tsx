@@ -85,8 +85,8 @@ export function ScorePentagon({
       role="img"
       aria-label={
         composite != null
-          ? `Marketplace rating ${composite}`
-          : "Marketplace rating pentagon"
+          ? `Hire readiness ${composite}`
+          : "Hire readiness pentagon"
       }
     >
       <defs>
@@ -257,7 +257,7 @@ export function ScorePentagon({
               fontWeight="700"
               fontFamily="var(--font-dm-sans), system-ui, sans-serif"
             >
-              {ax.short} {Math.round(ax.value)}
+              {ax.absent ? `${ax.short} —` : `${ax.short} ${Math.round(ax.value)}`}
             </text>
           );
         })}
@@ -294,13 +294,17 @@ export function ScoreAxisList({ axes }: { axes: ScoreAxis[] }) {
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-semibold text-white/80">{ax.label}</span>
             <span className="tabular-nums font-bold text-amber-200">
-              {Math.round(ax.value)}
+              {ax.absent ? "—" : Math.round(ax.value)}
             </span>
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-200"
-              style={{ width: `${Math.max(3, Math.min(100, ax.value))}%` }}
+              style={{
+                width: ax.absent
+                  ? "0%"
+                  : `${Math.max(3, Math.min(100, ax.value))}%`,
+              }}
             />
           </div>
           <p className="mt-0.5 text-[10px] text-white/35">{ax.source}</p>

@@ -40,6 +40,25 @@ export function toHundredPointScale(
   return Math.max(0, Math.min(100, n));
 }
 
+export function hasOnchainRating(agent: {
+  total_feedbacks?: number;
+  average_score?: number | null;
+}): boolean {
+  return (
+    (agent.total_feedbacks ?? 0) > 0 &&
+    toHundredPointScale(agent.average_score) > 0
+  );
+}
+
+/** Real 8004scan average, or Unrated. Never invents a number. */
+export function formatOnchainRating(agent: {
+  total_feedbacks?: number;
+  average_score?: number | null;
+}): string {
+  if (!hasOnchainRating(agent)) return "Unrated";
+  return formatAverageScore(agent.average_score);
+}
+
 export function feedbackBelongsToAgent(
   f: Feedback,
   chainId: number,

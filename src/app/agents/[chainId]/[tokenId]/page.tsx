@@ -27,8 +27,8 @@ import {
 } from "@/lib/marketplace-score";
 import {
   feedbackBelongsToAgent,
-  formatAverageScore,
   formatFeedbackScore,
+  formatOnchainRating,
 } from "@/lib/feedback-score";
 import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
 
@@ -161,13 +161,14 @@ export default async function AgentDetailPage({ params }: Props) {
             id="score"
             className="mt-8 scroll-mt-24 rounded-2xl border border-amber-400/20 bg-white/[0.03] p-5 sm:p-6"
           >
-            <p className="section-label">Marketplace rating</p>
+            <p className="section-label">Hire readiness</p>
             <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white">
-              5-axis rating
+              5-axis readiness
             </h2>
             <p className="body-sm mt-1.5 max-w-xl">
-              Genesis 5-axis rating for this agent — Reputation · Trust · Reach ·
-              Commerce · Fitness (partner-fed).
+              Listing quality for this hire — Trust · Pay · Fit, plus Reputation
+              and Reach only when 8004scan has real ratings. Unrated is not a
+              low score.
             </p>
             <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
               <div className="flex flex-col items-center">
@@ -183,7 +184,7 @@ export default async function AgentDetailPage({ params }: Props) {
                 <ScoreAxisList axes={axes} />
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {[
-                    { label: "Rating", value: String(Math.round(composite)) },
+                    { label: "Ready", value: String(Math.round(composite)) },
                     { label: "Fit", value: fit.toFixed(0) },
                     {
                       label: "Partner total",
@@ -193,8 +194,8 @@ export default async function AgentDetailPage({ params }: Props) {
                           : "—",
                     },
                     {
-                      label: "Avg rating",
-                      value: formatAverageScore(agent.average_score),
+                      label: "On-chain rating",
+                      value: formatOnchainRating(agent),
                     },
                     {
                       label: "Ratings",

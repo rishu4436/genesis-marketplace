@@ -176,7 +176,7 @@ export function featuresFromAgent(agent: Agent): ListingFeature[] {
       active: protocols.length > 0,
     },
     {
-      label: "Ratings",
+      label: "On-chain rating",
       detail:
         (agent.total_feedbacks ?? 0) > 0
           ? `${agent.total_feedbacks} on-chain · avg ${
@@ -184,7 +184,7 @@ export function featuresFromAgent(agent: Agent): ListingFeature[] {
                 ? formatAverageScore(agent.average_score)
                 : "—"
             }`
-          : "No ratings yet",
+          : "Unrated",
       active: (agent.total_feedbacks ?? 0) > 0,
     },
     {

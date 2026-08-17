@@ -12,6 +12,10 @@ import {
 } from "@/lib/marketplace-score";
 import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
 import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
+import {
+  formatOnchainRating,
+  hasOnchainRating,
+} from "@/lib/feedback-score";
 
 export function AgentCard({
   agent,
@@ -49,7 +53,7 @@ export function AgentCard({
             </Link>
             <span
               className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-200"
-              title="Genesis 5-axis rating"
+              title="Hire readiness — listing quality, not an on-chain rating"
             >
               {Math.round(composite)}
             </span>
@@ -105,7 +109,11 @@ export function AgentCard({
             {desc}
           </p>
           <p className="mt-2 line-clamp-1 text-[10px] tabular-nums text-white/30">
-            {axes.map((a) => `${a.short} ${Math.round(a.value)}`).join(" · ")}
+            {axes
+              .map((a) =>
+                a.absent ? `${a.short} —` : `${a.short} ${Math.round(a.value)}`,
+              )
+              .join(" · ")}
           </p>
         </div>
       </Link>
@@ -121,10 +129,16 @@ export function AgentCard({
             Verified
           </span>
         )}
-        {(agent.total_feedbacks ?? 0) > 0 && (
+        {hasOnchainRating(agent) ? (
           <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] text-white/60">
-            {agent.total_feedbacks}{" "}
-            {agent.total_feedbacks === 1 ? "rating" : "ratings"}
+            {formatOnchainRating(agent)}
+            {agent.total_feedbacks
+              ? ` · ${agent.total_feedbacks}`
+              : ""}
+          </span>
+        ) : (
+          <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35">
+            Unrated
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">

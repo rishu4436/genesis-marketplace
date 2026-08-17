@@ -3,6 +3,8 @@ import type { CategoryId } from "./categories";
 import { CATEGORIES } from "./categories";
 import { compareByScore } from "./agent-score";
 import { destinationRank } from "./hire-class";
+import { toHundredPointScale } from "./feedback-score";
+import { compareByReadiness } from "./marketplace-score";
 
 /** Higher = better fit for marketplace ranking */
 export function rankScore(agent: Agent, categoryId?: CategoryId): number {
@@ -49,9 +51,18 @@ export function sortAgents(
       );
     }
     if (mode === "ratings") {
+      const aRated = (a.total_feedbacks ?? 0) > 0;
+      const bRated = (b.total_feedbacks ?? 0) > 0;
+      if (aRated !== bRated) return bRated ? 1 : -1;
+      const avg =
+        toHundredPointScale(b.average_score) -
+        toHundredPointScale(a.average_score);
+      if (avg !== 0) return avg;
       return (b.total_feedbacks ?? 0) - (a.total_feedbacks ?? 0);
     }
     if (mode === "score") {
+      const ready = compareByReadiness(a, b);
+      if (ready !== 0) return ready;
       return compareByScore(a, b);
     }
     const dest = destinationRank(b) - destinationRank(a);
