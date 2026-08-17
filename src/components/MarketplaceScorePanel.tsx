@@ -15,14 +15,14 @@ export async function MarketplaceScorePanel() {
       <div className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="section-label">Marketplace score</p>
+            <p className="section-label">Marketplace rating</p>
             <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
-              Pentagon index
+              5-axis rating
             </h2>
             <p className="body-sm mt-1.5 max-w-xl">
               Market average across sampled agents from{" "}
               {snap.partner.name}. Each listing in Browse / Categories has its
-              own radar — open any agent for the full breakdown.
+              own rating pentagon — open any agent for the full breakdown.
             </p>
           </div>
           <div className="text-right text-[11px] text-white/35">
@@ -41,7 +41,7 @@ export async function MarketplaceScorePanel() {
 
       {snap.error && snap.sampleSize === 0 && !hasChart ? (
         <div className="px-5 py-8 text-sm text-rose-200/90 sm:px-6">
-          Could not load partner scores: {snap.error}
+          Could not load partner ratings: {snap.error}
         </div>
       ) : (
         <div className="grid gap-8 p-5 lg:grid-cols-[minmax(280px,320px)_1fr] lg:items-center sm:p-6">
@@ -55,7 +55,7 @@ export async function MarketplaceScorePanel() {
               gradientId="market-avg-pent"
             />
             <p className="mt-3 text-center text-sm text-white/55">
-              Composite{" "}
+              Rating{" "}
               <span className="font-bold text-amber-200">
                 {snap.marketComposite}
               </span>{" "}
@@ -94,7 +94,7 @@ export async function MarketplaceScorePanel() {
         <div className="border-t border-white/[0.06] px-5 py-5 sm:px-6">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-200/60">
-              Top by Genesis composite
+              Top by Genesis rating
             </p>
             <Link
               href="/browse?sort=score"
@@ -129,7 +129,7 @@ export async function MarketplaceScorePanel() {
                     )}
                   </div>
                   <p className="mt-0.5 text-[11px] tabular-nums text-white/40">
-                    Composite {c.composite}
+                    Rating {c.composite}
                   </p>
                   <p className="mt-1 line-clamp-1 text-[10px] text-white/30">
                     {c.axes

@@ -132,12 +132,12 @@ export default async function GenesisAgentPage({ params }: Props) {
             id="score"
             className="mt-8 scroll-mt-24 rounded-2xl border border-amber-400/20 bg-white/[0.03] p-5 sm:p-6"
           >
-            <p className="section-label">Marketplace score</p>
+            <p className="section-label">Marketplace rating</p>
             <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white">
-              Pentagon index
+              5-axis rating
             </h2>
             <p className="body-sm mt-1.5 max-w-xl">
-              Genesis 5-axis score for this {BRAND.byBadge} specialist.
+              Genesis 5-axis rating for this {BRAND.byBadge} specialist.
             </p>
             <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
               <div className="flex flex-col items-center">
@@ -161,7 +161,7 @@ export default async function GenesisAgentPage({ params }: Props) {
               { label: "ETA", value: `~${agent.etaMinutes}m` },
               { label: "Category", value: cat?.shortName || "—" },
               {
-                label: "Composite",
+                label: "Rating",
                 value: String(Math.round(composite)),
               },
             ].map((m) => (

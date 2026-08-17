@@ -50,7 +50,7 @@ const STEPS = [
   {
     n: "02",
     t: "Compare",
-    d: "Side-by-side scores, fit, and track-record signals before you hire.",
+    d: "Side-by-side ratings, fit, and track-record signals before you hire.",
   },
   {
     n: "03",

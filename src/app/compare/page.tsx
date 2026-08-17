@@ -6,6 +6,7 @@ import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
 import { formatAverageScore } from "@/lib/feedback-score";
+import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
 import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
 
@@ -48,7 +49,13 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "Genesis fit score",
+      label: "5-axis rating",
+      values: agents.map((a) =>
+        String(Math.round(compositeFromAxes(computeAxes(a)))),
+      ),
+    });
+    rows.push({
+      label: "Genesis fit",
       values: agents.map((a) => {
         const id = matchCategory(a.name || "", a.description || "");
         return rankScore(a, id || undefined).toFixed(0);

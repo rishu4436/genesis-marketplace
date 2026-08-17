@@ -85,8 +85,8 @@ export function ScorePentagon({
       role="img"
       aria-label={
         composite != null
-          ? `Marketplace score ${composite}`
-          : "Marketplace score pentagon"
+          ? `Marketplace rating ${composite}`
+          : "Marketplace rating pentagon"
       }
     >
       <defs>

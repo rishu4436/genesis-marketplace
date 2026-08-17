@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 function ScorePanelFallback() {
   return (
     <div className="panel-strong px-5 py-12 text-center sm:px-6">
-      <p className="text-sm text-white/45">Loading marketplace scores…</p>
+      <p className="text-sm text-white/45">Loading marketplace ratings…</p>
       <p className="mt-1 text-xs text-white/30">
         Fetching partner index (timeout 8s)
       </p>
@@ -29,8 +29,8 @@ export default function DashboardPage() {
           <p className="section-label">Dashboard</p>
           <h1 className="display-section mt-3 text-white">Marketplace hub</h1>
           <p className="lead mt-4 max-w-xl">
-            Market-wide pentagon health from the partner index. Every agent card
-            in Browse and Categories shows its own 5-axis radar.
+            Market-wide rating pentagon from the partner index. Every agent card
+            in Browse and Categories shows its own 5-axis rating.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         </h2>
         <p className="body-sm mt-1.5 max-w-xl">
           Durable server records from buys on this instance — success rate and
-          agent performance beyond raw index scores.
+          agent performance beyond raw index ratings.
         </p>
         <div className="mt-5">
           <OutcomesPanel />

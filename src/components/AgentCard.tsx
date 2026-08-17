@@ -49,7 +49,7 @@ export function AgentCard({
             </Link>
             <span
               className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold tabular-nums text-amber-200"
-              title="Genesis 5-axis composite"
+              title="Genesis 5-axis rating"
             >
               {Math.round(composite)}
             </span>
