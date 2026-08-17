@@ -24,6 +24,8 @@ type Props = {
     sort?: string;
     x402?: string;
     verified?: string;
+    ratings?: string;
+    /** @deprecated use ratings=1 */
     feedback?: string;
   }>;
 };
@@ -39,7 +41,7 @@ function buildBrowseHref(
   if (next.sort) p.set("sort", next.sort);
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");
-  if (next.feedback === "1") p.set("feedback", "1");
+  if (next.ratings === "1") p.set("ratings", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `/browse?${s}` : "/browse";
@@ -47,7 +49,7 @@ function buildBrowseHref(
 
 async function fetchBrowsePool(opts: {
   q?: string;
-  sortMode: "rank" | "score" | "newest" | "feedback";
+  sortMode: "rank" | "score" | "newest" | "ratings";
 }): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
   const collected: Agent[] = [];
   let error: string | null = null;
@@ -120,9 +122,16 @@ export default async function BrowsePage({ searchParams }: Props) {
   const pageSize = 24;
 
   const sortMode =
-    sp.sort === "score" || sp.sort === "newest" || sp.sort === "feedback"
-      ? sp.sort
+    sp.sort === "score" ||
+    sp.sort === "newest" ||
+    sp.sort === "ratings" ||
+    sp.sort === "feedback"
+      ? sp.sort === "feedback"
+        ? "ratings"
+        : sp.sort
       : "rank";
+
+  const hasRatings = sp.ratings === "1" || sp.feedback === "1";
 
   // Keep sort in filters even for "rank" as empty — for score always "score"
   const filters: BrowseFilters = {
@@ -131,7 +140,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     sort: sortMode === "rank" ? undefined : sortMode,
     x402: sp.x402,
     verified: sp.verified,
-    feedback: sp.feedback,
+    ratings: hasRatings ? "1" : undefined,
   };
 
   const pool = await fetchBrowsePool({ q: q || undefined, sortMode });
@@ -140,7 +149,7 @@ export default async function BrowsePage({ searchParams }: Props) {
   let agents = filterAgents(quality.kept, {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
-    hasFeedback: filters.feedback === "1",
+    hasRatings: filters.ratings === "1",
   });
 
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
@@ -217,8 +226,8 @@ export default async function BrowsePage({ searchParams }: Props) {
         {filters.verified === "1" && (
           <input type="hidden" name="verified" value="1" />
         )}
-        {filters.feedback === "1" && (
-          <input type="hidden" name="feedback" value="1" />
+        {filters.ratings === "1" && (
+          <input type="hidden" name="ratings" value="1" />
         )}
         <button type="submit" className="btn-primary !rounded-xl !py-3">
           Search

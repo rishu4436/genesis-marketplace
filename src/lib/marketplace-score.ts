@@ -5,7 +5,7 @@
  * and normalized into 0–100 axes for radar display + a single composite.
  *
  * Axes (pentagon):
- *  1. Reputation  — feedback quality (average_score)
+ *  1. Reputation  — rating quality (average_score)
  *  2. Trust       — verification + on-chain identity signals
  *  3. Reach       — stars / social proof
  *  4. Commerce    — x402 + protocols (can get paid / interoperable)
@@ -97,7 +97,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   const health = num(agent.health_score);
   const protocols = agent.supported_protocols?.length ?? 0;
 
-  // Reputation: feedback quality, boosted slightly by volume
+  // Reputation: rating quality, boosted slightly by volume
   const reputation = clamp01(
     avg > 0
       ? avg * 0.85 + Math.min(feedbacks, 40) * 0.375
@@ -112,7 +112,7 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   if (agent.image_url) trust += 8;
   trust = clamp01(trust);
 
-  // Reach: stars + feedback volume (social proof)
+  // Reach: stars + rating volume (social proof)
   const reach = clamp01(
     Math.min(stars, 80) * 0.7 + Math.min(feedbacks, 50) * 0.9,
   );

@@ -5,7 +5,7 @@ import type { Agent } from "./types";
  *
  * 8004scan fields:
  * - total_score: composite marketplace score (often ~0–60+)
- * - average_score: feedback average 0–100 when reviews exist
+ * - average_score: rating average 0–100 when reviews exist
  *
  * We sort and display the SAME number so page 1 is always ≥ page 2.
  * Prefer total_score (what the index ranks by); if missing, use average_score.

@@ -5,7 +5,7 @@ export type BrowseFilters = {
   sort?: string;
   x402?: string;
   verified?: string;
-  feedback?: string;
+  ratings?: string;
   page?: string;
 };
 
@@ -13,11 +13,11 @@ function hrefWith(base: string, current: BrowseFilters, patch: BrowseFilters) {
   const p = new URLSearchParams();
   const next = { ...current, ...patch };
   if (next.q) p.set("q", next.q);
-  // Persist sort on every link (score/feedback/newest) so paging never drops it
+  // Persist sort on every link (score/ratings/newest) so paging never drops it
   if (next.sort && next.sort !== "rank") p.set("sort", next.sort);
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");
-  if (next.feedback === "1") p.set("feedback", "1");
+  if (next.ratings === "1") p.set("ratings", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `${base}?${s}` : base;
@@ -57,7 +57,7 @@ export function FilterBar({
           sort: "rank",
         })}
         {chip(filters.sort === "score", "Score", { sort: "score" })}
-        {chip(filters.sort === "feedback", "Ratings", { sort: "feedback" })}
+        {chip(filters.sort === "ratings", "Ratings", { sort: "ratings" })}
         {chip(filters.sort === "newest", "Newest", { sort: "newest" })}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -70,10 +70,10 @@ export function FilterBar({
         {chip(filters.verified === "1", "Verified", {
           verified: filters.verified === "1" ? undefined : "1",
         })}
-        {chip(filters.feedback === "1", "Has ratings", {
-          feedback: filters.feedback === "1" ? undefined : "1",
+        {chip(filters.ratings === "1", "Has ratings", {
+          ratings: filters.ratings === "1" ? undefined : "1",
         })}
-        {(filters.x402 || filters.verified || filters.feedback || filters.sort) && (
+        {(filters.x402 || filters.verified || filters.ratings || filters.sort) && (
           <Link
             href={filters.q ? `${basePath}?q=${encodeURIComponent(filters.q)}` : basePath}
             className="text-xs text-white/40 underline-offset-2 hover:text-white/70 hover:underline"

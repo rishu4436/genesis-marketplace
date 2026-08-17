@@ -51,7 +51,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | Path | Purpose |
 |------|---------|
 | `/` | Marketplace home + 4 category shelves |
-| `/browse` | Search, sort, filters (x402 / verified / feedback) |
+| `/browse` | Search, sort, filters (x402 / verified / ratings) |
 | `/categories` | Four first-class categories |
 | `/categories/[id]` | Category shelf (multi-strategy fetch + rank) |
 | `/agents/[chainId]/[tokenId]` | Detail, fit score, hire wizard, related |

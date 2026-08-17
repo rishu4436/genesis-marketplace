@@ -36,7 +36,7 @@ export function rankScore(agent: Agent, categoryId?: CategoryId): number {
 
 export function sortAgents(
   agents: Agent[],
-  opts?: { categoryId?: CategoryId; mode?: "rank" | "score" | "newest" | "feedback" },
+  opts?: { categoryId?: CategoryId; mode?: "rank" | "score" | "newest" | "ratings" },
 ): Agent[] {
   const mode = opts?.mode ?? "rank";
   const copy = [...agents];
@@ -48,7 +48,7 @@ export function sortAgents(
         new Date(a.created_at || 0).getTime()
       );
     }
-    if (mode === "feedback") {
+    if (mode === "ratings") {
       return (b.total_feedbacks ?? 0) - (a.total_feedbacks ?? 0);
     }
     if (mode === "score") {
@@ -67,14 +67,14 @@ export function filterAgents(
   filters: {
     x402?: boolean;
     verified?: boolean;
-    hasFeedback?: boolean;
+    hasRatings?: boolean;
     q?: string;
   },
 ): Agent[] {
   let out = agents;
   if (filters.x402) out = out.filter((a) => a.x402_supported);
   if (filters.verified) out = out.filter((a) => a.is_verified);
-  if (filters.hasFeedback) out = out.filter((a) => (a.total_feedbacks ?? 0) > 0);
+  if (filters.hasRatings) out = out.filter((a) => (a.total_feedbacks ?? 0) > 0);
   if (filters.q?.trim()) {
     const q = filters.q.trim().toLowerCase();
     out = out.filter(

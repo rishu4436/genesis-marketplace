@@ -55,7 +55,7 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "Avg score",
+      label: "Avg rating",
       values: agents.map((a) => formatAverageScore(a.average_score)),
     });
     rows.push({

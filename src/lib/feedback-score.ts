@@ -1,5 +1,5 @@
 /**
- * 8004scan feedback scores are usually 0–100.
+ * 8004scan rating scores are usually 0–100.
  * A few sources use 0–5. Never print a 60 as "60/5".
  */
 
