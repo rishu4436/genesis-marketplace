@@ -4,11 +4,11 @@
   "walletAddress": "0xD322D37a6E772ed2c4E32C53f66cd72e20480f80",
   "adminAddress": "0xD322D37a6E772ed2c4E32C53f66cd72e20480f80",
   "keystore": "0x6b8361C29d05D498b1a12B54A37310f94171E94A",
-  "transactionHash": "0xdb0c1d6361e239e5e60a1cc76c59333f79f127d638b69995da591eca0f3a2c58",
-  "explorerUrl": "https://testnet.bscscan.com/tx/0xdb0c1d6361e239e5e60a1cc76c59333f79f127d638b69995da591eca0f3a2c58",
+  "transactionHash": "0xd2802c897877a0b25e12946739d876caeb5327ab25721b9fc74381dd4753eda5",
+  "explorerUrl": "https://testnet.bscscan.com/tx/0xd2802c897877a0b25e12946739d876caeb5327ab25721b9fc74381dd4753eda5",
   "keystoreExplorer": "https://testnet.bscscan.com/address/0x6b8361C29d05D498b1a12B54A37310f94171E94A",
   "agentSlug": "range-keeper",
   "agentName": "RangeKeeper",
-  "grantedAt": "2026-08-17T08:10:21.653Z",
-  "sessionId": "alt_mswye53j_7bllh2"
+  "grantedAt": "2026-08-18T10:57:29.105Z",
+  "sessionId": "alt_msyjswf0_j6zwb9"
 }

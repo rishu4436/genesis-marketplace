@@ -1,0 +1,124 @@
+[project]
+name = "YieldRouter-agent"
+
+[stack]
+# Project-lifetime facts: which framework / runtime adapter recipes this
+# Agent was scaffolded against. doctor / dev / deploy read these to know
+# what to check, load, and route. framework: adk; runtime: agentcore | azure-foundry.
+framework = "adk"
+runtime = "agentcore"
+# External protocol this runtime serves (one runtime, one signer):
+#   A2A â€” serve_a2a: agent card + negotiate/notify_funded skills.
+#   MCP â€” FastMCP on /mcp: negotiate (signed quote) + notify_funded (verify â†’
+#         deliver â†’ submit, synchronously within the tool call) + read-only chain
+#         tools. MCP delivery runs in-call (â‰¤ ~15 min); the runtime is stateful.
+protocol = "A2A"
+
+[network]
+default = "bsc-testnet"
+
+[deploy]
+# Deploy destination (orthogonal to [stack].runtime). 'platform' deploys
+# through the BNB Chain managed platform as a 48h TESTNET TRIAL sandbox
+# (auto-reclaimed at 48h), not a production seller. `bag deploy` dispatches
+# on this; it records [deploy.platform] (slug/deployment_id/invoke_url)
+# post-deploy. Absent â‡’ self (deploy to your own cloud via [stack].runtime).
+destination = "platform"
+# Artifact channel: 'zip' (evm-local default â€” managed runtime, no Docker)
+# or 'container' (local Docker build â†’ brokered ECR; forced for twak).
+platform_artifact = "zip"
+packaging = "zip"
+
+[wallet]
+# Local keystore signer. The Agent is the SOLE key-holder/signer.
+# The keystore lives at the WORKSPACE root â€” outside app/agent (the AgentCore
+# codeLocation) â€” so no packaging path can bundle it into a deploy artifact.
+kind = "evm-local"
+signer = "local"
+keystore_dir = "../../.studio/wallets"
+# address = "0x..."   # filled by `bag wallet new`
+address = "0xe588cD118A7D960a5f64788Ed2F61e873daC97E4"
+platform_exposed_addresses = ["0xe588cD118A7D960a5f64788Ed2F61e873daC97E4"]
+
+[llm]
+provider = "pieverse-llm"
+model = "auto/free"
+
+[llm.pieverse]
+# Pieverse topup runs ONLY on BSC mainnet (chainId=56); decoupled from [network].default.
+network = "bsc-mainnet"
+# key_hash = "..."        # written by `bag llm activate`
+# zero-deposit default. `bag llm activate` creates the key with $0
+# allocation; switch to a paid model + `bag llm topup` only when you need it.
+initial_allocation_usd = 0
+key_hash = "22e5d29c6743164c04a71656768160952d18e6557c0c50bb0502b73cdf666624"
+
+[llm.auto_renew]
+# (v0.0.1): hook auto-allocates from Pieverse Account Balance to the
+# API key when Key Credit < min_balance_usd. Account Balance is NEVER refilled
+# automatically from your wallet UNLESS you opt in via `bag budget enable`
+# â€” defaults below stay in allocate-only mode. This
+# automatic `load_model()` hook IS the agent's LLM-credit self-top-up (NOT an
+# LLM-callable tool).
+enabled = true            # set false to opt out of in-process auto-allocate
+min_balance_usd = 0.01    # Key Credit threshold that triggers allocate
+topup_chunk_usd = 1.0     # chunk pulled from Account Balance per allocate
+max_topup_per_day_usd = 3.0   # opt-in cap; only enforced when `bag budget enable` is on
+check_interval_seconds = 60
+
+[payments.erc8183]
+# Read by the Agent: it quotes the FIXED `price`, CLAMPS it to [min,max],
+# freezes a short-TTL offer, and EIP-191 signs it â€” pricing is rule-based, the
+# LLM never prices.
+currency = "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"   # $U token address â€” prefilled from [network].default
+price = "70000000000000000"                   # wei â€” your list price (0.1 U); what every quote charges
+min_price = "10000000000000000"                                # wei â€” clamp floor
+max_price = "300000000000000000"                                 # wei â€” clamp ceiling; SET before going live
+quote_ttl_seconds = 900                        # seconds a signed quote stays valid; SDK caps at 900 (~15min work window)
+default_estimated_completion_seconds = 600
+poll_interval_seconds = 30
+auto_settle = false                            # opt-in: detect dispute-window-elapsed â†’ settle
+
+[storage]
+# Deliverables pinned to IPFS. upload() returns ipfs://CID, published
+# on-chain verbatim â€” durable, public, deploy-ready. Works with any
+# pinning service or self-hosted node: the upload endpoint is
+# STORAGE_API_URL and the write key/JWT is STORAGE_API_KEY, both in
+# .studio/.env.local.
+kind = "ipfs"
+
+
+[payments.x402]
+# Optional: PIN the trusted Pieverse pay-to address. Leave empty â€” `bag llm
+# topup` / auto-topup auto-discover it from the hardcoded, SIWE-authenticated
+# topup endpoint (validated chain + U asset). Set a value only to pin a
+# specific recipient; the generic x402 buyer still never trusts an un-pinned
+# payTo from an arbitrary URL.
+expected_recipient = ""
+allowed_hosts = ["llm.pieverse.io"]
+
+[budget]
+# auto-topup consent â€” `acknowledged_at` is the ISO-8601 UTC
+# timestamp marking when the user explicitly accepted the auto-topup terms.
+# Both `enabled = true` AND a valid `acknowledged_at` are required for the
+# in-process auto-topup hook to fire (defends against hand-edits).
+enabled = false
+acknowledged_at = "2026-08-06T16:06:54Z"
+# Caps â€” tighten/loosen via `bag budget enable --max-per-topup-usd N ...`
+max_per_topup_usd = 1.0
+max_per_day_usd = 3.0
+max_per_month_usd = 15.0
+
+[deploy.platform]
+terms_accepted_at = "2026-08-06T16:12:37Z"
+slug = "yieldrouter"
+deployment_id = "01KZBXKNH29HJTKGZH8WV9RS7A"
+agent_id = "01KZBXKNH3VKHHE3YCH1K496A9"
+invoke_url = "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXKNH3VKHHE3YCH1K496A9/.well-known/agent-card.json"
+last_deploy_at = "2026-08-06T16:14:40Z"
+
+[identity]
+endpoint = "https://genesis-marketplace-one.vercel.app/api/apex/yield-router"
+registered_at = "2026-08-18T10:08:08.387236+00:00"
+agent_id = 1774
+last_register_tx = "0xfb4a11c89b7583c78ba7c6ac1b7318c3c16ff81ee37ecb77aa59e86cb118b91c"

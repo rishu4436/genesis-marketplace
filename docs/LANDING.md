@@ -1,6 +1,9 @@
-# Genesis cinematic landing
+# Genesis landing
 
-Immersive single-page home for the BNB Chain **Build the Era** marketplace.
+Homepage (`/`) is the **archived cinematic landing** again.
+
+- Live home: `LandingPageCinematic`
+- Later desk experiment still at `src/components/landing/LandingPage.tsx`
 
 ## Run
 
@@ -11,34 +14,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Stack (landing)
-
-| Library | Role |
-|---------|------|
-| **Next.js** (App Router) | Page at `/` → `LandingPage` |
-| **Tailwind CSS v4** | Layout, glass panels, responsive |
-| **Framer Motion** | Scroll-linked hero scale/fade, `whileInView` reveals |
-| **Lenis** | Smooth scrolling (disabled when `prefers-reduced-motion`) |
-| **Canvas** | Ambient particles + soft nebula (in `LandingBackground`) |
+Archived cinematic landing: `/classic`
 
 ## Structure
 
-1. Hero — kinetic headline, 200k+ agents story, CTAs  
-2. Problem — fragmentation  
-3. Solution — Genesis front door  
-4. Four categories — equal depth cards  
-5. Specialists strip  
-6. How it works — 4 steps  
-7. Why Genesis  
-8. Final CTA  
+1. Hero — “Hire the agent. Keep the keys.” + live floor
+2. Specialists — one operator per job
+3. How hire works — three steps
+4. CTA
 
 ## Files
 
 - `src/components/landing/LandingPage.tsx`
 - `src/components/landing/LandingBackground.tsx`
 - `src/app/page.tsx`
-
-## Accessibility
-
-- `useReducedMotion()` skips Lenis and heavy transforms  
-- Canvas particle motion reduced under `prefers-reduced-motion`

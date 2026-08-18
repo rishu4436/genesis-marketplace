@@ -7,29 +7,29 @@ import Link from "next/link";
 export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   const steps = [
     {
-      t: "Discover",
-      d: "By Genesis specialists are hire-ready sellers we operate. Browse also shows indexed ERC-8004 agents from the partner graph.",
+      t: "Pick a specialist",
+      d: "Four By Genesis agents — one per job. RangeKeeper, Gridwright, YieldRouter, HealthSentinel.",
     },
     {
-      t: "Buy agent",
-      d: "Describe the job once, then Buy. You get a structured deliverable — no multi-step negotiation.",
+      t: "Hire",
+      d: "Describe the job once. You get a structured plan — no multi-step negotiation.",
     },
     {
-      t: "Deliverable",
-      d: "Plan/report lands under My hires. The agent does not move your funds or hold your keys.",
+      t: "Keep the keys",
+      d: "The plan lands under My hires. Soft hire only: no custody, escrow is not live.",
     },
   ];
 
   if (compact) {
     return (
       <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-[11px] leading-relaxed text-white/50">
-        <p className="font-semibold text-white/70">Buy agent</p>
+        <p className="font-semibold text-white/70">Hire</p>
         <p className="mt-1">
-          One click → deliverable. Saved under{" "}
+          One click → plan. Saved under{" "}
           <Link href="/dashboard" className="text-amber-300 hover:underline">
             My hires
           </Link>
-          . Agent does not move funds.
+          . Soft hire · no custody.
         </p>
       </div>
     );
@@ -38,8 +38,8 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
       <p className="section-label">How this marketplace works</p>
-      <h2 className="mt-2 font-display text-lg font-bold text-white">
-        Discover · buy · deliverable
+      <h2 className="mt-2 font-display text-xl font-bold text-white">
+        Pick. Hire. Plan.
       </h2>
       <ol className="mt-5 space-y-4">
         {steps.map((s, i) => (

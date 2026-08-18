@@ -7,38 +7,38 @@
     "range-keeper": {
       "tokenId": "1773",
       "chainId": 97,
-      "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY",
+      "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/range-keeper",
       "walletAddress": "0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133",
       "agentId": "01KZBTZ2A4NRRY71WF8YV4EXXY",
       "platformSlug": "rangekeeper",
-      "notes": "LIVE platform. ERC-8004 1773. Trial shared expiry ~2026-08-08T15:28Z."
+      "notes": "ERC-8004 1773. Endpoint updated 2026-08-18 to marketplace APEX. Platform trial expired."
     },
     "gridwright": {
-      "tokenId": "",
+      "tokenId": "1841",
       "chainId": 97,
-      "serviceUrl": "",
+      "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/gridwright",
       "walletAddress": "0xee011fC24c9037908a819352b4485573483849f1",
       "agentId": "",
       "platformSlug": "",
-      "notes": "Project ready in studio/Gridwright. FREE TIER MAX 3 agents — deploy when a slot is free (bag platform kill <slug>). Until then marketplace uses local APEX."
+      "notes": "ERC-8004 1841 on bsc-testnet. Hire path: marketplace APEX. Platform 48h trial expired 2026-08-08."
     },
     "yield-router": {
       "tokenId": "1774",
       "chainId": 97,
-      "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXKNH3VKHHE3YCH1K496A9",
+      "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/yield-router",
       "walletAddress": "0xe588cD118A7D960a5f64788Ed2F61e873daC97E4",
       "agentId": "01KZBXKNH3VKHHE3YCH1K496A9",
       "platformSlug": "yieldrouter",
-      "notes": "LIVE platform. ERC-8004 1774."
+      "notes": "ERC-8004 1774. Endpoint updated 2026-08-18 to marketplace APEX. Platform trial expired."
     },
     "health-sentinel": {
       "tokenId": "1775",
       "chainId": 97,
-      "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXTNSPVX052KK69RPWJMN8",
+      "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/health-sentinel",
       "walletAddress": "0x037ffBF18DF73812EC29D024AbB7e79DbB4356c8",
       "agentId": "01KZBXTNSPVX052KK69RPWJMN8",
       "platformSlug": "healthsentinel",
-      "notes": "LIVE platform. ERC-8004 1775."
+      "notes": "ERC-8004 1775. Endpoint updated 2026-08-18 to marketplace APEX. Platform trial expired."
     }
   }
 }

@@ -151,12 +151,15 @@ export default function AdvantagePage() {
                     href={`/genesis/${task.withAgent.genesisSlug}#buy`}
                     className="rounded-full bg-amber-400 px-3 py-1.5 text-xs font-semibold text-black"
                   >
-                    Buy {task.withAgent.agentName}
+                    Hire {task.withAgent.agentName}
                   </Link>
                   {task.withAgent.jobId && (
-                    <span className="rounded-full border border-white/10 px-3 py-1.5 font-mono text-[10px] text-white/40">
-                      {task.withAgent.jobId}
-                    </span>
+                    <Link
+                      href={`/jobs/${task.withAgent.jobId}`}
+                      className="rounded-full border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200"
+                    >
+                      Open live result →
+                    </Link>
                   )}
                 </div>
               </div>

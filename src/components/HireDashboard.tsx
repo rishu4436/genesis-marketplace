@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { HireJob, HireStatus } from "@/lib/hire-engine";
 import { BRAND } from "@/lib/brand";
+import { HireAccountBar } from "@/components/HireAccountBar";
 
 function statusStyle(status: HireStatus | string) {
   switch (status) {
@@ -92,7 +93,17 @@ function RecoverBox({
       if (!res.ok || !json.data) {
         throw new Error(json.error || "No hire found for that receipt");
       }
-      onRecovered(persistRecovered(json.data));
+      const recovered = json.data;
+      try {
+        await fetch("/api/profile/hires", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId: recovered.id }),
+        });
+      } catch {
+        /* guest recover still works locally */
+      }
+      onRecovered(persistRecovered(recovered));
       setQ("");
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Lookup failed");
@@ -107,11 +118,11 @@ function RecoverBox({
       className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4"
     >
       <p className="text-xs font-semibold text-amber-100">
-        Recover a hire on this device
+        Open a receipt
       </p>
       <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-        Paste your result link or claim code (GX-XXX-XXX). You do not buy
-        again. This browser list is only a cache.
+        Paste a result link or claim code (GX-XXX-XXX). If you are signed in,
+        it is saved to your account.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <input
@@ -137,21 +148,24 @@ export function HireDashboard() {
   const [jobs, setJobs] = useState<HireJob[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
 
-  useEffect(() => {
-    let local: HireJob[] = [];
+  function loadLocal(): HireJob[] {
     try {
       const raw = localStorage.getItem("genesis-hires");
       const arr = raw ? (JSON.parse(raw) as HireJob[]) : [];
-      local = Array.isArray(arr) ? arr : [];
+      return Array.isArray(arr) ? arr : [];
     } catch {
-      local = [];
+      return [];
     }
-    setJobs(local);
-    fetch("/api/profile/hires")
-      .then((r) => r.json())
-      .then((j: { data?: HireJob[] }) => {
-        if (!Array.isArray(j.data)) return;
+  }
+
+  async function loadServerFirst() {
+    const local = loadLocal();
+    try {
+      const r = await fetch("/api/profile/hires");
+      const j = (await r.json()) as { data?: HireJob[]; signedIn?: boolean };
+      if (r.ok && Array.isArray(j.data)) {
         const map = new Map<string, HireJob>();
         for (const job of [...j.data, ...local]) map.set(job.id, job);
         const merged = [...map.values()].sort(
@@ -159,11 +173,18 @@ export function HireDashboard() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
         setJobs(merged);
-      })
-      .catch(() => {
-        /* stay on local cache */
-      })
-      .finally(() => setReady(true));
+        setSignedIn(true);
+        return;
+      }
+    } catch {
+      /* guest */
+    }
+    setSignedIn(false);
+    setJobs(local);
+  }
+
+  useEffect(() => {
+    loadServerFirst().finally(() => setReady(true));
   }, []);
 
   const stats = useMemo(() => {
@@ -202,12 +223,21 @@ export function HireDashboard() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 font-display text-xl text-amber-300">
             ∅
           </div>
-          <h2 className="card-title mt-6 text-xl">No hires on this device</h2>
+          <h2 className="card-title mt-6 text-xl">
+            {signedIn ? "No hires on this account yet" : "No hires here yet"}
+          </h2>
           <p className="body mx-auto mt-3 max-w-sm">
-            New phone? Recover with the claim code or result link from your
-            last plan. You do not buy again.
+            {signedIn
+              ? "Hire a specialist. The plan is saved to this account."
+              : "Sign in so hires follow you, or open a claim code from another device."}
           </p>
-          <div className="mx-auto mt-6 max-w-md text-left">
+          <div className="mx-auto mt-6 max-w-md space-y-4 text-left">
+            <HireAccountBar
+              onChange={(ok) => {
+                setSignedIn(ok);
+                if (ok) void loadServerFirst();
+              }}
+            />
             <RecoverBox
               onRecovered={(next) => {
                 setJobs(next);
@@ -216,11 +246,11 @@ export function HireDashboard() {
             />
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/hire" className="btn-primary">
+            <Link href="/hire" className="btn-solid">
               Get a new plan
             </Link>
-            <Link href="/categories" className="btn-secondary">
-              Browse categories
+            <Link href="/shop" className="btn-line">
+              Shop by job
             </Link>
           </div>
         </div>
@@ -230,6 +260,12 @@ export function HireDashboard() {
 
   return (
     <div className="space-y-6">
+      <HireAccountBar
+        onChange={(ok) => {
+          setSignedIn(ok);
+          void loadServerFirst();
+        }}
+      />
       {/* Summary strip */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
@@ -255,15 +291,18 @@ export function HireDashboard() {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-white/45">
-          {jobs.length} job{jobs.length === 1 ? "" : "s"} cached on this device
+          {jobs.length} hire{jobs.length === 1 ? "" : "s"}
+          {signedIn ? " on this account" : " on this device"}
         </p>
-        <button
-          type="button"
-          onClick={clearAll}
-          className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-white/45 transition hover:border-white/20 hover:text-white/70"
-        >
-          Clear all
-        </button>
+        {!signedIn && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-white/45 transition hover:border-white/20 hover:text-white/70"
+          >
+            Clear this device
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">

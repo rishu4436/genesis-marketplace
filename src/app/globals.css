@@ -26,6 +26,7 @@ body {
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.011em;
   font-feature-settings: "ss01" on, "cv11" on;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -54,6 +55,62 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 1.25rem;
+  border-radius: 9999px;
+  background: #f0b90b;
+  color: #0a0a0a;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.btn-solid:hover {
+  background: #f5c842;
+}
+.btn-solid:active {
+  transform: scale(0.98);
+}
+
+.btn-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 1.15rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.btn-line:hover {
+  border-color: rgba(240, 185, 11, 0.45);
+  background: rgba(240, 185, 11, 0.06);
+}
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.btn-text:hover {
+  color: #f0b90b;
 }
 
 .display-hero {
@@ -305,6 +362,40 @@ img {
   }
 }
 
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes hire-progress {
+  0% {
+    width: 18%;
+  }
+  50% {
+    width: 78%;
+  }
+  100% {
+    width: 18%;
+  }
+}
+
+@keyframes float-card {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .anim-in,
   .anim-in-d1,
@@ -317,8 +408,16 @@ img {
   .genesis-mark-bag {
     animation: none !important;
   }
+
+  [style*="float-card"],
+  [style*="hire-progress"],
+  [style*="pulse-dot"] {
+    animation: none !important;
+  }
   .btn-primary,
-  .btn-secondary {
+  .btn-secondary,
+  .btn-solid,
+  .btn-line {
     transition: none;
   }
 }

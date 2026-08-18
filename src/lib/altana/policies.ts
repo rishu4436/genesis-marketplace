@@ -54,10 +54,10 @@ export const SPECIALIST_POLICIES: Record<string, AgentPolicyTemplate> = {
     bullets: [
       "Call allowlist: PancakeSwap V3 router + NonfungiblePositionManager",
       "Spend cap: demo USDT/day + small native BNB for gas",
-      "Expiry: default 24h (revocable anytime)",
+      "Expiry: 30d (revocable anytime)",
       "No unrestricted calls — Keystore-verifiable",
     ],
-    defaultExpiryHours: 24,
+    defaultExpiryHours: 720,
     nativeSpendBnb: "0.02",
     calls: [
       { to: BSC_CONTRACTS.pcsV3SwapRouter },
@@ -80,9 +80,9 @@ export const SPECIALIST_POLICIES: Record<string, AgentPolicyTemplate> = {
     bullets: [
       "Call allowlist: PCS V2/V3 routers",
       "Spend cap: 25 USDT/day + gas BNB",
-      "Expiry: 12h default",
+      "Expiry: 30d default (judging window)",
     ],
-    defaultExpiryHours: 12,
+    defaultExpiryHours: 720,
     nativeSpendBnb: "0.015",
     calls: [
       { to: BSC_CONTRACTS.pcsV2Router },
@@ -105,9 +105,9 @@ export const SPECIALIST_POLICIES: Record<string, AgentPolicyTemplate> = {
     bullets: [
       "Call allowlist: Venus comptroller + PCS routers",
       "Spend cap: 100 USDT/day",
-      "Expiry: 24h",
+      "Expiry: 30d",
     ],
-    defaultExpiryHours: 24,
+    defaultExpiryHours: 720,
     nativeSpendBnb: "0.02",
     calls: [
       { to: BSC_CONTRACTS.venusComptroller },
@@ -131,9 +131,9 @@ export const SPECIALIST_POLICIES: Record<string, AgentPolicyTemplate> = {
     bullets: [
       "Call allowlist: Venus comptroller",
       "Spend cap: 75 USDT/day for repay",
-      "Expiry: 48h (alerts may need window)",
+      "Expiry: 30d",
     ],
-    defaultExpiryHours: 48,
+    defaultExpiryHours: 720,
     nativeSpendBnb: "0.02",
     calls: [{ to: BSC_CONTRACTS.venusComptroller }],
     tokenSpends: [

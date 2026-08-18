@@ -1,0 +1,145 @@
+{
+  "id": "job_msyi1ltz_hocg2l",
+  "claimCode": "GX-QTT-QKW",
+  "createdAt": "2026-08-18T10:07:53.543Z",
+  "updatedAt": "2026-08-18T10:07:53.964Z",
+  "status": "delivered",
+  "chainId": 56,
+  "tokenId": "genesis:yield-router",
+  "agentName": "YieldRouter",
+  "genesisSlug": "yield-router",
+  "categoryId": "yield-optimisation",
+  "task": "Rank venues for 5000 USDT on BSC and propose a split under a 2 USD gas budget. Risk-adjusted APR.",
+  "budgetUsd": "7",
+  "duration": "once",
+  "risk": "low",
+  "tier": "full",
+  "buyerContext": null,
+  "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBXKNH3VKHHE3YCH1K496A9",
+  "timeline": [
+    {
+      "at": "2026-08-18T10:07:53.544Z",
+      "status": "negotiating",
+      "detail": "Specialist negotiate · YieldRouter"
+    },
+    {
+      "at": "2026-08-18T10:07:53.952Z",
+      "status": "quoted",
+      "detail": "Quoted $7 · ETA 2m · YieldRouter"
+    },
+    {
+      "at": "2026-08-18T10:07:53.952Z",
+      "status": "funded",
+      "detail": "Job marked funded (simulated escrow — no user fund custody on Genesis)"
+    },
+    {
+      "at": "2026-08-18T10:07:53.952Z",
+      "status": "fulfilling",
+      "detail": "Multi-source analysis + specialist plan…"
+    },
+    {
+      "at": "2026-08-18T10:07:53.964Z",
+      "status": "delivered",
+      "detail": "Full analysis ready"
+    }
+  ],
+  "quote": {
+    "priceUsd": 7,
+    "currency": "USD",
+    "etaMinutes": 2,
+    "protocol": "ERC-8183-sim",
+    "expiresAt": "2026-08-18T10:37:53.952Z",
+    "notes": "Full analysis for YieldRouter.",
+    "live": false,
+    "tier": "full"
+  },
+  "deliverable": {
+    "title": "Yield route · USDT on BSC",
+    "summary": "YieldRouter ranked USDT venues under risk=low. Recommended barbell: 75% liquid lending · 15% PCS/farm sleeve · 10% dry powder. Target band 4–8% risk-adjusted on ~$5,000 notional. Gas ≲ $4.00. Confidence 76/100. Recommendation: ALLOCATE barbell — core lend first, satellite farm second, keep dry powder.",
+    "sections": [
+      {
+        "heading": "Data sources",
+        "body": "• USDT: $0.999 (-0.01% 24h)\n  sources: CoinGecko simple price [live] $0.999214 · 24h -0.01% · PancakeSwap context [derived] LP/farm framing for BSC (plan-level, not pool slot0)\n\n• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n• Protocol framing: PancakeSwap / Venus / Aave-style (plan-level)\n• Model: genesis-v2 · fetched 2026-08-18T10:07:53.954Z"
+      },
+      {
+        "heading": "Buyer context",
+        "body": "No portfolio context attached. Add a buyer profile for personalised PnL notes (UOMP-style)."
+      },
+      {
+        "heading": "Bull / bear thesis",
+        "body": "BULL: Liquid USDT lending remains core; PCS satellite only when risk-adj APR clears IL/gas hurdle.\n\nBEAR: Farm APRs can be emissions mirages; TVL exits strand capital."
+      },
+      {
+        "heading": "Hard recommendation",
+        "body": "ALLOCATE barbell — core lend first, satellite farm second, keep dry powder."
+      },
+      {
+        "heading": "Brief intake",
+        "body": "• Task: Rank venues for 5000 USDT on BSC and propose a split under a 2 USD gas budget. Risk-adjusted APR.\n• Asset (resolved): USDT\n• Notional: $5,000\n• Target APR (if stated): not specified — optimize risk-adj\n• Risk: low\n• Gas cap: $4.00"
+      },
+      {
+        "heading": "Venue ranking (risk-adjusted)",
+        "body": "• #1 Liquid lending: Venus / blue-chip supply — exit anytime, moderate APR\n• #2 PCS farm / gauge: Only if pair IL accepted; prefer deep stables or majors\n• #3 LST / restake path: Optional sleeve if you accept smart-contract stack risk\n• Avoid: Unverified farms, <24h old pools, opaque points-only APRs"
+      },
+      {
+        "heading": "Allocation plan",
+        "body": "• Lending: 75% (≈ $3750)\n• Farm / PCS-related: 15% (≈ $750)\n• Dry powder: 10% (≈ $500)\n• Rebalance trigger: Top venue APR compresses >30% relative or TVL −40%\n• Horizon: Review in 48h, full re-rank in 7d"
+      },
+      {
+        "heading": "Execution checklist",
+        "body": "1. Confirm live supply APR for USDT on your chosen lender\n2. Size 75% of $5,000 into lending first (safest leg)\n3. If farm sleeve: prefer PCS pools with deep liquidity; set IL mental stop\n4. Keep gas budget ≤ $4.00; batch approvals\n5. Screenshot starting balances for later PnL"
+      },
+      {
+        "heading": "PancakeSwap note",
+        "body": "When PCS farm clears risk-adjusted hurdles vs pure lending, use it as the satellite sleeve — not the core. IL can erase APR quickly on volatile pairs."
+      },
+      {
+        "heading": "Risks",
+        "body": "• Smart contract: Prefer audited, high-TVL venues\n• IL: Farms with non-stable pairs\n• Liquidity: Exit path must work under stress\n• Custody: Agent never moves funds — you execute"
+      }
+    ],
+    "metrics": [
+      {
+        "label": "Asset",
+        "value": "USDT"
+      },
+      {
+        "label": "Notional",
+        "value": "$5,000"
+      },
+      {
+        "label": "Risk-adj APR",
+        "value": "4–8%"
+      },
+      {
+        "label": "Split",
+        "value": "75/15/10"
+      },
+      {
+        "label": "Re-check",
+        "value": "48h"
+      },
+      {
+        "label": "Gas cap",
+        "value": "$4.00"
+      },
+      {
+        "label": "Confidence",
+        "value": "76/100"
+      },
+      {
+        "label": "Agent",
+        "value": "YieldRouter"
+      },
+      {
+        "label": "Spot",
+        "value": "$0.999"
+      },
+      {
+        "label": "Rec",
+        "value": "ALLOCATE barbell"
+      }
+    ],
+    "disclaimer": "YieldRouter plan uses illustrative rankings. Verify live APRs and TVL before depositing. Not financial advice. Multi-source snapshot may lag; verify live venues before capital moves."
+  }
+}

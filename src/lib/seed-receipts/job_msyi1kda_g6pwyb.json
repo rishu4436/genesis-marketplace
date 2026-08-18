@@ -1,0 +1,146 @@
+{
+  "id": "job_msyi1kda_g6pwyb",
+  "claimCode": "GX-YWU-WKZ",
+  "createdAt": "2026-08-18T10:07:51.646Z",
+  "updatedAt": "2026-08-18T10:07:53.488Z",
+  "status": "delivered",
+  "chainId": 56,
+  "tokenId": "genesis:gridwright",
+  "agentName": "Gridwright",
+  "genesisSlug": "gridwright",
+  "categoryId": "grid-trading",
+  "task": "Design a 12-level geometric grid on BNB/USDT between 500 and 700. Size notional, pause rules, 24h fill sketch.",
+  "budgetUsd": "10",
+  "duration": "once",
+  "risk": "medium",
+  "tier": "full",
+  "buyerContext": null,
+  "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/gridwright",
+  "timeline": [
+    {
+      "at": "2026-08-18T10:07:51.646Z",
+      "status": "negotiating",
+      "detail": "Specialist negotiate · Gridwright"
+    },
+    {
+      "at": "2026-08-18T10:07:53.478Z",
+      "status": "quoted",
+      "detail": "Live negotiate OK · $9.5 · local APEX"
+    },
+    {
+      "at": "2026-08-18T10:07:53.478Z",
+      "status": "funded",
+      "detail": "Job marked funded (simulated escrow — no user fund custody on Genesis)"
+    },
+    {
+      "at": "2026-08-18T10:07:53.478Z",
+      "status": "fulfilling",
+      "detail": "Multi-source analysis + specialist plan…"
+    },
+    {
+      "at": "2026-08-18T10:07:53.488Z",
+      "status": "delivered",
+      "detail": "Full analysis ready"
+    }
+  ],
+  "quote": {
+    "priceUsd": 9.5,
+    "currency": "USD-sim",
+    "etaMinutes": 3,
+    "protocol": "ERC-8183",
+    "expiresAt": "2026-08-18T10:37:54.730Z",
+    "notes": "Soft-hire quote for Gridwright (no payment). Live negotiate used when seller is reachable.",
+    "providerSig": "genesis-sim:gridwright:RGVzaWduIGEgMTItbGV2ZWwgZ2VvbWV0",
+    "rawPrice": "9500000000000000000",
+    "live": false
+  },
+  "deliverable": {
+    "title": "Grid layout · BNB-USDT · 12 levels",
+    "summary": "Gridwright designed a geometric 12-level grid on BNB-USDT from 500 → 700 (mid 600.0000). Spacing ~3.03% · ~$83.33/level on ~$1000 notional · pause if unrealized DD ≥ 6%. Confidence 96/100. Recommendation: DEPLOY GRID with DD pause armed; start at 50% size for 24h validation.",
+    "sections": [
+      {
+        "heading": "Data sources",
+        "body": "• BNB: $602.26 (-0.36% 24h)\n  sources: CoinGecko simple price [live] $602.26 · 24h -0.36% · PancakeSwap context [derived] LP/farm framing for BSC (plan-level, not pool slot0)\n• USDT: $0.999 (+0% 24h)\n  sources: CoinGecko simple price [live] $0.999228 · 24h -0.00% · PancakeSwap context [derived] LP/farm framing for BSC (plan-level, not pool slot0)\n\n• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n• Protocol framing: PancakeSwap / Venus / Aave-style (plan-level)\n• Model: genesis-v2 · fetched 2026-08-18T10:07:53.486Z"
+      },
+      {
+        "heading": "Buyer context",
+        "body": "No portfolio context attached. Add a buyer profile for personalised PnL notes (UOMP-style)."
+      },
+      {
+        "heading": "Bull / bear thesis",
+        "body": "BULL: Mean-reverting tape on BNB-USDT pays geometric grids; mid-vol fills compound on outer rungs.\n\nBEAR: Trending breakouts pause inventory wrong-way; DD stop must fire before gap risk."
+      },
+      {
+        "heading": "Hard recommendation",
+        "body": "DEPLOY GRID with DD pause armed; start at 50% size for 24h validation."
+      },
+      {
+        "heading": "Brief intake",
+        "body": "• Task: Design a 12-level geometric grid on BNB/USDT between 500 and 700. Size notional, pause rules, 24h fill sketch.\n• Pair: BNB-USDT\n• Levels: 12\n• Bounds: 500 – 700\n• Deployable notional: $1000"
+      },
+      {
+        "heading": "Grid parameters",
+        "body": "• Mode: Geometric (equal % steps)\n• Spacing: ~3.03% per step\n• Inventory at mid: 50% base / 50% quote\n• Notional / level: ≈ $83.33\n• Order type: Limit grid — you place or bot executes"
+      },
+      {
+        "heading": "Level map (compressed)",
+        "body": "L1: 500.0000 · BUY\nL2: 524.6207 · BUY\nL3: 550.4538 · BUY\nL4: 577.5589 · BUY\nL5: 605.9988 · SELL\nL6: 635.8390 · SELL\nL7: 667.1486 · SELL\nL8: 700.0000 · SELL\n… +4 levels omitted"
+      },
+      {
+        "heading": "Risk controls",
+        "body": "• Drawdown pause: 6% vs mid inventory mark\n• Resume: Manual only after you review vol regime\n• Max open levels: 12\n• Risk posture: medium"
+      },
+      {
+        "heading": "24h fill sketch",
+        "body": "Under mid-vol mean reversion, expect ~5–8 fills on outer/inner rungs. Est. gross edge 0.12–0.40% of deployed notional before fees; net depends on maker fee tier on PCS/spot venue."
+      },
+      {
+        "heading": "Execution checklist",
+        "body": "1. Set low=500 high=700 on your grid UI or bot\n2. Configure 12 geometric levels; size ≈ $83.33 each\n3. Enable pause when unrealized DD ≥ 6%\n4. Start with 50% capital; scale after 24h of stable fills\n5. Never give the agent withdrawal rights — plan only"
+      }
+    ],
+    "metrics": [
+      {
+        "label": "Pair",
+        "value": "BNB-USDT"
+      },
+      {
+        "label": "Levels",
+        "value": "12"
+      },
+      {
+        "label": "Spacing",
+        "value": "~3.03%"
+      },
+      {
+        "label": "DD pause",
+        "value": "6%"
+      },
+      {
+        "label": "$ / level",
+        "value": "$83.33"
+      },
+      {
+        "label": "Notional",
+        "value": "$1000"
+      },
+      {
+        "label": "Confidence",
+        "value": "96/100"
+      },
+      {
+        "label": "Agent",
+        "value": "Gridwright"
+      },
+      {
+        "label": "Spot",
+        "value": "$602.26"
+      },
+      {
+        "label": "Rec",
+        "value": "DEPLOY GRID with DD pause armed; start at 50% size for 24h validation."
+      }
+    ],
+    "disclaimer": "Strategy brief from Gridwright. Bounds inferred when not provided. You place orders. Not financial advice. Multi-source snapshot may lag; verify live venues before capital moves."
+  }
+}

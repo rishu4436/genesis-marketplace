@@ -3,7 +3,7 @@ import { MarketplaceHome } from "@/components/MarketplaceHome";
 export const metadata = {
   title: "Shop",
   description:
-    "Find and hire DeFi agents on BNB Smart Chain — four jobs, equal depth.",
+    "Four hire-ready specialists. Four DeFi jobs. One-click plan — you keep the keys.",
 };
 
 export const revalidate = 90;

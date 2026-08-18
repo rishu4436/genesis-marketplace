@@ -21,10 +21,10 @@ export default async function JudgePage() {
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
-          <Link href="/shop" className="text-amber-300 hover:underline">
-            Shop
+          <Link href="/hire" className="text-amber-300 hover:underline">
+            Hire
           </Link>{" "}
-          — job chip → Buy
+          — pick RangeKeeper
         </li>
         <li>
           <span className="font-semibold text-white">2.</span>{" "}

@@ -1,108 +1,102 @@
 import Link from "next/link";
 import { GenesisMark } from "@/components/brand/GenesisMark";
 
-const PRODUCT = [
-  { href: "/shop", label: "Shop" },
-  { href: "/browse", label: "Marketplace floor" },
-  { href: "/categories", label: "Jobs" },
-  { href: "/hire", label: "Buy an agent" },
-  { href: "/compare", label: "Compare" },
-  { href: "/packages", label: "Packages" },
-  { href: "/advantage", label: "Advantage report" },
-  { href: "/why", label: "Why Genesis" },
-  { href: "/for-agents", label: "For agents" },
-  { href: "/sell", label: "Sell / claim" },
-  { href: "/profile", label: "Profile" },
-  { href: "/dashboard", label: "My hires" },
-  { href: "/altana", label: "Altana sessions" },
-  { href: "/judge", label: "Judge path" },
-];
-
-const SPECIALISTS = [
-  { href: "/genesis/range-keeper", label: "RangeKeeper" },
-  { href: "/genesis/gridwright", label: "Gridwright" },
-  { href: "/genesis/yield-router", label: "YieldRouter" },
-  { href: "/genesis/health-sentinel", label: "HealthSentinel" },
+const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
+  {
+    title: "Hire",
+    links: [
+      { href: "/hire", label: "Hire an agent" },
+      { href: "/shop", label: "Shop" },
+      { href: "/compare", label: "Compare" },
+      { href: "/dashboard", label: "My hires" },
+    ],
+  },
+  {
+    title: "Specialists",
+    links: [
+      { href: "/genesis/range-keeper", label: "RangeKeeper" },
+      { href: "/genesis/gridwright", label: "Gridwright" },
+      { href: "/genesis/yield-router", label: "YieldRouter" },
+      { href: "/genesis/health-sentinel", label: "HealthSentinel" },
+    ],
+  },
+  {
+    title: "Jobs",
+    links: [
+      { href: "/categories/rebalancing", label: "Rebalancing" },
+      { href: "/categories/grid-trading", label: "Grid trading" },
+      { href: "/categories/yield-optimisation", label: "Yield" },
+      { href: "/categories/health-factor", label: "Health factor" },
+    ],
+  },
 ];
 
 export function Footer() {
   return (
-    <footer className="relative z-20 mt-auto w-full border-t border-white/[0.08] bg-[#05080e]">
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="sm:col-span-2 lg:col-span-1">
+    <footer
+      id="site-footer"
+      className="relative z-20 mt-auto w-full border-t border-white/[0.08] bg-[#07090d]"
+    >
+      <div className="mx-auto max-w-[1160px] px-5 sm:px-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 sm:grid-cols-4">
+          <div className="col-span-2 sm:col-span-1">
             <GenesisMark href="/" size="sm" showWordmark animated={false} />
-            <p className="body-sm mt-4 max-w-xs">
-              The destination marketplace for agents on BNB Smart Chain —
-              find by job, compare hire class, hire in one click. You keep
-              the keys.
+            <p className="mt-4 max-w-[280px] text-[13.5px] leading-[1.65] text-white/45">
+              Hire a DeFi specialist on BNB Smart Chain. You get a plan. You
+              keep the keys.
             </p>
           </div>
 
-          <div>
-            <div className="section-label">Marketplace</div>
-            <ul className="mt-4 space-y-2.5">
-              {PRODUCT.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-sm font-medium text-white/55 transition hover:text-amber-300"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <div className="section-label">Specialists</div>
-            <ul className="mt-4 space-y-2.5">
-              {SPECIALISTS.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-sm font-medium text-white/55 transition hover:text-amber-300"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <div className="section-label">Start</div>
-            <p className="body-sm mt-4">
-              Pick a job category or hire a specialist in one flow.
-            </p>
-            <div className="mt-5 flex flex-col gap-2.5">
-              <Link
-                href="/hire"
-                className="btn-primary w-full !py-2.5 !text-sm"
-              >
-                Buy an agent →
-              </Link>
-              <Link
-                href="/browse"
-                className="btn-secondary w-full !py-2.5 !text-sm"
-              >
-                All agents →
-              </Link>
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <div className="section-label mb-[18px]">{col.title}</div>
+              <ul className="flex flex-col gap-2.5">
+                {col.links.map((l) => (
+                  <li key={l.href + l.label}>
+                    <Link
+                      href={l.href}
+                      className="inline-block text-[13.5px] leading-normal text-white/55 transition-colors hover:text-[#F0B90B]"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/[0.08] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs font-medium text-white/35">
-            © {new Date().getFullYear()} Genesis Marketplace
+        <div className="flex flex-col gap-3 border-t border-white/[0.08] py-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-mono text-[11.5px] tracking-wide text-white/35">
+            © {new Date().getFullYear()} Genesis. Soft hire · no custody.
           </p>
-          <Link
-            href="/hire"
-            className="inline-flex items-center justify-center rounded-full bg-[#F0B90B] px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-amber-300"
-          >
-            Buy an agent →
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="inline-flex items-center gap-2 font-mono text-[11.5px] text-white/45">
+              <span
+                className="inline-block h-2 w-2 rounded-full bg-[#16a34a] shadow-[0_0_6px_#16a34a99]"
+                style={{ animation: "pulse-dot 2s ease-in-out infinite" }}
+              />
+              Specialists live
+            </span>
+            <Link
+              href="/altana"
+              className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"
+            >
+              Altana
+            </Link>
+            <Link
+              href="/judge"
+              className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"
+            >
+              Judge
+            </Link>
+            <Link
+              href="/hire"
+              className="text-[13.5px] font-medium text-white/55 transition-colors hover:text-[#F0B90B]"
+            >
+              Hire an agent →
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

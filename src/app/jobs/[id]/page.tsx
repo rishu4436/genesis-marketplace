@@ -96,6 +96,9 @@ export default async function JobPage({ params }: Props) {
         <span className="text-white/40">Brief: </span>
         {job.task}
       </p>
+      <p className="mt-3 text-[12px] leading-relaxed text-white/40">
+        Plan only. You keep the keys. Soft hire — escrow is not live.
+      </p>
 
       {job.deliverable && (
         <div className="mt-8 space-y-4">
@@ -125,7 +128,7 @@ export default async function JobPage({ params }: Props) {
               <h2 className="text-xs font-semibold text-amber-200/90">
                 {s.heading}
               </h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-white/60">
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-white/60">
                 {s.body}
               </p>
             </div>
@@ -140,11 +143,11 @@ export default async function JobPage({ params }: Props) {
       )}
 
       <div className="mt-10 flex flex-wrap gap-2">
-        <Link href={`${href}#buy`} className="btn-primary !text-sm">
-          Buy again
+        <Link href="/dashboard" className="btn-solid !text-sm">
+          My hires
         </Link>
-        <Link href="/advantage" className="btn-secondary !text-sm">
-          Advantage report
+        <Link href={`${href}#buy`} className="btn-line !text-sm">
+          Hire again
         </Link>
       </div>
     </div>

@@ -95,11 +95,8 @@ export function HireWizard({
       return;
     }
     setError(null);
-    if (rail === "free") {
-      void buyAgent(brief);
-      return;
-    }
-    setPhase("pay");
+    // Soft hire: deliver the plan immediately. Escrow/payment is optional.
+    void buyAgent(brief);
   }
 
   async function buyAgent(taskOverride?: string, paid?: DemoPayment | null) {
@@ -133,7 +130,7 @@ export function HireWizard({
           risk: buyerCtx?.risk === "conservative" ? "low" : buyerCtx?.risk === "aggressive" ? "high" : "medium",
           notes: `tier:${rail}`,
           autoFulfill: true,
-          tier: rail,
+          tier: rail === "escrow" ? "escrow" : "full",
           buyerContext: rail === "free" ? null : buyerCtx,
           payment: receipt,
         }),
@@ -178,8 +175,7 @@ export function HireWizard({
       if (sp.get("buy") === "1" && !autobuyStarted.current) {
         autobuyStarted.current = true;
         const brief = t.length > 8 ? t : defaultTaskForCategory(categoryId);
-        if (rail === "free") void buyAgent(brief);
-        else setPhase("pay");
+        void buyAgent(brief);
       }
     } catch {
       /* ignore */
@@ -249,9 +245,9 @@ export function HireWizard({
               {job.claimCode || job.id}
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-              This plan lives at the result page. Bookmark the link or keep
-              this claim code. Another phone: open My hires → Recover. You do
-              not buy again.
+              This plan lives at the result page. If you are signed in, it is
+              also on My hires. Otherwise keep this claim code or the result
+              link.
             </p>
           </div>
 
@@ -352,7 +348,7 @@ export function HireWizard({
             }}
             className="rounded-full px-3 py-2 text-xs font-medium text-white/50 hover:text-white/80"
           >
-            Buy again
+            Hire again
           </button>
         </div>
       </div>
@@ -383,12 +379,10 @@ export function HireWizard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs font-medium uppercase tracking-wider text-amber-200/80">
-            Buy {agentName}
+            Hire {agentName}
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-            {isHireReady
-              ? "You receive a plan at a link + claim code — any device"
-              : "You receive a plan at a link + claim code — any device"}
+            Structured plan at a link + claim code. Soft hire — no custody.
           </p>
         </div>
         <div className="text-right">
@@ -450,10 +444,10 @@ export function HireWizard({
             : "Starting…"
           : rail === "free"
             ? "Run free scan"
-            : `Checkout · $${displayPrice}`}
+            : `Hire · $${displayPrice}`}
       </button>
       <p className="mt-2 text-center text-[10px] text-white/40">
-        No wallet · no charge yet · result is a receipt you keep
+        Soft hire · plan only · you keep the keys · escrow is not live
       </p>
 
       {/* Tiers: Free scan | Full analysis | Escrow — stockanalyst-inspired */}

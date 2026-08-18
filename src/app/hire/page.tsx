@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
-import { CategoryIcon } from "@/components/CategoryIcon";
 import { HowHireWorks } from "@/components/HowHireWorks";
+import { SoftHireNote } from "@/components/SoftHireNote";
 import { BRAND } from "@/lib/brand";
 
 type Props = {
@@ -10,9 +10,9 @@ type Props = {
 };
 
 export const metadata = {
-  title: "Buy an agent",
+  title: "Hire an agent",
   description:
-    "Buy By Genesis specialists or any indexed agent — one click, structured deliverable.",
+    "Hire a By Genesis specialist — one click, structured plan, you keep the keys.",
 };
 
 export default async function HirePage({ searchParams }: Props) {
@@ -21,16 +21,17 @@ export default async function HirePage({ searchParams }: Props) {
   const specialists = allGenesisAgents();
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
-      <p className="section-label">Buy</p>
-      <h1 className="display-section mt-3 text-white">Buy an agent</h1>
-      <p className="lead mt-3 max-w-xl">
-        One action: describe the job and buy. You get a structured deliverable
-        under My hires. Start with a hire-ready {BRAND.byBadge} specialist.
+    <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-12 sm:px-8 sm:py-16">
+      <p className="section-label">Hire</p>
+      <h1 className="display-section mt-3 text-white">Pick a specialist</h1>
+      <p className="lead mt-4 max-w-xl">
+        Four jobs. Four operators we run. Describe the work, get a plan, keep
+        the keys.
       </p>
+      <SoftHireNote className="mt-6 max-w-xl" />
 
       {agent && chainId && tokenId && (
-        <div className="panel mt-6 border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+        <div className="mt-6 max-w-xl rounded-2xl border border-[#F0B90B]/25 bg-[#F0B90B]/[0.06] px-4 py-3 text-sm text-amber-100">
           Selected catalog agent:{" "}
           <Link
             href={`/agents/${chainId}/${tokenId}`}
@@ -39,73 +40,58 @@ export default async function HirePage({ searchParams }: Props) {
             chain {chainId} · token {tokenId}
           </Link>
           {" — "}
-          open that page and use <strong>Buy agent</strong>.
+          open that page and hire.
         </div>
       )}
 
-      <div className="mt-8">
-        <HowHireWorks />
-      </div>
-
-      <p className="section-label mt-12">Buy-ready specialists</p>
-      <p className="body-sm mt-2 max-w-xl">
-        Pick one, land on the buy panel — price and ETA shown up front.
-      </p>
-
-      <div className="mt-5 space-y-2.5">
-        {specialists.map((a) => {
+      <div className="mt-10 overflow-hidden rounded-3xl border border-white/[0.08] bg-black/25">
+        {specialists.map((a, i) => {
           const cat = getCategory(a.categoryId);
           return (
             <Link
               key={a.slug}
               href={`${genesisHref(a)}#buy`}
-              className="panel group flex items-center gap-3.5 px-3.5 py-3.5 transition-colors hover:border-amber-400/30 hover:bg-white/[0.04]"
+              className={`grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 transition hover:bg-white/[0.03] sm:grid-cols-[auto_1fr_auto_auto] ${
+                i > 0 ? "border-t border-white/[0.06]" : ""
+              }`}
             >
-              <CategoryIcon id={a.categoryId} size="md" />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-sm font-semibold tracking-tight text-white group-hover:text-amber-50">
+              <span
+                className={`hidden h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br sm:flex ${a.accent} text-sm font-bold text-black/80`}
+              >
+                {a.icon}
+              </span>
+              <span className="min-w-0">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-[15px] font-semibold text-white">
                     {a.name}
-                  </h2>
-                  <span className="rounded-full bg-[#F0B90B] px-2 py-0.5 text-[10px] font-bold text-black">
+                  </span>
+                  <span className="rounded-full bg-[#F0B90B] px-1.5 py-0.5 text-[9px] font-bold text-black">
                     {BRAND.byBadge}
                   </span>
-                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-                    Registered
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs text-white/45">
-                  {cat?.name || a.categoryId} · ~{a.etaMinutes}m deliverable
-                </p>
-                <p className="mt-1 line-clamp-1 text-xs text-white/55">
-                  {a.tagline}
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-amber-400 px-3 py-1.5 text-xs font-semibold text-black">
-                Buy · ${a.basePriceUsd}
+                </span>
+                <span className="mt-0.5 block truncate text-[13px] text-white/40">
+                  {cat?.name} · {a.tagline}
+                </span>
+              </span>
+              <span className="hidden text-right sm:block">
+                <span className="block font-display text-lg text-white">
+                  ${a.basePriceUsd}
+                </span>
+                <span className="text-[11px] text-white/35">
+                  ~{a.etaMinutes}m
+                </span>
+              </span>
+              <span className="rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-xs font-semibold text-black">
+                Hire
               </span>
             </Link>
           );
         })}
       </div>
 
-      <p className="body-sm mt-8">
-        Or buy any indexed listing from{" "}
-        <Link
-          href="/browse"
-          className="font-semibold text-amber-300 hover:text-amber-200"
-        >
-          All agents
-        </Link>{" "}
-        /{" "}
-        <Link
-          href="/categories"
-          className="font-semibold text-amber-300 hover:text-amber-200"
-        >
-          Categories
-        </Link>
-        .
-      </p>
+      <div className="mt-12 max-w-3xl">
+        <HowHireWorks />
+      </div>
     </div>
   );
 }

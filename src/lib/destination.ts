@@ -12,7 +12,7 @@ export const DESTINATION = {
     {
       n: "01",
       t: "Find by job",
-      d: "Rebalance, grid, yield, health factor — same shelf depth. Not a dump of 200k names.",
+      d: "Rebalance, grid, yield, health factor — same shelf depth. Four hire-ready specialists first.",
     },
     {
       n: "02",

@@ -260,7 +260,29 @@ export async function createJobWithLiveNegotiate(input: {
     timeline: [],
   };
 
-  // ── Free scan tier (stockanalyst x402:free analogue) ──
+  // ── Free scan — Genesis specialists still get the full job-specific plan ──
+  if (tier === "free" && input.genesisSlug) {
+    job = pushTimeline(
+      job,
+      "negotiating",
+      `Specialist plan · ${input.agentName}`,
+    );
+    job = {
+      ...job,
+      quote: {
+        priceUsd: 0,
+        currency: "USD",
+        etaMinutes: g?.etaMinutes ?? 2,
+        protocol: "x402-free",
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        notes: "Soft hire · full specialist plan · no custody",
+        tier: "full",
+        live: false,
+      },
+    };
+    return fulfillJobAsync({ ...job, status: "quoted", tier: "full" });
+  }
+
   if (tier === "free") {
     job = pushTimeline(job, "negotiating", "Free scan · multi-source spot check");
     const scan = await buildFreeScan({

@@ -106,7 +106,7 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 | RangeKeeper | Rebalancing | 1773 | BNB platform |
 | YieldRouter | Yield | 1774 | BNB platform |
 | HealthSentinel | Health factor | 1775 | BNB platform |
-| Gridwright | Grid | — | Local APEX (quota) |
+| Gridwright | Grid | 1841 | Marketplace APEX (ERC-8004 live) |
 
 Trial expires ~**2026-08-08T15:28Z**. Redeploy while active: `scripts/redeploy-platform-agents.ps1`.
 

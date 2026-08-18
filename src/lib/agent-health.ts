@@ -64,19 +64,36 @@ export async function checkAgentHealth(
     localOk = p.ok;
   }
 
+  const tokenId = pin.tokenId || agent.tokenId;
+
   if (platformOk) {
     return {
       slug: agent.slug,
       name: agent.name,
       status: "live",
       label: "Live",
-      detail: pin.tokenId
-        ? `Platform A2A · token #${pin.tokenId}`
+      detail: tokenId
+        ? `Platform A2A · ERC-8004 #${tokenId}`
         : "Platform A2A reachable",
       checkedAt,
       serviceUrl: agent.serviceUrl,
       platform: true,
-      tokenId: pin.tokenId || agent.tokenId,
+      tokenId,
+    };
+  }
+
+  // On-chain identity + working hire path counts as live on BSC
+  if (localOk && tokenId) {
+    return {
+      slug: agent.slug,
+      name: agent.name,
+      status: "live",
+      label: "Live",
+      detail: `ERC-8004 #${tokenId} · hire path live`,
+      checkedAt,
+      serviceUrl: agent.serviceUrl || `${base}/api/apex/${agent.slug}`,
+      platform: false,
+      tokenId,
     };
   }
 

@@ -6,6 +6,7 @@ import { CompareTray } from "@/components/CompareTray";
 import { TrialBanner } from "@/components/TrialBanner";
 import { AiConcierge } from "@/components/AiConcierge";
 import { AppShellBackground } from "@/components/brand/AppShellBackground";
+import { HashScroll } from "@/components/HashScroll";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -76,6 +77,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <AppShellBackground />
+        <HashScroll />
         <div className="relative z-10 flex w-full min-h-full flex-1 flex-col">
           <Header />
           <TrialBanner />

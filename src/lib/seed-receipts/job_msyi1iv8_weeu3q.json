@@ -1,0 +1,141 @@
+{
+  "id": "job_msyi1iv8_weeu3q",
+  "claimCode": "GX-YJW-CSM",
+  "createdAt": "2026-08-18T10:07:49.700Z",
+  "updatedAt": "2026-08-18T10:07:50.759Z",
+  "status": "delivered",
+  "chainId": 56,
+  "tokenId": "genesis:range-keeper",
+  "agentName": "RangeKeeper",
+  "genesisSlug": "range-keeper",
+  "categoryId": "rebalancing",
+  "task": "Propose new bands for a concentrated PCS V3 CAKE/USDT LP when price is out of range. Include fee APR vs IL and a gas-aware reset.",
+  "budgetUsd": "8",
+  "duration": "once",
+  "risk": "medium",
+  "tier": "full",
+  "buyerContext": null,
+  "serviceUrl": "https://bnbagent-api.bnbchain.world/v1/rt/01KZBTZ2A4NRRY71WF8YV4EXXY",
+  "timeline": [
+    {
+      "at": "2026-08-18T10:07:49.701Z",
+      "status": "negotiating",
+      "detail": "Specialist negotiate · RangeKeeper"
+    },
+    {
+      "at": "2026-08-18T10:07:50.741Z",
+      "status": "quoted",
+      "detail": "Quoted $7.6 · ETA 2m · RangeKeeper"
+    },
+    {
+      "at": "2026-08-18T10:07:50.742Z",
+      "status": "funded",
+      "detail": "Job marked funded (simulated escrow — no user fund custody on Genesis)"
+    },
+    {
+      "at": "2026-08-18T10:07:50.742Z",
+      "status": "fulfilling",
+      "detail": "Multi-source analysis + specialist plan…"
+    },
+    {
+      "at": "2026-08-18T10:07:50.759Z",
+      "status": "delivered",
+      "detail": "Full analysis ready"
+    }
+  ],
+  "quote": {
+    "priceUsd": 7.6,
+    "currency": "USD",
+    "etaMinutes": 2,
+    "protocol": "ERC-8183-sim",
+    "expiresAt": "2026-08-18T10:37:50.741Z",
+    "notes": "Full analysis for RangeKeeper.",
+    "live": false,
+    "tier": "full"
+  },
+  "deliverable": {
+    "title": "LP rebalance full analysis · CAKE-USDT (PCS V3)",
+    "summary": "RangeKeeper assessed CAKE-USDT concentrated liquidity. With a ±6.5% working band, estimated time-out-of-range is elevated (~34% of recent window). Reset to a fee-first band and stage gas ≤ $2.00. Confidence 86/100 based on brief detail. Recommendation: REBALANCE — reset to proposed band this session if OOR >30%; cap gas.",
+    "sections": [
+      {
+        "heading": "Data sources",
+        "body": "• CAKE: $1.46 (-0.27% 24h)\n  sources: CoinGecko simple price [live] $1.46 · 24h -0.27% · PancakeSwap context [derived] LP/farm framing for BSC (plan-level, not pool slot0)\n• USDT: $0.999 (+0% 24h)\n  sources: CoinGecko simple price [live] $0.999228 · 24h -0.00% · PancakeSwap context [derived] LP/farm framing for BSC (plan-level, not pool slot0)\n\n• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n• Protocol framing: PancakeSwap / Venus / Aave-style (plan-level)\n• Model: genesis-v2 · fetched 2026-08-18T10:07:50.744Z"
+      },
+      {
+        "heading": "Buyer context",
+        "body": "No portfolio context attached. Add a buyer profile for personalised PnL notes (UOMP-style)."
+      },
+      {
+        "heading": "Bull / bear thesis",
+        "body": "BULL: CAKE-USDT fee capture recovers if price re-enters a tighter fee-first band and stays in-range >70% of the week.\n\nBEAR: If moderate vol continues, repeated rebalances burn gas and IL may dominate fees on wide ranges."
+      },
+      {
+        "heading": "Hard recommendation",
+        "body": "REBALANCE — reset to proposed band this session if OOR >30%; cap gas."
+      },
+      {
+        "heading": "Brief intake",
+        "body": "• Task: Propose new bands for a concentrated PCS V3 CAKE/USDT LP when price is out of range. Include fee APR vs IL and a gas-aware reset.\n• Pair (resolved): CAKE-USDT\n• Risk posture: medium\n• Position notional context: ~$1000\n• Gas budget: $2.00\n• Skills applied: PCS V3 range monitor · Rebalance band proposal · Fee APR vs IL snapshot"
+      },
+      {
+        "heading": "Range diagnosis",
+        "body": "• Assumption: PCS V3 concentrated position near range edge\n• Est. time out-of-range (24–48h): ~34%\n• Fee capture vs in-range baseline: Degraded — outer ticks under-used\n• IL sensitivity: ±6.5% move → ~1.4% IL (order-of-magnitude)"
+      },
+      {
+        "heading": "Recommended band",
+        "body": "• Center: Current mark (spot)\n• Lower: mark − 6.2%\n• Upper: mark + 6.8% (mild upside bias)\n• Idle capital: Keep ~10% outside LP for a second rebalance\n• Fee APR (in-range est.): 22–30%"
+      },
+      {
+        "heading": "Execution checklist (you hold keys)",
+        "body": "1. Confirm pool CAKE-USDT fee tier and current tick on PancakeSwap\n2. Remove liquidity only after noting NFT token id / position id\n3. Mint new position at ±6.5% band; verify amounts vs slippage limit 0.5%\n4. Cap gas for full reset under $2.00 on BSC\n5. Set calendar reminder 24h to re-check time-in-range\n6. Do not approve unlimited spend beyond the router you trust"
+      },
+      {
+        "heading": "Risks & stop rules",
+        "body": "• Abort rebalance if: Gas spike > 2× estimate or pool TVL collapsed\n• Re-open earlier if: Mark exits new band within 6h (vol expansion)\n• Custody: Genesis / agent never hold your LP NFT or private keys"
+      },
+      {
+        "heading": "Monitoring plan",
+        "body": "1. Alert if time-out-of-range > 35% over 12h\n2. Alert if fee APR (rolling) drops > 40% vs post-rebalance day-1\n3. Weekly: IL vs fees cumulative — keep LP only if fees > IL + gas"
+      }
+    ],
+    "metrics": [
+      {
+        "label": "Pair",
+        "value": "CAKE-USDT"
+      },
+      {
+        "label": "Band width",
+        "value": "±6.5%"
+      },
+      {
+        "label": "Fee APR est.",
+        "value": "22–30%"
+      },
+      {
+        "label": "IL @ ±band",
+        "value": "~1.4%"
+      },
+      {
+        "label": "Gas budget",
+        "value": "$2.00"
+      },
+      {
+        "label": "Confidence",
+        "value": "86/100"
+      },
+      {
+        "label": "Agent",
+        "value": "RangeKeeper"
+      },
+      {
+        "label": "Spot",
+        "value": "$1.46"
+      },
+      {
+        "label": "Rec",
+        "value": "REBALANCE"
+      }
+    ],
+    "disclaimer": "Expert plan from RangeKeeper — illustrative math from your brief, not live on-chain reads unless connected. Not financial advice. No funds moved. Multi-source snapshot may lag; verify live venues before capital moves."
+  }
+}

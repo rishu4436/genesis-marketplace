@@ -23,6 +23,7 @@ type Session = {
   createdAt: string;
   explorerUrl?: string;
   policyTitle?: string;
+  keystore?: string;
 };
 
 type Status = {
@@ -287,16 +288,32 @@ export function AltanaPanel({
                   tx {s.transactionHash}
                 </p>
               )}
-              {s.explorerUrl && (
-                <a
-                  href={s.explorerUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1.5 inline-block text-[10px] font-medium text-violet-200 hover:underline"
-                >
-                  {s.mode === "live" ? "Grant tx on BscScan ↗" : "Explorer ↗"}
-                </a>
-              )}
+              <div className="mt-1.5 flex flex-wrap gap-3">
+                {s.explorerUrl && (
+                  <a
+                    href={s.explorerUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-medium text-violet-200 hover:underline"
+                  >
+                    {s.mode === "live" ? "Grant tx on BscScan ↗" : "Explorer ↗"}
+                  </a>
+                )}
+                {s.keystore && (
+                  <a
+                    href={
+                      s.chainId === 56
+                        ? `https://bscscan.com/address/${s.keystore}`
+                        : `https://testnet.bscscan.com/address/${s.keystore}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-medium text-violet-200 hover:underline"
+                  >
+                    Keystore ↗
+                  </a>
+                )}
+              </div>
             </article>
           ))
         )}

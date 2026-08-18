@@ -4,8 +4,16 @@
  */
 
 import type { HireJob } from "./hire-engine";
+import weekRk from "./seed-receipts/job_msyi1iv8_weeu3q.json";
+import weekGw from "./seed-receipts/job_msyi1kda_g6pwyb.json";
+import weekYr from "./seed-receipts/job_msyi1ltz_hocg2l.json";
+import weekHs from "./seed-receipts/job_msyi1m7z_zmtich.json";
 
 export const SEED_JOBS: HireJob[] = [
+  weekRk as HireJob,
+  weekGw as HireJob,
+  weekYr as HireJob,
+  weekHs as HireJob,
   {
     id: "job_msigjtrw_99syy1",
     createdAt: "2026-08-07T12:00:00.000Z",

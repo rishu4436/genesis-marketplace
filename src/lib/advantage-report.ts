@@ -49,14 +49,14 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
     withAgent: {
       agentName: "RangeKeeper",
       genesisSlug: "range-keeper",
-      jobId: "job_msigjtrw_99syy1",
+      jobId: "job_msyi1iv8_weeu3q",
       timeMin: 3,
       costUsd: 8,
       quality: 4.4,
-      method: "Buy agent on Genesis → structured LP rebalance plan",
-      outputTitle: "LP rebalance plan — PancakeSwap V3",
+      method: "Hire RangeKeeper on Genesis · 2026-08-18 full analysis",
+      outputTitle: "LP rebalance full analysis · CAKE-USDT (PCS V3)",
       outputSummary:
-        "Range health, proposed bands, fee APR vs IL snapshot, gas-aware reset notes. Plan-only (no custody).",
+        "±6.5% working band, ~34% time-out-of-range, fee APR 22–30% vs ~1.4% IL, gas ≤ $2. Recommended reset. Open the live receipt.",
     },
   },
   {
@@ -77,14 +77,14 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
     withAgent: {
       agentName: "YieldRouter",
       genesisSlug: "yield-router",
-      jobId: "job_msigk35r_lcneaa",
+      jobId: "job_msyi1ltz_hocg2l",
       timeMin: 3,
-      costUsd: 8,
+      costUsd: 7,
       quality: 4.3,
-      method: "Buy agent on Genesis → yield reallocation brief",
-      outputTitle: "Yield route brief — USDT BSC",
+      method: "Hire YieldRouter on Genesis · 2026-08-18 full analysis",
+      outputTitle: "Yield route · USDT on BSC",
       outputSummary:
-        "Ranked venues, risk notes, suggested splits, gas budget framing. Plan-only.",
+        "Venues ranked for $5,000 USDT. Barbell 75/15/10, 4–8% risk-adj APR, gas cap $4. Open the live receipt.",
     },
   },
   {
@@ -105,14 +105,14 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
     withAgent: {
       agentName: "HealthSentinel",
       genesisSlug: "health-sentinel",
-      jobId: "job_msigk9fd_u6hnr5",
+      jobId: "job_msyi1m7z_zmtich",
       timeMin: 3,
-      costUsd: 8,
+      costUsd: 6,
       quality: 4.5,
-      method: "Buy agent on Genesis → HF protection plan",
-      outputTitle: "Health factor protection plan",
+      method: "Hire HealthSentinel on Genesis · 2026-08-18 full analysis",
+      outputTitle: "Health factor full analysis · Venus",
       outputSummary:
-        "Shock simulation, alert thresholds, repay vs collateral options. Security-weighted task.",
+        "Baseline HF 1.45 → 1.25 at −15% shock. Soft 1.3 / hard 1.2. Stage repay now. Security-weighted. Open the live receipt.",
     },
   },
 ];

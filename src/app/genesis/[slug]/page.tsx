@@ -19,6 +19,7 @@ import { BRAND } from "@/lib/brand";
 import { getCategoryDepth } from "@/lib/category-depth";
 import { taskFitForGenesis } from "@/lib/task-fit";
 import { TaskFitBadge } from "@/components/TaskFitBadge";
+import { SoftHireNote } from "@/components/SoftHireNote";
 import { AltanaPanel } from "@/components/AltanaPanel";
 import { defaultTaskForCategory } from "@/lib/hire";
 import {
@@ -115,14 +116,11 @@ export default async function GenesisAgentPage({ params }: Props) {
               <p className="mt-1 text-sm text-amber-100/80">{agent.tagline}</p>
               <p className="body mt-3 max-w-2xl">{agent.description}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <a
-                  href="#buy"
-                  className="btn-primary !px-4 !py-2 !text-sm"
-                >
-                  Buy · ${agent.basePriceUsd}
+                <a href="#buy" className="btn-solid !px-4 !text-sm">
+                  Hire · ${agent.basePriceUsd}
                 </a>
                 <span className="text-xs text-white/45">
-                  ~{agent.etaMinutes}m · plan only · no fund custody
+                  ~{agent.etaMinutes}m · plan only · you keep the keys
                 </span>
               </div>
             </div>
@@ -258,9 +256,10 @@ export default async function GenesisAgentPage({ params }: Props) {
           <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/90">
             <span className="font-bold text-[#F0B90B]">Hire-ready</span>
             {" — "}
-            {BRAND.byBadge} seller we operate. Buy now returns a structured
+            {BRAND.byBadge} seller we operate. Hire returns a structured
             plan in about {agent.etaMinutes}m.
           </div>
+          <SoftHireNote compact />
           <TaskFitBadge fit={fit} />
           <HireWizard
             chainId={agent.chainId ?? 56}
