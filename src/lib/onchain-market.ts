@@ -95,7 +95,7 @@ function decodeAddress(hex: string): string | null {
 function decodeUint(hex: string, word = 0): bigint {
   const h = hex.replace(/^0x/i, "");
   const slice = h.slice(word * 64, word * 64 + 64);
-  if (!slice) return 0n;
+  if (!slice) return BigInt(0);
   return BigInt("0x" + slice);
 }
 
