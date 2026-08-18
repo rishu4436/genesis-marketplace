@@ -190,7 +190,7 @@ export function scoreSellerFromJobs(
     ok:
       mandateHolds(job) &&
       sessionSafe(job) &&
-      job.isolation?.secretsExposed !== true,
+      sessionSafe(job),
     weight,
   }));
   if (admission.checks.find((c) => c.id === "injection")?.ok) {

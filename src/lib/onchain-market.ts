@@ -96,12 +96,13 @@ function decodeUint(hex: string, word = 0): bigint {
   const h = hex.replace(/^0x/i, "");
   const slice = h.slice(word * 64, word * 64 + 64);
   if (!slice) return 0n;
-  return BigInt(`0x${slice}`);
+  return BigInt("0x" + slice);
 }
 
 function decodeInt24Tick(hex: string): number {
   const word = decodeUint(hex, 1);
-  let n = Number(word & ((1n << 24n) - 1n));
+  const mask = (BigInt(1) << BigInt(24)) - BigInt(1);
+  let n = Number(word & mask);
   if (n >= 1 << 23) n -= 1 << 24;
   return n;
 }
