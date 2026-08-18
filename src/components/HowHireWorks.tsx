@@ -7,8 +7,8 @@ import Link from "next/link";
 export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   const steps = [
     {
-      t: "Pick a specialist",
-      d: "Four By Genesis agents — one per job. RangeKeeper, Gridwright, YieldRouter, HealthSentinel.",
+      t: "Pick who to hire",
+      d: "Four By Genesis specialists first — one per job — then hireable 8004scan listings. Featured stays labeled, not ranked.",
     },
     {
       t: "Hire",

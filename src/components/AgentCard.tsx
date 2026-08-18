@@ -21,10 +21,12 @@ export function AgentCard({
   agent,
   categoryId,
   showCompare = true,
+  ctaLabel = "Buy",
 }: {
   agent: Agent;
   categoryId?: CategoryId;
   showCompare?: boolean;
+  ctaLabel?: string;
 }) {
   const desc =
     agent.description?.trim() ||
@@ -147,7 +149,7 @@ export function AgentCard({
             href={`${agentHref(agent)}#buy`}
             className="rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-semibold text-black transition hover:bg-amber-300"
           >
-            Buy
+            {ctaLabel}
           </Link>
         </div>
       </div>

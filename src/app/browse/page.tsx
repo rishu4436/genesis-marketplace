@@ -2,11 +2,8 @@ import { AgentCard } from "@/components/AgentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterBar, type BrowseFilters } from "@/components/FilterBar";
 import { JobFloor } from "@/components/JobFloor";
-import {
-  listAgentsSafe,
-  searchAgentsSafe,
-  dedupeAgents,
-} from "@/lib/scan";
+import { dedupeAgents } from "@/lib/scan";
+import { fetchHireablePool } from "@/lib/catalog-pool";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
 import { agentScore } from "@/lib/agent-score";
 import {
@@ -17,7 +14,6 @@ import {
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { sortForDestination } from "@/lib/hire-class";
 import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
-import type { Agent } from "@/lib/types";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -53,74 +49,6 @@ function buildBrowseHref(
   return s ? `/browse?${s}` : "/browse";
 }
 
-async function fetchBrowsePool(opts: {
-  q?: string;
-  sortMode: "rank" | "score" | "newest" | "ratings";
-}): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
-  const collected: Agent[] = [];
-  let error: string | null = null;
-  let apiTotal: number | null = null;
-
-  if (opts.q) {
-    const [semantic, listed, listed2] = await Promise.all([
-      searchAgentsSafe({ q: opts.q, limit: 80, chainId: 56 }),
-      listAgentsSafe({
-        chainId: 56,
-        search: opts.q,
-        limit: 80,
-        page: 1,
-        sortBy: "total_score",
-        sortOrder: "desc",
-      }),
-      listAgentsSafe({
-        chainId: 56,
-        search: opts.q,
-        limit: 80,
-        page: 2,
-        sortBy: "total_score",
-        sortOrder: "desc",
-      }),
-    ]);
-    for (const r of [semantic, listed, listed2]) {
-      if (r.data) collected.push(...r.data);
-      if (r.error && !error) error = r.error;
-    }
-    apiTotal = listed.meta?.pagination?.total ?? null;
-  } else {
-    // Always pull multiple pages; we re-sort in memory so order is correct
-    const apiSort =
-      opts.sortMode === "newest" ? "created_at" : "total_score";
-    // Keep this small — too many parallel partner calls freezes the page
-    const maxPages = 3;
-
-    const pages = await Promise.all(
-      Array.from({ length: maxPages }, (_, i) =>
-        listAgentsSafe({
-          chainId: 56,
-          page: i + 1,
-          limit: 40,
-          sortBy: apiSort as "total_score" | "created_at",
-          sortOrder: "desc",
-        }),
-      ),
-    );
-
-    for (const res of pages) {
-      if (res.data?.length) collected.push(...res.data);
-      if (res.error && !error) error = res.error;
-      if (res.meta?.pagination?.total != null) {
-        apiTotal = res.meta.pagination.total;
-      }
-    }
-  }
-
-  return {
-    agents: dedupeAgents(collected),
-    error: collected.length ? null : error,
-    apiTotal,
-  };
-}
-
 export default async function BrowsePage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = (sp.q || "").trim();
@@ -149,7 +77,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     ratings: hasRatings ? "1" : undefined,
   };
 
-  const pool = await fetchBrowsePool({ q: q || undefined, sortMode });
+  const pool = await fetchHireablePool({ q: q || undefined, sortMode });
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
   const quality = catalogFilterStats(merged);
