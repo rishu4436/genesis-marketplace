@@ -16,6 +16,7 @@ import type { BuyerContext } from "@/lib/buyer-context";
 import { PaymentSheet } from "@/components/PaymentSheet";
 import type { DemoPayment } from "@/lib/demo-pay";
 import { shortWallet } from "@/lib/demo-pay";
+import { SignInForm } from "@/components/SignInForm";
 
 type Props = {
   chainId: number;
@@ -245,10 +246,18 @@ export function HireWizard({
               {job.claimCode || job.id}
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-              This plan lives at the result page. If you are signed in, it is
-              also on My hires. Otherwise keep this claim code or the result
+              This plan lives at the result page. Sign in below so My hires
+              shows it on another browser. Or keep this claim code / result
               link.
             </p>
+          </div>
+
+          <div className="mt-3">
+            <SignInForm
+              jobId={job.id}
+              title="Save this hire to an account"
+              hint="Then Sign in on any browser and open My hires to see this agent again."
+            />
           </div>
 
           {job.payment && (

@@ -16,8 +16,9 @@ export default function DashboardPage() {
           <p className="section-label">My hires</p>
           <h1 className="display-section mt-3 text-white">Your plans</h1>
           <p className="mt-4 max-w-xl text-[15px] leading-[1.7] text-white/50">
-            Sign in (email or wallet) and hires follow you. Or skip the
-            account and keep a claim code / result link.
+            Sign in from the header (email or wallet) and hires follow you to
+            any browser. Or skip the account and keep a claim code / result
+            link.
           </p>
           <SoftHireNote className="mt-5 max-w-xl" />
         </div>

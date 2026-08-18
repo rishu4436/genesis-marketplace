@@ -30,23 +30,40 @@ export async function POST(req: Request) {
       { status: 401 },
     );
   }
-  const body = (await req.json()) as { jobId?: string };
-  if (!body.jobId) {
+  const body = (await req.json()) as { jobId?: string; jobIds?: string[] };
+  const ids = [
+    ...new Set(
+      [...(body.jobIds || []), body.jobId].filter(
+        (id): id is string => Boolean(id),
+      ),
+    ),
+  ];
+  if (ids.length === 0) {
     return NextResponse.json(
       { success: false, error: "jobId required" },
       { status: 400 },
     );
   }
-  const job = await getJob(body.jobId);
-  if (!job) {
+  const { saveJob } = await import("@/lib/job-store");
+  const attached = [];
+  for (const id of ids) {
+    const job = await getJob(id);
+    if (!job) continue;
+    if (job.ownerId && job.ownerId !== acc.id) continue;
+    job.ownerId = acc.id;
+    await attachJob(acc.id, job.id);
+    await saveJob(job);
+    attached.push(job);
+  }
+  if (attached.length === 0) {
     return NextResponse.json(
       { success: false, error: "Hire not found" },
       { status: 404 },
     );
   }
-  job.ownerId = acc.id;
-  await attachJob(acc.id, job.id);
-  const { saveJob } = await import("@/lib/job-store");
-  await saveJob(job);
-  return NextResponse.json({ success: true, data: job });
+  return NextResponse.json({
+    success: true,
+    data: attached.length === 1 ? attached[0] : attached,
+    count: attached.length,
+  });
 }

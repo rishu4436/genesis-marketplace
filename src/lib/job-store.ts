@@ -14,7 +14,12 @@ import { sealJob } from "./job-receipt";
 
 const memory = new Map<string, HireJob>();
 const claims = new Map<string, string>();
+const walletJobs = new Map<string, string[]>();
 let seedsLoaded = false;
+
+function normWallet(addr: string) {
+  return addr.trim().toLowerCase();
+}
 
 function kvUrl() {
   return (
@@ -90,6 +95,69 @@ function indexClaim(job: HireJob) {
   }
 }
 
+function walletJobsDir() {
+  return path.join(process.cwd(), "data", "wallet-jobs");
+}
+
+function walletJobsFile(addr: string) {
+  const safe = normWallet(addr).replace(/[^a-z0-9]/g, "_");
+  return path.join(walletJobsDir(), `${safe}.json`);
+}
+
+export async function indexWalletJob(addr: string, jobId: string) {
+  const key = normWallet(addr);
+  if (!key || !jobId) return;
+  const prev = walletJobs.get(key) || [];
+  const next = [jobId, ...prev.filter((id) => id !== jobId)].slice(0, 80);
+  walletJobs.set(key, next);
+  try {
+    await fs.mkdir(walletJobsDir(), { recursive: true });
+    await fs.writeFile(walletJobsFile(key), JSON.stringify(next), "utf8");
+  } catch {
+    /* memory still holds */
+  }
+  if (kvEnabled()) {
+    await kvCmd("SET", `genesis:wjobs:${key}`, JSON.stringify(next));
+  }
+}
+
+export async function jobsForWallet(addr: string): Promise<HireJob[]> {
+  const key = normWallet(addr);
+  if (!key) return [];
+  const ids = new Set<string>();
+  for (const id of walletJobs.get(key) || []) ids.add(id);
+  try {
+    const raw = await fs.readFile(walletJobsFile(key), "utf8");
+    const arr = JSON.parse(raw) as string[];
+    if (Array.isArray(arr)) for (const id of arr) ids.add(id);
+  } catch {
+    /* no disk index */
+  }
+  const fromKv = await kvCmd<string>("GET", `genesis:wjobs:${key}`);
+  if (fromKv) {
+    try {
+      const arr = JSON.parse(fromKv) as string[];
+      if (Array.isArray(arr)) for (const id of arr) ids.add(id);
+    } catch {
+      /* ignore */
+    }
+  }
+  for (const job of memory.values()) {
+    if (
+      job.payment?.walletAddress &&
+      normWallet(job.payment.walletAddress) === key
+    ) {
+      ids.add(job.id);
+    }
+  }
+  const out: HireJob[] = [];
+  for (const id of ids) {
+    const job = await getJob(id);
+    if (job) out.push(job);
+  }
+  return out;
+}
+
 /** Legacy jobs (seeds) get a live seal in memory. Already-sealed jobs stay put. */
 function hydrateEvidence(job: HireJob): HireJob {
   return sealJob(job);
@@ -115,6 +183,9 @@ export async function saveJob(job: HireJob): Promise<HireJob> {
         sealed.id,
       );
     }
+  }
+  if (sealed.payment?.walletAddress) {
+    await indexWalletJob(sealed.payment.walletAddress, sealed.id);
   }
   return sealed;
 }

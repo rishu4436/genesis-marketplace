@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GenesisMark } from "@/components/brand/GenesisMark";
+import { AuthNav } from "@/components/AuthNav";
 
 const PRIMARY = [
   { href: "/hire", label: "Hire" },
@@ -84,9 +85,13 @@ export function Header() {
           <Link href="/hire" className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
             Hire an agent
           </Link>
+          <span className="ml-1">
+            <AuthNav />
+          </span>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <AuthNav compact />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -132,6 +137,9 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link href="/login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
+                Sign in / recover hires
+              </Link>
               <Link href="/hire" className="btn-solid mt-2 w-full">
                 Hire an agent
               </Link>

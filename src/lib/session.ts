@@ -38,5 +38,7 @@ export async function currentAccount(): Promise<Account | null> {
 export async function loginAccount(account: Account) {
   const ses = await createSession(account.id);
   await setSessionCookie(ses.id);
+  const { recoverJobsAfterLogin } = await import("./job-recovery");
+  await recoverJobsAfterLogin(account);
   return account;
 }
