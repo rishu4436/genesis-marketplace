@@ -1,0 +1,77 @@
+/**
+ * Phase 7 featured + growth checks.
+ * Run: npx --yes tsx scripts/verify-featured.ts
+ */
+
+import { featuredNeverInOrganic, featuredSlotsForJob } from "../src/lib/featured-slots";
+import { growthLoops } from "../src/lib/growth-loops";
+import { decorateRankSurface } from "../src/lib/rank-surface";
+import { rankGenesisForJob } from "../src/lib/job-rank";
+import { JOB_CHIPS } from "../src/lib/job-chips";
+import { allGenesisAgents } from "../src/lib/genesis-agents";
+import { FEATURED_THIRD_PARTY } from "../src/lib/third-party-sellers";
+
+type Check = { name: string; ok: boolean; detail?: string };
+const checks: Check[] = [];
+
+function check(name: string, ok: boolean, detail?: string) {
+  checks.push({ name, ok, detail });
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
+}
+
+function main() {
+  const rebal = featuredSlotsForJob("rebalancing", JOB_CHIPS[0].task);
+  check("rebalance has a featured slot", rebal.length === 1, String(rebal.length));
+  check("featured is labeled not organic", rebal[0]?.organic === false);
+  check("featured paidRank is false", rebal[0]?.paidRank === false);
+  check(
+    "featured is the partner listing",
+    rebal[0]?.slug === FEATURED_THIRD_PARTY.slug,
+  );
+
+  const grid = featuredSlotsForJob("grid-trading");
+  check("grid job has no featured pin", grid.length === 0);
+
+  const ranked = rankGenesisForJob(JOB_CHIPS[0].task);
+  const surface = decorateRankSurface(ranked);
+  check("organic paidRank stays false", surface.paidRank === false);
+  check(
+    "featured never appears in organic",
+    featuredNeverInOrganic(
+      surface.organic.map((o) => o.slug),
+      surface.featured,
+    ),
+  );
+  check(
+    "organic is still only the job specialist",
+    surface.organic.every((o) => o.categoryId === "rebalancing"),
+  );
+  check("growth includes compare", surface.growth.some((g) => g.id === "compare-job"));
+  check("growth includes package", surface.growth.some((g) => g.id === "package"));
+
+  const loops = growthLoops({
+    task: "rebalance",
+    jobId: "job_x",
+    hireHref: "/hire",
+  });
+  check(
+    "share loop does not point at rank",
+    loops.some((l) => l.id === "share-receipt" && l.href.includes("/jobs/")),
+  );
+
+  check("four specialists still exist", allGenesisAgents().length === 4);
+  check(
+    "featured slug is not a genesis specialist",
+    !allGenesisAgents().some((a) => a.slug === FEATURED_THIRD_PARTY.slug),
+  );
+
+  const failed = checks.filter((c) => !c.ok);
+  console.log("");
+  console.log(`Result  ${checks.length - failed.length}/${checks.length} passed`);
+  if (failed.length) {
+    for (const f of failed) console.error(`  - ${f.name}${f.detail ? `: ${f.detail}` : ""}`);
+    process.exit(1);
+  }
+}
+
+main();

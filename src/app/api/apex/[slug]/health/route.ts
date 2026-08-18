@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
-import { getGenesisAgent } from "@/lib/genesis-agents";
+import { apexHealthPayload } from "@/lib/apex-health";
 
 type Ctx = { params: Promise<{ slug: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
   const { slug } = await ctx.params;
-  const agent = getGenesisAgent(slug);
-  if (!agent) {
+  const payload = apexHealthPayload(slug);
+  if (!payload) {
     return NextResponse.json({ status: "not_found" }, { status: 404 });
   }
-  return NextResponse.json({
-    status: "ok",
-    service: "erc8183-service (genesis)",
-    keyless: true,
-    agent: agent.name,
-    slug,
-  });
+  return NextResponse.json(payload);
 }

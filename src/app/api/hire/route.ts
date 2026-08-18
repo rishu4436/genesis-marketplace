@@ -10,6 +10,10 @@ import type { CommerceTier } from "@/lib/agent-model";
 import type { BuyerContext } from "@/lib/buyer-context";
 import type { DemoPayment } from "@/lib/demo-pay";
 import { verifyWalletPayment } from "@/lib/verify-wallet-pay";
+import { sealJob } from "@/lib/job-receipt";
+import { ESCROW_STANCE } from "@/lib/escrow-stance";
+import { incidentFromPolicyBreak } from "@/lib/job-decision";
+import { saveIncident } from "@/lib/slash-store";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -52,7 +56,7 @@ export async function POST(req: Request) {
       ? getGenesisAgent(body.genesisSlug)
       : undefined;
 
-    const job = await createJobWithLiveNegotiate({
+    let job = await createJobWithLiveNegotiate({
       chainId: Number(body.chainId || g?.chainId || 56),
       tokenId: String(
         body.tokenId || g?.tokenId || `genesis:${body.genesisSlug}`,
@@ -91,16 +95,21 @@ export async function POST(req: Request) {
         job.ownerId = acc.id;
         await attachJob(acc.id, job.id);
       }
-      await saveJob(job);
+      job = await saveJob(job);
+      const broke = incidentFromPolicyBreak(job);
+      if (broke) await saveIncident(broke);
     } catch {
-      /* still return job */
+      job = sealJob(job, { resign: true });
     }
 
     return NextResponse.json({
       success: true,
       data: job,
       sharePath: `/jobs/${encodeURIComponent(job.id)}`,
+      receiptPath: `/api/jobs/${encodeURIComponent(job.id)}/receipt`,
       claimCode: job.claimCode,
+      sessionId: job.session?.id ?? null,
+      escrow: ESCROW_STANCE,
       model: "genesis-v2-stockanalyst-inspired",
       tier,
     });

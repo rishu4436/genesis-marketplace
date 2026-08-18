@@ -18,6 +18,13 @@ export default async function JudgePage() {
       <h1 className="mt-2 font-display text-2xl font-bold text-white">
         90-second path
       </h1>
+      <p className="mt-3 text-[13px] leading-relaxed text-white/50">
+        Hire path is <span className="text-white/75">Ready</span> (ERC-8004 +
+        marketplace APEX). BNB Studio A2A trial ended — we do not call these
+        Live autonomous runtimes. Escrow is blocked
+        (PolicyNotWhitelisted). Hire is plan-only; Altana is a separate
+        optional grant.
+      </p>
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
@@ -112,7 +119,14 @@ export default async function JudgePage() {
         </li>
         <li>
           <span className="font-semibold text-white">Data quality</span> —
-          hire class on cards, spam hidden, live operator numbers on #265375.
+          hashed receipt{" "}
+          <Link
+            href="/jobs/job_msyi1iv8_weeu3q"
+            className="text-amber-300"
+          >
+            job_msyi1iv8
+          </Link>
+          , PCS slot0 + Venus rate on a fresh hire, Ready not fake Live.
         </li>
         <li>
           <span className="font-semibold text-white">Diversity</span> —{" "}
@@ -125,7 +139,8 @@ export default async function JudgePage() {
           <span className="font-semibold text-white">TermiX</span> —{" "}
           <Link href="/advantage" className="text-amber-300">
             /advantage
-          </Link>
+          </Link>{" "}
+          three tasks, trading ×1.2, security ×1.4, DIY misses vs receipt.
         </li>
         <li>
           <span className="font-semibold text-white">PancakeSwap</span> —

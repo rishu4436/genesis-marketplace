@@ -52,6 +52,10 @@ export function isDefiJobAgent(agent: Agent): boolean {
 /** Higher = belongs on the destination floor */
 export function destinationRank(agent: Agent): number {
   let s = 0;
+  const genesis =
+    agent.id?.startsWith("genesis:") ||
+    Boolean((agent as Agent & { genesis_verified?: boolean }).genesis_verified);
+  if (genesis) s += 2000;
   const cls = hireClassForAgent(agent);
   if (cls === "live") s += 400;
   if (isDefiJobAgent(agent)) s += 120;

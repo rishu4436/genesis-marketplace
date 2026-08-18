@@ -24,11 +24,13 @@ export default async function AltanaPage() {
         Session keys you control
       </h1>
       <p className="lead mt-4 max-w-2xl">
-        Altana lets specialists act under <strong className="text-white/80">spend caps</strong>,{" "}
-        <strong className="text-white/80">contract allowlists</strong>, and{" "}
-        <strong className="text-white/80">expiry</strong> — permissions live on the
-        Keystore so anyone can verify, and you can revoke in one action. Your keys
-        stay yours.
+        This page is the Altana partner track. It is not the hire path.
+        A hire on Genesis returns a plan under a spend-0 session. Here you
+        may optionally grant a Keystore session with{" "}
+        <strong className="text-white/80">spend caps</strong>,{" "}
+        <strong className="text-white/80">allowlists</strong>, and{" "}
+        <strong className="text-white/80">expiry</strong> — then revoke it
+        in-product. Testnet counts.
       </p>
 
       <div className="panel mt-8 grid gap-3 sm:grid-cols-3">

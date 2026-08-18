@@ -221,7 +221,8 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           transition={{ delay: 0.32, duration: 0.7 }}
         >
           Four hire-ready specialists on BNB Smart Chain. Pick a job, hire
-          in one click, get a plan — you keep the keys.
+          in one click, get a plan — you keep the keys. Ready, not a dead
+          Studio runtime. Escrow is blocked. Hire is not an Altana key.
         </motion.p>
         <motion.div
           className="mt-10 flex flex-wrap items-center gap-3"

@@ -21,11 +21,19 @@ import { taskFitForGenesis } from "@/lib/task-fit";
 import { TaskFitBadge } from "@/components/TaskFitBadge";
 import { SoftHireNote } from "@/components/SoftHireNote";
 import { AltanaPanel } from "@/components/AltanaPanel";
+import { SellerIdentityPanel } from "@/components/SellerIdentityPanel";
+import { AdmissionPanel } from "@/components/AdmissionPanel";
+import { ReceiptScorePanel } from "@/components/ReceiptScorePanel";
+import { admitSeller } from "@/lib/admission";
+import { scoreSeller } from "@/lib/receipt-score";
 import { defaultTaskForCategory } from "@/lib/hire";
+import { checkAgentHealth } from "@/lib/agent-health";
 import {
   compositeFromAxes,
   computeAxes,
 } from "@/lib/marketplace-score";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -77,6 +85,9 @@ export default async function GenesisAgentPage({ params }: Props) {
   const composite = compositeFromAxes(axes);
   const defaultTask = defaultTaskForCategory(agent.categoryId);
   const fit = taskFitForGenesis(agent, defaultTask);
+  const health = await checkAgentHealth(agent);
+  const admission = admitSeller(agent);
+  const receiptScore = await scoreSeller(agent.slug);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -126,17 +137,19 @@ export default async function GenesisAgentPage({ params }: Props) {
             </div>
           </div>
 
+          {receiptScore && <ReceiptScorePanel score={receiptScore} />}
+
           <section
             id="score"
             className="mt-8 scroll-mt-24 rounded-2xl border border-amber-400/20 bg-white/[0.03] p-5 sm:p-6"
           >
-            <p className="section-label">Hire readiness</p>
+            <p className="section-label">Index readiness</p>
             <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white">
-              5-axis readiness
+              8004scan labels
             </h2>
             <p className="body-sm mt-1.5 max-w-xl">
-              Hire readiness for this {BRAND.byBadge} specialist — not an
-              on-chain rating. 8004scan reviews show as Unrated until they exist.
+              Partner-index signals (stars, reach, x402). These are labels,
+              not the receipt score above. Unrated is not a low score.
             </p>
             <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
               <div className="flex flex-col items-center">
@@ -183,16 +196,17 @@ export default async function GenesisAgentPage({ params }: Props) {
           </div>
 
           <div className="mt-10">
+            <SellerIdentityPanel health={health} />
+            <AdmissionPanel report={admission} />
+
             <TrustPassport
-              registered={Boolean(platform || pin.tokenId || agent.tokenId)}
+              registered={health.checks.identity.ok}
               registrationDetail={
-                platform
-                  ? `Live on BNB Agent Studio · ERC-8004 token${
-                      pin.tokenId ? ` #${pin.tokenId}` : ""
+                health.checks.identity.ok
+                  ? `ERC-8004 #${health.tokenId} · ${health.version}${
+                      health.checks.platform.ok ? " · Studio runtime up" : ""
                     }.`
-                  : pin.tokenId || agent.tokenId
-                    ? `Pinned identity token #${pin.tokenId || agent.tokenId}. Ready to buy on Genesis.`
-                    : "Specialist configured in marketplace — buy returns a structured plan."
+                  : "Specialist configured in marketplace — buy returns a structured plan."
               }
               features={[
                 {
@@ -202,10 +216,12 @@ export default async function GenesisAgentPage({ params }: Props) {
                 },
                 {
                   label: "Live platform",
-                  detail: platform
-                    ? "Seller endpoint registered"
-                    : "Local ready path",
-                  active: Boolean(platform),
+                  detail: health.checks.platform.ok
+                    ? "Studio card reachable"
+                    : platform
+                      ? "Studio runtime unreachable"
+                      : "No Studio runtime configured",
+                  active: health.checks.platform.ok,
                 },
                 {
                   label: "x402 payments",

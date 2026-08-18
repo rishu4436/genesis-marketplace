@@ -158,8 +158,9 @@ export function AltanaPanel({
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-white/50">
-        Grant a time-bounded key: allowlisted contracts, spend caps, auto-expiry.
-        Revoke anytime. Permissions designed for Altana Keystore verification.
+        Optional partner grant — not part of Hire. A normal hire is
+        plan-only (spend 0). This grants a separate Keystore session with
+        allowlisted contracts, spend caps, and expiry. Revoke here.
       </p>
       {status && (
         <p className="mt-2 text-[11px] text-white/45">

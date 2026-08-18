@@ -20,9 +20,9 @@ export default function AdvantagePage() {
         Agent Advantage Report
       </h1>
       <p className="lead mt-4 max-w-2xl">
-        Does buying an agent on Genesis beat doing the job yourself? Three real
-        tasks run both ways — time, cost, and output quality. At least one is
-        trading/security weighted.
+        Three concrete jobs. Same brief, two ways. Trading is weighted 1.2×.
+        Security (liquidation) is weighted 1.4×. Quality is what the receipt
+        contains versus what DIY actually missed — not a vibe score.
       </p>
 
       {/* Totals */}
@@ -110,6 +110,11 @@ export default function AdvantagePage() {
                 <p className="mt-2 text-xs leading-relaxed text-white/55">
                   {task.without.outputSummary}
                 </p>
+                <ul className="mt-3 space-y-1 text-[11px] text-rose-200/80">
+                  {task.diyMissed.map((m) => (
+                    <li key={m}>✗ {m}</li>
+                  ))}
+                </ul>
               </div>
 
               <div className="bg-emerald-500/[0.06] p-5 sm:p-6">
@@ -146,6 +151,11 @@ export default function AdvantagePage() {
                 <p className="mt-1 text-xs leading-relaxed text-white/55">
                   {task.withAgent.outputSummary}
                 </p>
+                <ul className="mt-3 space-y-1 text-[11px] text-emerald-200/80">
+                  {task.agentProof.map((m) => (
+                    <li key={m}>✓ {m}</li>
+                  ))}
+                </ul>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
                     href={`/genesis/${task.withAgent.genesisSlug}#buy`}
@@ -180,8 +190,8 @@ export default function AdvantagePage() {
             briefs (spreadsheet / explorer / farm UI).
           </li>
           <li>
-            Quality scores are rubrics for structure, actionability, and risk
-            honesty — not financial advice.
+            Quality is weighted: trading ×1.2, security ×{t.securityWeight}.
+            Not financial advice. Open the receipts.
           </li>
           <li>
             Full TermiX export also available at{" "}

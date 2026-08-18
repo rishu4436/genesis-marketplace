@@ -1,13 +1,10 @@
-import { MarketplaceHome } from "@/components/MarketplaceHome";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Shop",
-  description:
-    "Four hire-ready specialists. Four DeFi jobs. One-click plan — you keep the keys.",
+  title: "Hire",
+  description: "Hire a By Genesis specialist — one path, four jobs.",
 };
 
-export const revalidate = 90;
-
-export default function ShopPage() {
-  return <MarketplaceHome />;
+export default function ShopRedirect() {
+  redirect("/hire");
 }

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getJob } from "@/lib/job-store";
 import { JobResultClient } from "@/components/JobResultClient";
+import { JobReceiptPanel } from "@/components/JobReceiptPanel";
+import { JobSessionPanel } from "@/components/JobSessionPanel";
+import { JobDecisionPanel } from "@/components/JobDecisionPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +103,10 @@ export default async function JobPage({ params }: Props) {
         Plan only. You keep the keys. Soft hire — escrow is not live.
       </p>
 
+      <JobReceiptPanel job={job} />
+      <JobSessionPanel job={job} />
+      <JobDecisionPanel job={job} />
+
       {job.deliverable && (
         <div className="mt-8 space-y-4">
           <p className="text-sm leading-relaxed text-white/70">
@@ -148,6 +155,17 @@ export default async function JobPage({ params }: Props) {
         </Link>
         <Link href={`${href}#buy`} className="btn-line !text-sm">
           Hire again
+        </Link>
+        {job.task && (
+          <Link
+            href={`/compare?task=${encodeURIComponent(job.task)}`}
+            className="btn-line !text-sm"
+          >
+            Compare this job
+          </Link>
+        )}
+        <Link href="/packages" className="btn-line !text-sm">
+          Packages
         </Link>
       </div>
     </div>

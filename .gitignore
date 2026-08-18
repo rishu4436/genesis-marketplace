@@ -28,6 +28,7 @@
 /data/jobs/
 /data/claims/
 /data/altana-sessions/
+/data/incidents/
 
 # debug
 npm-debug.log*

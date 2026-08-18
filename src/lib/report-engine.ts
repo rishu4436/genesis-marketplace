@@ -22,6 +22,10 @@ import {
 } from "./defi-analysis";
 import type { CommerceTier } from "./agent-model";
 import { enrichDeliverableWithAi } from "./ai/intelligence";
+import {
+  fetchOnchainMarket,
+  formatOnchainSection,
+} from "./onchain-market";
 import { hasXaiKey } from "./ai/xai-client";
 
 export type FreeScanResult = {
@@ -115,6 +119,13 @@ export async function buildFullReport(
   const ticks = tickersFromBrief(job.task, job.categoryId);
   const snaps = await fetchMarketSnapshot(ticks);
   const marketBlock = formatMarketSection(snaps);
+  let onchainBlock = "";
+  try {
+    onchainBlock = formatOnchainSection(await fetchOnchainMarket());
+  } catch {
+    onchainBlock =
+      "On-chain BSC read failed. Plan uses specialist math only — no invented tick or APR.";
+  }
   const thesis = buildThesis({
     categoryId: job.categoryId,
     pairOrAsset: p.pair || p.asset || ticks[0] || "BSC",
@@ -154,12 +165,18 @@ export async function buildFullReport(
         },
       ];
 
+  const onchainSection = {
+    heading: "On-chain market (BSC)",
+    body: onchainBlock,
+  };
+
   const sourcesBlock = {
     heading: "Data sources",
     body:
       marketBlock +
-      "\n\n• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n" +
-      "• Protocol framing: PancakeSwap / Venus / Aave-style (plan-level)\n" +
+      "\n\n• On-chain: PCS V3 slot0 + Venus supplyRatePerBlock (eth_call)\n" +
+      "• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n" +
+      "• CoinGecko: spot fallback only\n" +
       `• Model: genesis-v2 · fetched ${snaps[0]?.fetchedAt || "n/a"}`,
   };
 
@@ -175,6 +192,7 @@ export async function buildFullReport(
 
   // Prepend market + context; keep specialist sections
   const sections = [
+    onchainSection,
     sourcesBlock,
     ...buyerBlock,
     thesisBlock,

@@ -16,6 +16,7 @@ import {
 } from "@/lib/marketplace-score";
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { sortForDestination } from "@/lib/hire-class";
+import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
 import type { Agent } from "@/lib/types";
 import Link from "next/link";
 
@@ -149,7 +150,9 @@ export default async function BrowsePage({ searchParams }: Props) {
   };
 
   const pool = await fetchBrowsePool({ q: q || undefined, sortMode });
-  const quality = catalogFilterStats(pool.agents);
+  const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
+  const merged = dedupeAgents([...genesisCards, ...pool.agents]);
+  const quality = catalogFilterStats(merged);
 
   let agents = filterAgents(quality.kept, {
     x402: filters.x402 === "1",
@@ -160,7 +163,7 @@ export default async function BrowsePage({ searchParams }: Props) {
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
   if (sortMode === "score") {
     agents = [...agents].sort(compareByReadiness);
-  } else if (sortMode === "rank" && !q) {
+  } else if (sortMode === "rank") {
     agents = sortForDestination(agents);
   } else {
     agents = sortAgents(agents, { mode: sortMode });
@@ -198,23 +201,21 @@ export default async function BrowsePage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <div className="max-w-2xl">
-        <p className="section-label">Marketplace</p>
-        <h1 className="display-section mt-3 text-white">Marketplace</h1>
+        <p className="section-label">Index</p>
+        <h1 className="display-section mt-3 text-white">Hire floor, then index</h1>
         <p className="lead mt-3">
-          Start on the job floor. Search the hireable index when you need a
-          name. Collectible and stutter listings stay hidden.
+          Specialists first. Live third-party next. 8004scan stars are a
+          filter, not the default rank. This page is the catalog — hire
+          starts at /hire.
         </p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/browse" className="btn-primary !py-2 !text-sm">
-          All agents
+        <Link href="/hire" className="btn-primary !py-2 !text-sm">
+          Hire specialists
         </Link>
         <Link href="/categories" className="btn-secondary !py-2 !text-sm">
-          By job category
-        </Link>
-        <Link href="/hire" className="btn-secondary !py-2 !text-sm">
-          Hire specialists
+          Four jobs
         </Link>
       </div>
 

@@ -3,6 +3,8 @@
  * Pulls public market snapshots when possible; always returns labeled sources.
  */
 
+import { jobFetch } from "./job-isolation";
+
 export type AnalysisSource = {
   id: string;
   name: string;
@@ -53,7 +55,7 @@ export async function fetchMarketSnapshot(
   const ids = unique.map((t) => COINGECKO_IDS[t]).join(",");
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
-    const res = await fetch(url, {
+    const res = await jobFetch(url, {
       next: { revalidate: 120 },
       headers: { Accept: "application/json" },
       signal:

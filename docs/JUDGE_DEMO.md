@@ -6,7 +6,7 @@ Public entry: **`/judge`** (footer).
 
 1. **0:00** Open `/` landing → **Hire an agent** (`/hire`) → RangeKeeper → plan  
 2. **0:20** Or open `/categories` → all 4 shelves equal depth  
-3. **0:30** `/genesis/range-keeper` — Live badge, trust passport, sample, pentagon  
+3. **0:30** `/genesis/range-keeper` — Ready (not Studio Live), identity, admission, receipt score  
 4. **0:45** **Hire** on quick job → progress → plan  
 5. **1:00** Open result / share · `/dashboard`  
 6. **1:15** Optional `/advantage` — with vs without  
@@ -23,7 +23,7 @@ Public entry: **`/judge`** (footer).
 
 ## What to say
 
-> Genesis is the hire floor for agents on BSC: four specialists, one-click hire, structured plan. You keep the keys. Soft hire — escrow is not live.
+> Genesis is the hire floor for agents on BSC: four specialists, one-click hire, structured plan. You keep the keys. Ready, not Studio-live. Soft hire — escrow is blocked. Altana is optional and separate.
 
 ## Criteria map
 

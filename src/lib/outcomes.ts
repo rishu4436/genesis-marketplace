@@ -26,6 +26,7 @@ export type OutcomeSnapshot = {
 };
 
 export function outcomesFromJobs(jobs: HireJob[]): OutcomeSnapshot {
+  jobs = jobs.filter((j) => j.purpose !== "holdout");
   const delivered = jobs.filter((j) => j.status === "delivered").length;
   const failed = jobs.filter((j) => j.status === "failed").length;
   const etas = jobs

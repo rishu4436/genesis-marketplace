@@ -1,7 +1,14 @@
-import type { ScoreAxis } from "@/lib/marketplace-score";
+type RadarAxis = {
+  id: string;
+  label: string;
+  short: string;
+  value: number;
+  source?: string;
+  absent?: boolean;
+};
 
 type Props = {
-  axes: ScoreAxis[];
+  axes: RadarAxis[];
   /** Overall 0–100 */
   composite?: number;
   size?: number;
@@ -286,7 +293,7 @@ export function ScorePentagon({
 }
 
 /** Compact axis breakdown list next to the pentagon */
-export function ScoreAxisList({ axes }: { axes: ScoreAxis[] }) {
+export function ScoreAxisList({ axes }: { axes: RadarAxis[] }) {
   return (
     <ul className="space-y-3">
       {axes.map((ax) => (

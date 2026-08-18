@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { GenesisMark } from "@/components/brand/GenesisMark";
 
 const PRIMARY = [
-  { href: "/shop", label: "Shop" },
   { href: "/hire", label: "Hire" },
   { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },

@@ -249,7 +249,7 @@ export function HireDashboard() {
             <Link href="/hire" className="btn-solid">
               Get a new plan
             </Link>
-            <Link href="/shop" className="btn-line">
+            <Link href="/hire" className="btn-line">
               Shop by job
             </Link>
           </div>

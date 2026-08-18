@@ -6,9 +6,9 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     title: "Hire",
     links: [
       { href: "/hire", label: "Hire an agent" },
-      { href: "/shop", label: "Shop" },
       { href: "/compare", label: "Compare" },
       { href: "/dashboard", label: "My hires" },
+      { href: "/categories", label: "Four jobs" },
     ],
   },
   {
@@ -76,7 +76,7 @@ export function Footer() {
                 className="inline-block h-2 w-2 rounded-full bg-[#16a34a] shadow-[0_0_6px_#16a34a99]"
                 style={{ animation: "pulse-dot 2s ease-in-out infinite" }}
               />
-              Specialists live
+              Hire path ready
             </span>
             <Link
               href="/altana"

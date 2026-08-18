@@ -2,6 +2,7 @@
  * Job store for shareable receipts.
  * Memory + disk (dev) + optional Upstash/Vercel KV (prod).
  * Buyer recovers a hire by job URL or claim code — not by device.
+ * Decision state lives on the job; reseal must not invent a new hire.
  */
 
 import { promises as fs } from "fs";
@@ -9,6 +10,7 @@ import path from "path";
 import type { HireJob } from "./hire-engine";
 import { normalizeClaimCode } from "./hire-engine";
 import { SEED_JOBS } from "./seed-jobs";
+import { sealJob } from "./job-receipt";
 
 const memory = new Map<string, HireJob>();
 const claims = new Map<string, string>();
@@ -88,39 +90,45 @@ function indexClaim(job: HireJob) {
   }
 }
 
+/** Legacy jobs (seeds) get a live seal in memory. Already-sealed jobs stay put. */
+function hydrateEvidence(job: HireJob): HireJob {
+  return sealJob(job);
+}
+
 export async function saveJob(job: HireJob): Promise<HireJob> {
   ensureSeeds();
-  memory.set(job.id, job);
-  indexClaim(job);
+  const sealed = sealJob(job, { resign: true });
+  memory.set(sealed.id, sealed);
+  indexClaim(sealed);
   try {
     await ensureDir();
-    await fs.writeFile(filePath(job.id), JSON.stringify(job, null, 2), "utf8");
+    await fs.writeFile(filePath(sealed.id), JSON.stringify(sealed, null, 2), "utf8");
   } catch {
     /* memory still holds it */
   }
   if (kvEnabled()) {
-    await kvCmd("SET", `genesis:job:${job.id}`, JSON.stringify(job));
-    if (job.claimCode) {
+    await kvCmd("SET", `genesis:job:${sealed.id}`, JSON.stringify(sealed));
+    if (sealed.claimCode) {
       await kvCmd(
         "SET",
-        `genesis:claim:${normalizeClaimCode(job.claimCode)}`,
-        job.id,
+        `genesis:claim:${normalizeClaimCode(sealed.claimCode)}`,
+        sealed.id,
       );
     }
   }
-  return job;
+  return sealed;
 }
 
 export async function getJob(id: string): Promise<HireJob | null> {
   ensureSeeds();
   const want = decodeURIComponent(id);
-  if (memory.has(want)) return memory.get(want)!;
+  if (memory.has(want)) return hydrateEvidence(memory.get(want)!);
   try {
     const raw = await fs.readFile(filePath(want), "utf8");
     const job = JSON.parse(raw) as HireJob;
     memory.set(job.id, job);
     indexClaim(job);
-    return job;
+    return hydrateEvidence(job);
   } catch {
     /* try kv */
   }
@@ -130,13 +138,13 @@ export async function getJob(id: string): Promise<HireJob | null> {
       const job = JSON.parse(fromKv) as HireJob;
       memory.set(job.id, job);
       indexClaim(job);
-      return job;
+      return hydrateEvidence(job);
     } catch {
       /* ignore */
     }
   }
   const seed = SEED_JOBS.find((j) => j.id === want);
-  return seed || null;
+  return seed ? hydrateEvidence(seed) : null;
 }
 
 export async function getJobByClaim(raw: string): Promise<HireJob | null> {
@@ -189,6 +197,7 @@ export async function listJobs(limit = 50): Promise<HireJob[]> {
     /* disk unavailable */
   }
   return [...memory.values()]
+    .map(hydrateEvidence)
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),

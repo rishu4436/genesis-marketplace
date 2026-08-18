@@ -1,13 +1,28 @@
 /**
- * Live health probes for Genesis + platform agents.
- * Genesis specialists always expose a Ready/Live buy path (equal depth).
+ * Honest health for Genesis specialists.
+ * Identity, version, runtime payload, evidence, optional platform.
+ * Specialists stay hireable even when the Studio trial is dead.
  */
 
 import { allGenesisAgents, type GenesisAgent } from "./genesis-agents";
 import { getPlatformConfig } from "./platform-a2a";
-import { getPin } from "./pins";
+import { listJobs } from "./job-store";
+import type { HireJob } from "./hire-engine";
+import { identityFromGenesis, type SellerIdentity } from "./seller-identity";
+import {
+  apexHealthMatchesIdentity,
+  apexHealthPayload,
+  type ApexHealthPayload,
+} from "./apex-health";
+import {
+  classifyHealth,
+  healthStyle,
+  type HealthChecks,
+  type LiveStatus,
+} from "./agent-health-model";
 
-export type LiveStatus = "live" | "local" | "degraded" | "unknown";
+export type { LiveStatus, HealthChecks } from "./agent-health-model";
+export { healthStyle, classifyHealth };
 
 export type AgentHealth = {
   slug: string;
@@ -19,6 +34,17 @@ export type AgentHealth = {
   serviceUrl?: string;
   platform: boolean;
   tokenId?: string;
+  hireable: boolean;
+  version: string;
+  identityHash: string;
+  sellerId: string;
+  checks: HealthChecks;
+  evidence: {
+    jobId: string;
+    sellerVersion: string;
+    deliveredAt: string | null;
+  } | null;
+  identity: SellerIdentity;
 };
 
 async function probeUrl(
@@ -43,77 +69,163 @@ async function probeUrl(
   }
 }
 
+function evidenceForSeller(
+  jobs: HireJob[],
+  identity: SellerIdentity,
+): AgentHealth["evidence"] {
+  const hits = jobs.filter((j) => {
+    if (j.status !== "delivered") return false;
+    if (j.genesisSlug && identity.sellerId === `genesis:${j.genesisSlug}`) {
+      const ver = j.receipt?.sellerVersion || j.spec?.seller.identityVersion;
+      return !ver || ver === identity.version;
+    }
+    return false;
+  });
+  if (hits.length === 0) return null;
+  const latest = hits[0];
+  return {
+    jobId: latest.id,
+    sellerVersion: latest.receipt?.sellerVersion || identity.version,
+    deliveredAt:
+      latest.receipt?.timestamps.deliveredAt || latest.updatedAt || null,
+  };
+}
+
+function parseApexBody(raw: unknown): ApexHealthPayload | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Partial<ApexHealthPayload>;
+  if (r.status !== "ok" || !r.slug || !r.version || !r.identityHash) return null;
+  if (!r.mandate || r.mandate.mayMoveFunds !== false) return null;
+  return r as ApexHealthPayload;
+}
+
 export async function checkAgentHealth(
   agent: GenesisAgent,
   origin?: string,
+  jobs?: HireJob[],
 ): Promise<AgentHealth> {
   const checkedAt = new Date().toISOString();
-  const pin = getPin(agent.slug);
+  const identity = identityFromGenesis(agent, origin);
   const platform = getPlatformConfig(agent.slug);
+
+  const localPayload = apexHealthPayload(agent.slug);
+  const localMatch = localPayload
+    ? apexHealthMatchesIdentity(localPayload, {
+        slug: agent.slug,
+        version: identity.version,
+        identityHash: identity.identityHash,
+      })
+    : { ok: false, detail: "no APEX payload" };
+
+  let remotePayload: ApexHealthPayload | null = null;
   const base = origin?.replace(/\/$/, "") || "";
+  if (base) {
+    try {
+      const url = `${base}/api/apex/${agent.slug}/health`;
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 4000);
+      const res = await fetch(url, {
+        method: "GET",
+        signal: ctrl.signal,
+        cache: "no-store",
+      });
+      clearTimeout(t);
+      if (res.ok) {
+        remotePayload = parseApexBody(await res.json());
+      }
+    } catch {
+      /* in-process payload still counts */
+    }
+  }
+
+  const remoteMatch = remotePayload
+    ? apexHealthMatchesIdentity(remotePayload, {
+        slug: agent.slug,
+        version: identity.version,
+        identityHash: identity.identityHash,
+      })
+    : null;
+
+  const runtimeOk = localMatch.ok || Boolean(remoteMatch?.ok);
+  const versionOk =
+    (localPayload?.version === identity.version ||
+      remotePayload?.version === identity.version) &&
+    runtimeOk;
 
   let platformOk = false;
   if (platform?.cardUrl) {
-    const p = await probeUrl(platform.cardUrl, 5000);
+    const p = await probeUrl(platform.cardUrl, 4000);
     platformOk = p.ok;
   }
 
-  let localOk = false;
-  if (base) {
-    const p = await probeUrl(`${base}/api/apex/${agent.slug}/health`);
-    localOk = p.ok;
-  }
+  const jobList = jobs ?? (await listJobs(200));
+  const evidence = evidenceForSeller(jobList, identity);
 
-  const tokenId = pin.tokenId || agent.tokenId;
+  const checks: HealthChecks = {
+    identity: {
+      ok: identity.erc8004 && Boolean(identity.controller),
+      detail: identity.erc8004
+        ? `ERC-8004 #${identity.tokenId} · ${identity.controller?.slice(0, 8) ?? "no controller"}…`
+        : "No ERC-8004 token pinned",
+    },
+    runtime: {
+      ok: runtimeOk,
+      detail: remoteMatch?.ok
+        ? "APEX health confirmed this seller"
+        : localMatch.ok
+          ? "In-process APEX payload matches pin"
+          : remoteMatch?.detail || localMatch.detail,
+    },
+    version: {
+      ok: Boolean(versionOk),
+      detail: versionOk
+        ? identity.version
+        : `expected ${identity.version}`,
+    },
+    mandate: {
+      ok:
+        identity.mandate.custody === false &&
+        identity.mandate.mayMoveFunds === false &&
+        (localPayload?.mandate.mayMoveFunds === false ||
+          remotePayload?.mandate.mayMoveFunds === false ||
+          localMatch.ok),
+      detail: "plan only · no custody · no fund movement",
+    },
+    evidence: {
+      ok: Boolean(evidence),
+      detail: evidence
+        ? `${evidence.jobId} · ${evidence.sellerVersion}`
+        : "No delivered receipt on this version yet",
+    },
+    platform: {
+      ok: platformOk,
+      detail: platformOk
+        ? "Studio card reachable"
+        : platform
+          ? "Studio trial/runtime unreachable"
+          : "No Studio runtime configured",
+    },
+  };
 
-  if (platformOk) {
-    return {
-      slug: agent.slug,
-      name: agent.name,
-      status: "live",
-      label: "Live",
-      detail: tokenId
-        ? `Platform A2A · ERC-8004 #${tokenId}`
-        : "Platform A2A reachable",
-      checkedAt,
-      serviceUrl: agent.serviceUrl,
-      platform: true,
-      tokenId,
-    };
-  }
+  const classified = classifyHealth(checks);
 
-  // On-chain identity + working hire path counts as live on BSC
-  if (localOk && tokenId) {
-    return {
-      slug: agent.slug,
-      name: agent.name,
-      status: "live",
-      label: "Live",
-      detail: `ERC-8004 #${tokenId} · hire path live`,
-      checkedAt,
-      serviceUrl: agent.serviceUrl || `${base}/api/apex/${agent.slug}`,
-      platform: false,
-      tokenId,
-    };
-  }
-
-  // Always Ready for marketplace specialists (local APEX / sim fulfill).
-  // Judges see equal category depth even if platform trial expired.
   return {
     slug: agent.slug,
     name: agent.name,
-    status: "local",
-    label: "Ready",
-    detail:
-      platform && !platformOk
-        ? "Platform offline · local buy path ready (equal depth)"
-        : localOk
-          ? "Local hire path healthy · buy returns a plan"
-          : "Buy path ready · structured plan deliverable",
+    status: classified.status,
+    label: classified.label,
+    detail: classified.detail,
     checkedAt,
     serviceUrl: agent.serviceUrl,
-    platform: false,
-    tokenId: pin.tokenId || agent.tokenId,
+    platform: platformOk,
+    tokenId: identity.tokenId || undefined,
+    hireable: true,
+    version: identity.version,
+    identityHash: identity.identityHash,
+    sellerId: identity.sellerId,
+    checks,
+    evidence,
+    identity,
   };
 }
 
@@ -121,18 +233,6 @@ export async function checkAllAgentHealth(
   origin?: string,
 ): Promise<AgentHealth[]> {
   const agents = allGenesisAgents();
-  return Promise.all(agents.map((a) => checkAgentHealth(a, origin)));
-}
-
-export function healthStyle(status: LiveStatus): string {
-  switch (status) {
-    case "live":
-      return "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30";
-    case "local":
-      return "bg-sky-400/15 text-sky-300 ring-sky-400/30";
-    case "degraded":
-      return "bg-amber-400/15 text-amber-200 ring-amber-400/30";
-    default:
-      return "bg-white/10 text-white/50 ring-white/15";
-  }
+  const jobs = await listJobs(200);
+  return Promise.all(agents.map((a) => checkAgentHealth(a, origin, jobs)));
 }

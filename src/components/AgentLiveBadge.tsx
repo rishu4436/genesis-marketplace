@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { healthStyle, type AgentHealth, type LiveStatus } from "@/lib/agent-health";
+import {
+  healthStyle,
+  type LiveStatus,
+} from "@/lib/agent-health-model";
+import type { AgentHealth } from "@/lib/agent-health";
 
 type Props = {
   slug: string;
@@ -46,7 +50,18 @@ export function AgentLiveBadge({ slug, className = "" }: Props) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${healthStyle(h.status as LiveStatus)} ${className}`}
-      title={h.detail}
+      title={
+        h.checks
+          ? [
+              h.detail,
+              h.version,
+              h.checks.identity.ok ? "identity" : "identity?",
+              h.checks.runtime.ok ? "runtime" : "runtime?",
+              h.checks.version.ok ? "version" : "version?",
+              h.checks.platform.ok ? "platform" : "no-platform",
+            ].join(" · ")
+          : h.detail
+      }
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${

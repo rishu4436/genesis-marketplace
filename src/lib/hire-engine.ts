@@ -26,6 +26,15 @@ import {
   runThirdPartyHire,
 } from "./third-party-hire";
 import { getAgentSafe } from "./scan";
+import type { JobReceipt, JobSpec } from "./job-spec";
+import type { JobDecision } from "./job-decision";
+import {
+  closeSession,
+  grantPlanSession,
+  type IsolationRecord,
+  type JobSession,
+} from "./job-session";
+import { runIsolated } from "./job-isolation";
 
 export type HireStatus =
   | "negotiating"
@@ -75,6 +84,8 @@ export type HireJob = {
   duration: HireIntent["duration"];
   risk: HireIntent["risk"];
   notes?: string;
+  /** holdout jobs are shadow-book evidence, never buyer commerce */
+  purpose?: "hire" | "holdout";
   /** free | full | escrow — stockanalyst-inspired */
   tier?: CommerceTier;
   buyerContext?: BuyerContext | null;
@@ -83,6 +94,15 @@ export type HireJob = {
   deliverable?: HireDeliverable;
   timeline: { at: string; status: HireStatus; detail: string }[];
   serviceUrl?: string;
+  /** Canonical request — hashed into the receipt */
+  spec?: JobSpec;
+  /** Evidence seal — verify on read, do not trust the client */
+  receipt?: JobReceipt;
+  /** Plan-only session — never a master key */
+  session?: JobSession;
+  isolation?: IsolationRecord;
+  /** Buyer accept / dispute — plan quality, not a payout */
+  decision?: JobDecision;
 };
 
 function nowIso() {
@@ -105,6 +125,29 @@ export function makeClaimCode(): string {
 
 export function normalizeClaimCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function attachSession(job: HireJob): HireJob {
+  if (job.session) return job;
+  return {
+    ...job,
+    session: grantPlanSession({
+      jobId: job.id,
+      chainId: job.chainId,
+      tokenId: job.tokenId,
+      genesisSlug: job.genesisSlug,
+      categoryId: job.categoryId,
+    }),
+  };
+}
+
+function settleSession(
+  job: HireJob,
+  status: "consumed" | "revoked" | "killed" | "expired",
+  reason: string,
+): HireJob {
+  if (!job.session) return job;
+  return { ...job, session: closeSession(job.session, status, reason) };
 }
 
 function pushTimeline(
@@ -197,6 +240,7 @@ export function createNegotiatedJob(input: {
     serviceUrl: input.serviceUrl,
     timeline: [],
   };
+  job = attachSession(job);
 
   job = pushTimeline(job, "negotiating", "POST negotiate — buyer brief received");
   const quote = buildQuote(input);
@@ -259,6 +303,7 @@ export async function createJobWithLiveNegotiate(input: {
     serviceUrl,
     timeline: [],
   };
+  job = attachSession(job);
 
   // ── Free scan — Genesis specialists still get the full job-specific plan ──
   if (tier === "free" && input.genesisSlug) {
@@ -324,7 +369,7 @@ export async function createJobWithLiveNegotiate(input: {
         disclaimer: scan.disclaimer,
       },
     };
-    return job;
+    return settleSession(job, "consumed", "free scan delivered · session revoked");
   }
 
   job = pushTimeline(
@@ -558,6 +603,11 @@ async function fulfillCatalogHire(
         ),
         deliverable: result.deliverable,
       };
+      next = settleSession(
+        next,
+        "consumed",
+        "third-party plan delivered · session revoked",
+      );
     }
     return next;
   }
@@ -593,6 +643,11 @@ async function fulfillCatalogHire(
       ),
       deliverable,
     };
+    next = settleSession(
+      next,
+      "consumed",
+      "identity recorded · session revoked",
+    );
   }
   return next;
 }
@@ -614,7 +669,7 @@ function fulfillFromEmbedded(
     ...pushTimeline(next, "delivered", "Deliverable ready"),
     deliverable,
   };
-  return next;
+  return settleSession(next, "consumed", "embedded plan delivered · session revoked");
 }
 
 export function fundJob(job: HireJob): HireJob {
@@ -630,7 +685,7 @@ export function fundJob(job: HireJob): HireJob {
 
 export function fulfillJob(job: HireJob): HireJob {
   // Sync fallback for callers that cannot await (legacy)
-  let next = job;
+  let next = attachSession(job);
   if (next.status === "quoted") {
     next = fundJob(next);
   }
@@ -644,12 +699,12 @@ export function fulfillJob(job: HireJob): HireJob {
     ...pushTimeline(next, "delivered", "Deliverable ready"),
     deliverable,
   };
-  return next;
+  return settleSession(next, "consumed", "plan delivered · session revoked");
 }
 
 /** Async fulfill — multi-source report + buyer context (v2 model) */
 export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
-  let next = job;
+  let next = attachSession(job);
   if (next.status === "quoted") {
     next = fundJob(next);
   }
@@ -659,10 +714,11 @@ export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
   next = pushTimeline(
     next,
     "fulfilling",
-    "Multi-source analysis + specialist plan…",
+    "Isolated session · multi-source analysis + specialist plan…",
   );
   const g = job.genesisSlug ? getGenesisAgent(job.genesisSlug) : undefined;
-  try {
+  const session = next.session!;
+  const ran = await runIsolated(session, async () => {
     const deliverable = await buildFullReport(
       next,
       g,
@@ -672,17 +728,44 @@ export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
       deliverable.sections = [
         {
           heading: "On-chain escrow path",
-          body: "This job was fulfilled under the Escrow tier analysis. To lock U on-chain when policy allows: open /fund, create/fund ERC-8183 job, then settle after 24h. Soft deliverable is available now so you are never blocked.",
+          body: "This job was fulfilled under the Escrow tier analysis. To lock U on-chain when policy allows: open /fund, create/fund ERC-8183 job, then settle after 24h. Soft deliverable is available now so you are never blocked. Escrow is not required for this plan.",
         },
         ...deliverable.sections,
       ];
     }
-    next = {
-      ...pushTimeline(next, "delivered", "Full analysis ready"),
-      deliverable,
-    };
-  } catch {
-    next = fulfillJob(next);
+    return deliverable;
+  });
+
+  next = { ...next, isolation: ran.isolation };
+
+  const deliverable =
+    ran.value || buildExpertDeliverable(next, g);
+
+  if (next.tier === "escrow" && !ran.value) {
+    deliverable.sections = [
+      {
+        heading: "On-chain escrow path",
+        body: "Escrow is optional and currently blocked (PolicyNotWhitelisted). Soft deliverable is available now.",
+      },
+      ...deliverable.sections,
+    ];
   }
-  return next;
+
+  next = {
+    ...pushTimeline(
+      next,
+      "delivered",
+      ran.value
+        ? "Full analysis ready · session consumed"
+        : "Fallback plan · isolated fulfill did not complete",
+    ),
+    deliverable,
+  };
+  return settleSession(
+    next,
+    ran.isolation.killed ? "killed" : "consumed",
+    ran.isolation.killed
+      ? ran.isolation.killReason || "isolated fulfill killed"
+      : "plan delivered · session revoked",
+  );
 }
