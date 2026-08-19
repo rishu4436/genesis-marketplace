@@ -1,6 +1,7 @@
 /**
  * Shared 8004scan hireable pool for /hire and /browse.
- * Multiple partner pages, then the caller re-sorts in memory.
+ * Aim for 200–500 loaded agents so x402 / verified / job chips
+ * still have rows after in-memory filters.
  */
 
 import type { Agent } from "./types";
@@ -8,63 +9,104 @@ import { listAgentsSafe, searchAgentsSafe, dedupeAgents } from "./scan";
 
 export type CatalogSortMode = "rank" | "score" | "newest" | "ratings";
 
+type SafeList = Awaited<ReturnType<typeof listAgentsSafe>>;
+
+const JOB_SEEDS = [
+  "grid trading",
+  "yield",
+  "rebalancing",
+  "x402",
+];
+
+function collect(
+  results: SafeList[],
+  into: Agent[],
+): { error: string | null; apiTotal: number | null } {
+  let error: string | null = null;
+  let apiTotal: number | null = null;
+  for (const res of results) {
+    if (res.data?.length) into.push(...res.data);
+    if (res.error && !error) error = res.error;
+    if (res.meta?.pagination?.total != null) {
+      apiTotal = res.meta.pagination.total;
+    }
+  }
+  return { error, apiTotal };
+}
+
 export async function fetchHireablePool(opts: {
   q?: string;
   sortMode: CatalogSortMode;
+  x402?: boolean;
+  verified?: boolean;
 }): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
   const collected: Agent[] = [];
-  let error: string | null = null;
-  let apiTotal: number | null = null;
+  const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
+  const jobs: Promise<SafeList>[] = [];
+
+  // ~400 top-score rows (4 × 100). Cached partner calls.
+  for (let page = 1; page <= 4; page++) {
+    jobs.push(
+      listAgentsSafe({
+        chainId: 56,
+        page,
+        limit: 100,
+        sortBy: apiSort as "total_score" | "created_at",
+        sortOrder: "desc",
+      }),
+    );
+  }
 
   if (opts.q) {
-    const [semantic, listed, listed2] = await Promise.all([
-      searchAgentsSafe({ q: opts.q, limit: 80, chainId: 56 }),
+    jobs.push(searchAgentsSafe({ q: opts.q, limit: 80, chainId: 56 }));
+    jobs.push(
       listAgentsSafe({
         chainId: 56,
         search: opts.q,
-        limit: 80,
+        limit: 100,
         page: 1,
         sortBy: "total_score",
         sortOrder: "desc",
       }),
+    );
+    jobs.push(
       listAgentsSafe({
         chainId: 56,
         search: opts.q,
-        limit: 80,
+        limit: 100,
         page: 2,
         sortBy: "total_score",
         sortOrder: "desc",
       }),
-    ]);
-    for (const r of [semantic, listed, listed2]) {
-      if (r.data) collected.push(...r.data);
-      if (r.error && !error) error = r.error;
-    }
-    apiTotal = listed.meta?.pagination?.total ?? null;
-  } else {
-    const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
-    const maxPages = 3;
-
-    const pages = await Promise.all(
-      Array.from({ length: maxPages }, (_, i) =>
-        listAgentsSafe({
-          chainId: 56,
-          page: i + 1,
-          limit: 40,
-          sortBy: apiSort as "total_score" | "created_at",
-          sortOrder: "desc",
-        }),
-      ),
     );
-
-    for (const res of pages) {
-      if (res.data?.length) collected.push(...res.data);
-      if (res.error && !error) error = res.error;
-      if (res.meta?.pagination?.total != null) {
-        apiTotal = res.meta.pagination.total;
-      }
+  } else {
+    for (const seed of JOB_SEEDS) {
+      jobs.push(searchAgentsSafe({ q: seed, limit: 40, chainId: 56 }));
     }
   }
+
+  if (opts.x402) {
+    const q = opts.q ? `${opts.q} x402` : "x402";
+    jobs.push(searchAgentsSafe({ q, limit: 80, chainId: 56 }));
+    jobs.push(
+      listAgentsSafe({
+        chainId: 56,
+        protocol: "A2A",
+        limit: 100,
+        page: 1,
+        sortBy: "total_score",
+        sortOrder: "desc",
+      }),
+    );
+  }
+
+  if (opts.verified) {
+    const q = opts.q ? `${opts.q} verified` : "verified";
+    jobs.push(searchAgentsSafe({ q, limit: 80, chainId: 56 }));
+  }
+
+  const results = await Promise.all(jobs);
+  const { error, apiTotal } = collect(results, collected);
 
   return {
     agents: dedupeAgents(collected),

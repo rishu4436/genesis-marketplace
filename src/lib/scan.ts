@@ -38,7 +38,7 @@ async function getJson<T>(
     headers: { ...headers(), ...init?.headers },
     signal: init?.signal ?? abortSignal(FETCH_MS),
     // Cache partner data briefly so pages don't re-hammer the API every click
-    next: { revalidate: 60 },
+    next: { revalidate: 180 },
   });
 
   const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
@@ -88,6 +88,7 @@ export type ListAgentsParams = {
   limit?: number;
   chainId?: number;
   search?: string;
+  protocol?: "MCP" | "A2A" | "OASF" | "Web" | "Email";
   sortBy?: "created_at" | "stars" | "name" | "token_id" | "total_score";
   sortOrder?: "asc" | "desc";
   isTestnet?: boolean;
@@ -99,6 +100,7 @@ function listQuery(params: ListAgentsParams = {}) {
   q.set("limit", String(params.limit ?? 20));
   q.set("chainId", String(params.chainId ?? BSC_CHAIN_ID));
   if (params.search) q.set("search", params.search);
+  if (params.protocol) q.set("protocol", params.protocol);
   if (params.sortBy) q.set("sortBy", params.sortBy);
   if (params.sortOrder) q.set("sortOrder", params.sortOrder);
   if (params.isTestnet !== undefined)

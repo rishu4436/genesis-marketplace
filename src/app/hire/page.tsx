@@ -81,14 +81,31 @@ export default async function HirePage({ searchParams }: Props) {
     ratings: sp.ratings === "1" ? "1" : undefined,
   };
 
-  const pool = await fetchHireablePool({ q: q || undefined, sortMode });
+  const pool = await fetchHireablePool({
+    q: q || undefined,
+    sortMode,
+    x402: filters.x402 === "1",
+    verified: filters.verified === "1",
+  });
   const quality = catalogFilterStats(pool.agents);
 
-  let catalog = filterAgents(quality.kept, {
+  const strictFilters = {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
-  }).filter((a) => !isFeaturedThirdParty(a.chain_id, a.token_id));
+  };
+  let catalog = filterAgents(quality.kept, strictFilters).filter(
+    (a) => !isFeaturedThirdParty(a.chain_id, a.token_id),
+  );
+  let relaxed = false;
+  if (catalog.length === 0 && quality.kept.length > 0) {
+    catalog = filterAgents(quality.kept, {
+      x402: false,
+      verified: false,
+      hasRatings: false,
+    }).filter((a) => !isFeaturedThirdParty(a.chain_id, a.token_id));
+    relaxed = catalog.length > 0;
+  }
 
   if (sortMode === "score") {
     catalog = [...catalog].sort(compareByReadiness);
@@ -296,6 +313,11 @@ export default async function HirePage({ searchParams }: Props) {
           {pool.error && pageAgents.length === 0
             ? "Catalog unavailable"
             : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+          {relaxed && (
+            <span className="ml-1 text-amber-200/70">
+              · no exact filter match — showing closest listings
+            </span>
+          )}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
               · sorted by hire readiness · this page {pageMax.toFixed(0)}–

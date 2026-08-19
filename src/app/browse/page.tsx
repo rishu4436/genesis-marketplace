@@ -77,7 +77,12 @@ export default async function BrowsePage({ searchParams }: Props) {
     ratings: hasRatings ? "1" : undefined,
   };
 
-  const pool = await fetchHireablePool({ q: q || undefined, sortMode });
+  const pool = await fetchHireablePool({
+    q: q || undefined,
+    sortMode,
+    x402: filters.x402 === "1",
+    verified: filters.verified === "1",
+  });
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
   const quality = catalogFilterStats(merged);
@@ -87,6 +92,11 @@ export default async function BrowsePage({ searchParams }: Props) {
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
   });
+  let relaxed = false;
+  if (agents.length === 0 && quality.kept.length > 0) {
+    agents = filterAgents(quality.kept, {});
+    relaxed = agents.length > 0;
+  }
 
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
   if (sortMode === "score") {
@@ -207,6 +217,11 @@ export default async function BrowsePage({ searchParams }: Props) {
           {pool.error && pageAgents.length === 0
             ? "—"
             : `${q ? "Search" : "Hireable index"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+          {relaxed && (
+            <span className="ml-1 text-amber-200/70">
+              · no exact filter match — showing closest listings
+            </span>
+          )}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
               · sorted by hire readiness · this page {pageMax.toFixed(0)}–
