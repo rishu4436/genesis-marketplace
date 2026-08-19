@@ -41,7 +41,7 @@ export function classifyHealth(checks: HealthChecks): ClassifiedHealth {
     return {
       status: "live",
       label: "Live",
-      detail: "ERC-8004 + pinned version + platform runtime reachable",
+      detail: "ERC-8004 + pinned version + live A2A card reachable",
     };
   }
 

@@ -153,9 +153,25 @@ export async function checkAgentHealth(
     runtimeOk;
 
   let platformOk = false;
-  if (platform?.cardUrl) {
+  let platformDetail = platform
+    ? "Studio trial/runtime unreachable"
+    : "No Studio runtime configured";
+  const genesisCard = base
+    ? `${base}/api/apex/${agent.slug}/.well-known/agent-card.json`
+    : "";
+  if (genesisCard) {
+    const g = await probeUrl(genesisCard, 4000);
+    if (g.ok) {
+      platformOk = true;
+      platformDetail = "Genesis live A2A card reachable";
+    }
+  }
+  if (!platformOk && platform?.cardUrl) {
     const p = await probeUrl(platform.cardUrl, 4000);
-    platformOk = p.ok;
+    if (p.ok) {
+      platformOk = true;
+      platformDetail = "Studio card reachable";
+    }
   }
 
   const jobList = jobs ?? (await listJobs(200));
@@ -199,11 +215,7 @@ export async function checkAgentHealth(
     },
     platform: {
       ok: platformOk,
-      detail: platformOk
-        ? "Studio card reachable"
-        : platform
-          ? "Studio trial/runtime unreachable"
-          : "No Studio runtime configured",
+      detail: platformDetail,
     },
   };
 

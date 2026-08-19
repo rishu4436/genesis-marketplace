@@ -19,11 +19,11 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        Hire path is <span className="text-white/75">Ready</span> (ERC-8004 +
-        marketplace APEX). BNB Studio A2A trial ended — we do not call these
-        Live autonomous runtimes. Escrow is blocked
-        (PolicyNotWhitelisted). Hire is plan-only; Altana is a separate
-        optional grant.
+        Hire path is <span className="text-white/75">Live</span> on the
+        Genesis A2A runtime (agent card + negotiate). BNB Studio&apos;s 48h
+        sandbox on this GitHub account expired and is not renewable. Escrow
+        is blocked (PolicyNotWhitelisted). Hire is plan-only; Altana is a
+        separate optional grant.
       </p>
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
@@ -126,7 +126,8 @@ export default async function JudgePage() {
           >
             job_msyi1iv8
           </Link>
-          , PCS slot0 + Venus rate on a fresh hire, Ready not fake Live.
+          , PCS slot0 + Venus rate on a fresh hire, Genesis A2A Live (not
+          the expired Studio trial).
         </li>
         <li>
           <span className="font-semibold text-white">Diversity</span> —{" "}

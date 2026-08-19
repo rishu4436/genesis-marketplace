@@ -453,7 +453,7 @@ export async function createJobWithLiveNegotiate(input: {
     return job;
   }
 
-  if (serviceUrl && !platformCfg) {
+  if (serviceUrl) {
     try {
       const { ok, data } = await negotiateLive(serviceUrl, {
         task_description: input.task,
@@ -480,23 +480,23 @@ export async function createJobWithLiveNegotiate(input: {
           (data.quote_expires_at as string) ||
           new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-        const isLocalApex = serviceUrl.includes("/api/apex/");
+        const isGenesisApex = serviceUrl.includes("/api/apex/");
         job = {
           ...pushTimeline(
             job,
             "quoted",
-            `Live negotiate OK · $${priceUsd} · ${isLocalApex ? "local APEX" : "external service"}`,
+            `Live negotiate OK · $${priceUsd} · ${isGenesisApex ? "Genesis A2A" : "external service"}`,
           ),
           quote: {
             priceUsd,
             currency: (data.currency as string) || "USD",
             etaMinutes: eta as number,
-            protocol: isLocalApex ? "ERC-8183" : "ERC-8183-live",
+            protocol: "ERC-8183-live",
             expiresAt: expires,
-            notes: (data.notes as string) || "Live APEX quote",
+            notes: (data.notes as string) || "Live A2A quote",
             providerSig: data.provider_sig as string | undefined,
             rawPrice: data.price != null ? String(data.price) : undefined,
-            live: !isLocalApex,
+            live: true,
           },
         };
 
