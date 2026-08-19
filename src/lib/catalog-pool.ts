@@ -44,8 +44,8 @@ export async function fetchHireablePool(opts: {
   const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
   const jobs: Promise<SafeList>[] = [];
 
-  // ~400 top-score rows (4 × 100). Cached partner calls.
-  for (let page = 1; page <= 4; page++) {
+  // ~500 top-score rows (5 × 100). Cached partner calls.
+  for (let page = 1; page <= 5; page++) {
     jobs.push(
       listAgentsSafe({
         chainId: 56,
