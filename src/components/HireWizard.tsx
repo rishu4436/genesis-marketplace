@@ -492,37 +492,46 @@ export function HireWizard({
         Soft hire · plan only · you keep the keys · escrow is not live
       </p>
 
-      {/* Tiers: Free scan | Full analysis | Escrow — stockanalyst-inspired */}
       <div className="mt-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
           Tier
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {modes.map((m) => {
-            const active = rail === m.rail;
-            // Escrow selectable — still delivers full analysis + fund path note
-            const enabled = m.available;
-            return (
-              <button
-                key={m.rail}
-                type="button"
-                disabled={!enabled || loading}
-                title={m.reason || m.description}
-                onClick={() => enabled && setRail(m.rail)}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
-                  active
-                    ? "bg-amber-400 text-black"
-                    : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
-                }`}
-              >
-                {m.short}
-              </button>
-            );
-          })}
+          {modes
+            .filter((m) => m.available)
+            .map((m) => {
+              const active = rail === m.rail;
+              return (
+                <button
+                  key={m.rail}
+                  type="button"
+                  disabled={loading}
+                  title={m.description}
+                  onClick={() => setRail(m.rail)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                    active
+                      ? "bg-amber-400 text-black"
+                      : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
+                  }`}
+                >
+                  {m.short}
+                </button>
+              );
+            })}
         </div>
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
           {modes.find((m) => m.rail === rail)?.description}
         </p>
+        {modes.some((m) => m.rail === "escrow" && !m.available) && (
+          <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
+            On-chain escrow is unavailable (policy not whitelisted). Optional
+            path:{" "}
+            <Link href="/fund" className="text-amber-300/80 hover:underline">
+              /fund
+            </Link>
+            .
+          </p>
+        )}
       </div>
 
       {rail !== "free" && (

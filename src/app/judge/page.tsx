@@ -20,11 +20,10 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        Hire path is <span className="text-white/75">Live</span> on the
-        Genesis A2A runtime (agent card + negotiate). BNB Studio&apos;s 48h
-        sandbox on this GitHub account expired and is not renewable. Escrow
-        is blocked (PolicyNotWhitelisted). Hire is plan-only; Altana is a
-        post-hire grant on the same receipt.
+        Studio trial expired. Hire runs on{" "}
+        <span className="text-white/75">Genesis APEX</span> (Ready, not
+        Studio-live). Escrow is blocked (PolicyNotWhitelisted). Hire is
+        plan-only; Altana is a post-hire grant on the same receipt.
       </p>
       <div className="mt-6">
         <PartnerStatusStrip compact />

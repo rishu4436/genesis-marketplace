@@ -4,7 +4,11 @@ import { rankScore } from "@/lib/agent-rank";
 import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
-import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
+import {
+  hireClassForAgent,
+  hireClassLabel,
+  listingHref,
+} from "@/lib/hire-class";
 import { formatOnchainRating } from "@/lib/feedback-score";
 import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
 import {
@@ -255,7 +259,7 @@ export default async function ComparePage({ searchParams }: Props) {
                   {agents.map((a) => (
                     <th key={a.agent_id || a.token_id} className="px-4 py-3">
                       <Link
-                        href={`/agents/${a.chain_id}/${a.token_id}`}
+                        href={listingHref(a)}
                         className="font-semibold text-amber-200 hover:underline"
                       >
                         {a.name || `#${a.token_id}`}
@@ -291,7 +295,7 @@ export default async function ComparePage({ searchParams }: Props) {
             {agents.map((a) => (
               <Link
                 key={a.agent_id}
-                href={`/agents/${a.chain_id}/${a.token_id}`}
+                href={`${listingHref(a)}#buy`}
                 className="rounded-full bg-[#F0B90B] px-4 py-2 text-xs font-semibold text-black hover:bg-amber-300"
               >
                 Hire {a.name?.slice(0, 18) || a.token_id} →

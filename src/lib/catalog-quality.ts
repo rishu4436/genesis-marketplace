@@ -12,7 +12,8 @@ export type CatalogDropReason =
   | "ticker-spam"
   | "ensoul-social"
   | "collectible-nft"
-  | "prompt-dump";
+  | "prompt-dump"
+  | "off-job";
 
 const TICKER_NAME =
   /^(8004ai|402ai|uuuai\d*|agentsai|onehaai|biuai)\b/i;
@@ -28,6 +29,9 @@ const ENSOUL =
 
 const PROMPT_DUMP =
   /^(an evoevo ai agent)|you are an elite intp|when processing any crypto prediction/i;
+
+const OFF_JOB =
+  /unibase|hinami|ヒナミ|shitcoin|shitscreener|wow gold|kansas city|white swan|clawdbot|poet screener|grindingpoet|hodlai|energy grid for silicon|epstein|world of warcraft|draw\.io diagram|football odds/i;
 
 function hay(agent: Agent): { name: string; desc: string } {
   return {
@@ -81,6 +85,7 @@ export function catalogDropReason(agent: Agent): CatalogDropReason | null {
   }
 
   if (PROMPT_DUMP.test(desc)) return "prompt-dump";
+  if (OFF_JOB.test(name) || OFF_JOB.test(desc)) return "off-job";
 
   return null;
 }

@@ -8,10 +8,15 @@ import { growthLoops } from "../src/lib/growth-loops";
 import {
   catalogLiveStats,
   hireClassForAgent,
+  listingHref,
 } from "../src/lib/hire-class";
 import { filterAgents } from "../src/lib/agent-rank";
 import { FEATURED_THIRD_PARTY, featuredAsAgent } from "../src/lib/third-party-sellers";
 import type { Agent } from "../src/lib/types";
+import { catalogDropReason } from "../src/lib/catalog-quality";
+import { classifyHealth, type HealthChecks } from "../src/lib/agent-health-model";
+import { marketplaceTiers } from "../src/lib/agent-model";
+import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
 
 type Check = { name: string; ok: boolean; detail?: string };
 const checks: Check[] = [];
@@ -94,6 +99,40 @@ function main() {
   check(
     "featured token stays 265375",
     FEATURED_THIRD_PARTY.tokenId === "265375",
+  );
+
+  const rk = getGenesisAgent("range-keeper");
+  check(
+    "compare hire URL is genesis specialist",
+    Boolean(rk) && listingHref(genesisToAgentCard(rk!)) === "/genesis/range-keeper",
+  );
+  check(
+    "hinami is off-job dump",
+    catalogDropReason({
+      ...indexed,
+      name: "ヒナミちゃん by Unibase",
+      description: "Hinami-chan is blowing up on X",
+    }) === "off-job",
+  );
+
+  const bound: HealthChecks = {
+    identity: { ok: true, detail: "id" },
+    runtime: { ok: true, detail: "rt" },
+    version: { ok: true, detail: "ver" },
+    mandate: { ok: true, detail: "plan" },
+    evidence: { ok: true, detail: "job" },
+    platform: { ok: true, detail: "Genesis APEX · Studio trial expired" },
+  };
+  const apex = classifyHealth(bound);
+  check(
+    "APEX health is Ready not Studio Live",
+    apex.label === "Ready · Genesis APEX" && apex.status === "local",
+  );
+  check(
+    "escrow tier hidden when unavailable",
+    marketplaceTiers({ escrowAvailable: false }).filter((t) => t.available).every(
+      (t) => t.id !== "escrow",
+    ),
   );
 
   const failed = checks.filter((c) => !c.ok);

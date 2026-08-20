@@ -97,8 +97,8 @@ export function GenesisAgentCard({ agent }: { agent: GenesisAgent }) {
             PancakeSwap
           </span>
         )}
-        <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
-          Live
+        <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
+          Ready
         </span>
         <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35">
           Unrated

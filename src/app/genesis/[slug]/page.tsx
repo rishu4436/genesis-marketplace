@@ -13,7 +13,6 @@ import { ScoreAxisList, ScorePentagon } from "@/components/ScorePentagon";
 import { TrustPassport } from "@/components/TrustPassport";
 import { AgentLiveBadge } from "@/components/AgentLiveBadge";
 import { CategoryDepthPanel } from "@/components/CategoryDepthPanel";
-import { getPlatformConfig } from "@/lib/platform-a2a";
 import { getPin } from "@/lib/pins";
 import { BRAND } from "@/lib/brand";
 import { getCategoryDepth } from "@/lib/category-depth";
@@ -61,7 +60,6 @@ export default async function GenesisAgentPage({ params }: Props) {
 
   const cat = getCategory(agent.categoryId);
   const others = allGenesisAgents().filter((a) => a.slug !== agent.slug);
-  const platform = getPlatformConfig(agent.slug);
   const pin = getPin(agent.slug);
 
   const card = genesisToAgentCard(agent);
@@ -225,10 +223,8 @@ export default async function GenesisAgentPage({ params }: Props) {
               registered={health.checks.identity.ok}
               registrationDetail={
                 health.checks.identity.ok
-                  ? `ERC-8004 #${health.tokenId} · ${health.version}${
-                      health.checks.platform.ok ? " · Studio runtime up" : ""
-                    }.`
-                  : "Specialist configured in marketplace — buy returns a structured plan."
+                  ? `ERC-8004 #${health.tokenId} · ${health.version} · ${health.label}.`
+                  : "Specialist configured in marketplace — hire returns a structured plan."
               }
               features={[
                 {
@@ -237,13 +233,9 @@ export default async function GenesisAgentPage({ params }: Props) {
                   active: true,
                 },
                 {
-                  label: "Live platform",
-                  detail: health.checks.platform.ok
-                    ? "Studio card reachable"
-                    : platform
-                      ? "Studio runtime unreachable"
-                      : "No Studio runtime configured",
-                  active: health.checks.platform.ok,
+                  label: "Hire runtime",
+                  detail: health.detail,
+                  active: health.hireable,
                 },
                 {
                   label: "x402 payments",

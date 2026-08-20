@@ -38,20 +38,28 @@ export function classifyHealth(checks: HealthChecks): ClassifiedHealth {
     checks.mandate.ok;
 
   if (bound && checks.platform.ok) {
+    const studio = checks.platform.detail.startsWith("Studio card");
+    if (studio) {
+      return {
+        status: "live",
+        label: "Live · Studio",
+        detail: "ERC-8004 + Studio A2A card reachable",
+      };
+    }
     return {
-      status: "live",
-      label: "Live",
-      detail: "ERC-8004 + pinned version + live A2A card reachable",
+      status: "local",
+      label: "Ready · Genesis APEX",
+      detail: "Studio trial expired. Hire runs on Genesis APEX.",
     };
   }
 
   if (bound) {
     return {
       status: "local",
-      label: "Ready",
+      label: "Ready · Genesis APEX",
       detail: checks.evidence.ok
-        ? "Identity + version bound · hire path ready · recent receipt"
-        : "Identity + version bound · hire path ready",
+        ? "Studio trial expired. Hire path ready · recent receipt"
+        : "Studio trial expired. Hire runs on Genesis APEX.",
     };
   }
 

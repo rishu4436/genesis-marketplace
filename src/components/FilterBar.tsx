@@ -7,6 +7,7 @@ export type BrowseFilters = {
   verified?: string;
   ratings?: string;
   live?: string;
+  index?: string;
   page?: string;
 };
 
@@ -20,6 +21,7 @@ function hrefWith(base: string, current: BrowseFilters, patch: BrowseFilters) {
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
   if (next.live === "1") p.set("live", "1");
+  if (next.index === "1") p.set("index", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `${base}?${s}` : base;
@@ -78,10 +80,14 @@ export function FilterBar({
         {chip(filters.live === "1", "Live A2A", {
           live: filters.live === "1" ? undefined : "1",
         })}
+        {chip(filters.index === "1", "Full index", {
+          index: filters.index === "1" ? undefined : "1",
+        })}
         {(filters.x402 ||
           filters.verified ||
           filters.ratings ||
           filters.live ||
+          filters.index ||
           filters.sort) && (
           <Link
             href={filters.q ? `${basePath}?q=${encodeURIComponent(filters.q)}` : basePath}

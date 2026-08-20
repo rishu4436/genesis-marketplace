@@ -153,9 +153,7 @@ export async function checkAgentHealth(
     runtimeOk;
 
   let platformOk = false;
-  let platformDetail = platform
-    ? "Studio trial/runtime unreachable"
-    : "No Studio runtime configured";
+  let platformDetail = "Studio trial expired. Hire runs on Genesis APEX.";
   const genesisCard = base
     ? `${base}/api/apex/${agent.slug}/.well-known/agent-card.json`
     : "";
@@ -163,10 +161,10 @@ export async function checkAgentHealth(
     const g = await probeUrl(genesisCard, 4000);
     if (g.ok) {
       platformOk = true;
-      platformDetail = "Genesis live A2A card reachable";
+      platformDetail = "Genesis APEX · Studio trial expired";
     }
   }
-  if (!platformOk && platform?.cardUrl) {
+  if (platform?.cardUrl) {
     const p = await probeUrl(platform.cardUrl, 4000);
     if (p.ok) {
       platformOk = true;
