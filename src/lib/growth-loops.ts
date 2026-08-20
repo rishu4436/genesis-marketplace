@@ -4,7 +4,13 @@
  */
 
 export type GrowthLoop = {
-  id: "share-receipt" | "compare-job" | "package" | "hire-again";
+  id:
+    | "share-receipt"
+    | "compare-job"
+    | "package"
+    | "hire-again"
+    | "termix-advantage"
+    | "altana-grant";
   label: string;
   href: string;
 };
@@ -13,6 +19,7 @@ export function growthLoops(opts: {
   task?: string;
   jobId?: string;
   hireHref?: string;
+  genesisSlug?: string;
 }): GrowthLoop[] {
   const out: GrowthLoop[] = [];
   if (opts.jobId) {
@@ -41,5 +48,17 @@ export function growthLoops(opts: {
       href: opts.hireHref,
     });
   }
+  out.push({
+    id: "termix-advantage",
+    label: "TermiX advantage",
+    href: "/advantage",
+  });
+  out.push({
+    id: "altana-grant",
+    label: "Grant Altana session",
+    href: opts.genesisSlug
+      ? `/genesis/${opts.genesisSlug}#altana`
+      : "/altana",
+  });
   return out;
 }

@@ -8,7 +8,6 @@ import { GenesisMark } from "@/components/brand/GenesisMark";
 import { AuthNav } from "@/components/AuthNav";
 
 const PRIMARY = [
-  { href: "/hire", label: "Hire" },
   { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
 ];
@@ -83,7 +82,7 @@ export function Header() {
             );
           })}
           <Link href="/hire" className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
-            Hire an agent
+            Hire
           </Link>
           <span className="ml-1">
             <AuthNav />
@@ -137,11 +136,14 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link href="/partners" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
+                Partners
+              </Link>
               <Link href="/login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
-                Sign in / recover hires
+                Create account
               </Link>
               <Link href="/hire" className="btn-solid mt-2 w-full">
-                Hire an agent
+                Hire
               </Link>
             </nav>
           </motion.div>

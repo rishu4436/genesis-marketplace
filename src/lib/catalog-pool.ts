@@ -39,13 +39,15 @@ export async function fetchHireablePool(opts: {
   sortMode: CatalogSortMode;
   x402?: boolean;
   verified?: boolean;
+  live?: boolean;
 }): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
   const collected: Agent[] = [];
   const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
   const jobs: Promise<SafeList>[] = [];
 
-  // ~500 top-score rows (5 × 100). Cached partner calls.
-  for (let page = 1; page <= 5; page++) {
+  // Fewer pages by default so /hire does not wait out a dead index.
+  const scorePages = opts.live ? 4 : 3;
+  for (let page = 1; page <= scorePages; page++) {
     jobs.push(
       listAgentsSafe({
         chainId: 56,
@@ -85,6 +87,25 @@ export async function fetchHireablePool(opts: {
     }
   }
 
+  // Always pull A2A rows so live third-party is not buried under identity-only.
+  const a2aPages = opts.live ? 2 : 1;
+  for (let page = 1; page <= a2aPages; page++) {
+    jobs.push(
+      listAgentsSafe({
+        chainId: 56,
+        protocol: "A2A",
+        limit: 100,
+        page,
+        sortBy: "total_score",
+        sortOrder: "desc",
+      }),
+    );
+  }
+
+  if (opts.live) {
+    jobs.push(searchAgentsSafe({ q: opts.q ? `${opts.q} A2A` : "A2A", limit: 80, chainId: 56 }));
+  }
+
   if (opts.x402) {
     const q = opts.q ? `${opts.q} x402` : "x402";
     jobs.push(searchAgentsSafe({ q, limit: 80, chainId: 56 }));
@@ -93,7 +114,7 @@ export async function fetchHireablePool(opts: {
         chainId: 56,
         protocol: "A2A",
         limit: 100,
-        page: 1,
+        page: 3,
         sortBy: "total_score",
         sortOrder: "desc",
       }),

@@ -11,6 +11,7 @@ Public entry: **`/judge`** (footer).
 5. **1:00** Open result / share · `/dashboard`  
 6. **1:15** Optional `/advantage` — with vs without  
 7. **1:20** Optional third-party `/agents/56/265375?buy=1`  
+8. **1:25** `/partners` — live 8004scan, Altana, TermiX, PCS, featured A2A  
 
 ## Seeded proof jobs (no buy required)
 
@@ -23,7 +24,7 @@ Public entry: **`/judge`** (footer).
 
 ## What to say
 
-> Genesis is the hire floor for agents on BSC: four specialists, one-click hire, structured plan. You keep the keys. Ready, not Studio-live. Soft hire — escrow is blocked. Altana is optional and separate.
+> Genesis is the hire floor for agents on BSC: four specialists, one-click hire, structured plan. You keep the keys. Ready, not Studio-live. Soft hire — escrow is blocked. Altana and TermiX sit on the same receipt.
 
 ## Criteria map
 

@@ -12,7 +12,7 @@ import {
   computeAxes,
 } from "@/lib/marketplace-score";
 import { catalogFilterStats } from "@/lib/catalog-quality";
-import { sortForDestination } from "@/lib/hire-class";
+import { isGenesisListing, sortForDestination } from "@/lib/hire-class";
 import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
 import Link from "next/link";
 
@@ -27,6 +27,7 @@ type Props = {
     x402?: string;
     verified?: string;
     ratings?: string;
+    live?: string;
     /** @deprecated use ratings=1 */
     feedback?: string;
   }>;
@@ -44,6 +45,7 @@ function buildBrowseHref(
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
+  if (next.live === "1") p.set("live", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `/browse?${s}` : "/browse";
@@ -75,6 +77,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     x402: sp.x402,
     verified: sp.verified,
     ratings: hasRatings ? "1" : undefined,
+    live: sp.live === "1" ? "1" : undefined,
   };
 
   const pool = await fetchHireablePool({
@@ -82,6 +85,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     sortMode,
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
+    live: filters.live === "1",
   });
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
@@ -91,6 +95,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
+    live: filters.live === "1",
   });
   let relaxed = false;
   if (agents.length === 0 && quality.kept.length > 0) {
@@ -99,6 +104,8 @@ export default async function BrowsePage({ searchParams }: Props) {
   }
 
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
+  agents = agents.filter((a) => !isGenesisListing(a));
+
   if (sortMode === "score") {
     agents = [...agents].sort(compareByReadiness);
   } else if (sortMode === "rank") {
@@ -172,6 +179,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         {filters.verified === "1" && (
           <input type="hidden" name="verified" value="1" />
         )}
+        {filters.live === "1" && <input type="hidden" name="live" value="1" />}
         {filters.ratings === "1" && (
           <input type="hidden" name="ratings" value="1" />
         )}

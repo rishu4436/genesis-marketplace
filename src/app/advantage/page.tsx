@@ -58,7 +58,8 @@ export default function AdvantagePage() {
         {ADVANTAGE_TASKS.map((task, i) => (
           <article
             key={task.id}
-            className="panel-strong overflow-hidden"
+            id={task.id}
+            className="panel-strong scroll-mt-28 overflow-hidden"
           >
             <div className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
               <div className="flex flex-wrap items-center gap-2">

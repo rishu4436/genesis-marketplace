@@ -4,12 +4,13 @@ import { CategoryPreview } from "@/components/CategoryPreview";
 import { HowHireWorks } from "@/components/HowHireWorks";
 import { SoftHireNote } from "@/components/SoftHireNote";
 import { getAllCategorySnapshots } from "@/lib/category-agents";
-import { allGenesisAgents, genesisBuyHref } from "@/lib/genesis-agents";
+import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 import { BRAND } from "@/lib/brand";
+import { JOB_CHIPS } from "@/lib/job-chips";
 import {
   FEATURED_THIRD_PARTY,
-  thirdPartyBuyHref,
+  thirdPartyHref,
 } from "@/lib/third-party-sellers";
 
 export async function MarketplaceHome() {
@@ -20,17 +21,36 @@ export async function MarketplaceHome() {
 
   return (
     <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-12 sm:px-8 sm:py-16">
-      <p className="section-label">Shop</p>
+      <p className="section-label">Hire floor</p>
       <h1 className="display-section mt-3 text-white">
-        Four jobs. Four specialists.
+        Name the job. Hire the specialist.
       </h1>
       <p className="mt-4 max-w-xl text-[15px] leading-[1.7] text-white/50">
-        {BRAND.specialistsHint}
+        Four DeFi jobs we operate. One brief, a plan you run. You keep the
+        keys.{" "}
+        <Link href="/login" className="text-amber-300 hover:underline">
+          Create an account
+        </Link>{" "}
+        so the plan follows you.
       </p>
       <SoftHireNote className="mt-6 max-w-xl" />
 
       <div className="mt-8">
         <JobIntentSearch variant="hero" />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {JOB_CHIPS.map((chip) => (
+          <Link
+            key={chip.id}
+            href={`/genesis/${
+              specialists.find((s) => s.categoryId === chip.categoryId)?.slug
+            }?task=${encodeURIComponent(chip.task)}#buy`}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[13px] text-white/65 transition hover:border-amber-400/40 hover:text-amber-100"
+          >
+            {chip.label}
+          </Link>
+        ))}
       </div>
 
       <div className="mt-12 flex flex-wrap items-end justify-between gap-3">
@@ -51,7 +71,7 @@ export async function MarketplaceHome() {
           return (
             <Link
               key={a.slug}
-              href={genesisBuyHref(a, { buy: true })}
+              href={`${genesisHref(a)}#buy`}
               className="group flex h-full flex-col rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
             >
               <div className="flex items-start justify-between gap-3">
@@ -80,11 +100,11 @@ export async function MarketplaceHome() {
       </div>
 
       <Link
-        href={thirdPartyBuyHref(FEATURED_THIRD_PARTY, { buy: true })}
+        href={`${thirdPartyHref(FEATURED_THIRD_PARTY)}#buy`}
         className="mt-4 flex items-center gap-3 rounded-[12px] border border-white/[0.08] px-4 py-3 text-[13px] transition hover:border-white/20"
       >
-        <span className="rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-white/40">
-          Indexed
+        <span className="rounded-full border border-sky-400/25 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-sky-200/80">
+          Featured live
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold text-white">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HireDashboard } from "@/components/HireDashboard";
 import { SoftHireNote } from "@/components/SoftHireNote";
+import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 
 export const metadata = {
   title: "My hires",
@@ -23,11 +24,15 @@ export default function DashboardPage() {
           <SoftHireNote className="mt-5 max-w-xl" />
         </div>
         <Link href="/hire" className="btn-solid">
-          Hire an agent
+          Hire
         </Link>
       </div>
 
-      <div className="mt-12">
+      <div className="mt-8">
+        <PartnerStatusStrip compact />
+      </div>
+
+      <div className="mt-10">
         <HireDashboard />
       </div>
     </div>

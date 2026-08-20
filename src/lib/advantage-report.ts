@@ -158,6 +158,24 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
   },
 ];
 
+export function advantageHrefForHire(opts: {
+  genesisSlug?: string;
+  categoryId?: string | null;
+}): string {
+  const slug = opts.genesisSlug;
+  const cat = opts.categoryId;
+  if (slug === "range-keeper" || cat === "rebalancing") {
+    return "/advantage#lp-rebalance";
+  }
+  if (slug === "gridwright" || cat === "grid-trading") {
+    return "/advantage#grid-book";
+  }
+  if (slug === "health-sentinel" || cat === "health-factor") {
+    return "/advantage#hf-shock";
+  }
+  return "/advantage";
+}
+
 export function advantageTotals() {
   const wsum = ADVANTAGE_TASKS.reduce((s, t) => s + t.weight, 0);
   const withoutTime = ADVANTAGE_TASKS.reduce(

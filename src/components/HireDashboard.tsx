@@ -324,10 +324,10 @@ export function HireDashboard() {
                       Share page
                     </Link>
                     <Link
-                      href={`${href}#buy`}
+                      href={`${href}${h.task ? `?task=${encodeURIComponent(h.task)}` : ""}#buy`}
                       className="rounded-full bg-amber-400/15 px-3.5 py-1.5 text-xs font-semibold text-amber-200 transition hover:bg-amber-400/25"
                     >
-                      Buy again
+                      Hire again
                     </Link>
                   </div>
                 </div>

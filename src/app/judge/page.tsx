@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SEED_JOBS } from "@/lib/seed-jobs";
 import { readLiveProof } from "@/lib/altana/proof";
+import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 
 export const metadata = {
   title: "Judge path",
@@ -23,8 +24,11 @@ export default async function JudgePage() {
         Genesis A2A runtime (agent card + negotiate). BNB Studio&apos;s 48h
         sandbox on this GitHub account expired and is not renewable. Escrow
         is blocked (PolicyNotWhitelisted). Hire is plan-only; Altana is a
-        separate optional grant.
+        post-hire grant on the same receipt.
       </p>
+      <div className="mt-6">
+        <PartnerStatusStrip compact />
+      </div>
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
@@ -66,6 +70,13 @@ export default async function JudgePage() {
             Third-party hire
           </Link>{" "}
           — BNB LP Range Rebalancer (not By Genesis)
+        </li>
+        <li>
+          <span className="font-semibold text-white">6.</span>{" "}
+          <Link href="/partners" className="text-amber-300 hover:underline">
+            Partners
+          </Link>{" "}
+          — 8004scan, Altana, TermiX, PancakeSwap, live A2A probes
         </li>
       </ol>
 
@@ -142,6 +153,14 @@ export default async function JudgePage() {
             /advantage
           </Link>{" "}
           three tasks, trading ×1.2, security ×1.4, DIY misses vs receipt.
+          Linked from the job receipt.
+        </li>
+        <li>
+          <span className="font-semibold text-white">Partners</span> —{" "}
+          <Link href="/partners" className="text-amber-300">
+            /partners
+          </Link>{" "}
+          live 8004scan index, PCS slot0, Altana proof, featured A2A card.
         </li>
         <li>
           <span className="font-semibold text-white">PancakeSwap</span> —

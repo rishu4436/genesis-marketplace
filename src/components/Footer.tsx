@@ -5,11 +5,12 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "Hire",
     links: [
-      { href: "/hire", label: "Hire an agent" },
+      { href: "/hire", label: "Hire" },
       { href: "/compare", label: "Compare" },
       { href: "/dashboard", label: "My hires" },
       { href: "/login", label: "Sign in / recover" },
       { href: "/categories", label: "Four jobs" },
+      { href: "/partners", label: "Partners" },
     ],
   },
   {
@@ -80,6 +81,12 @@ export function Footer() {
               Hire path ready
             </span>
             <Link
+              href="/partners"
+              className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"
+            >
+              Partners
+            </Link>
+            <Link
               href="/altana"
               className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"
             >
@@ -95,7 +102,7 @@ export function Footer() {
               href="/hire"
               className="text-[13.5px] font-medium text-white/55 transition-colors hover:text-[#F0B90B]"
             >
-              Hire an agent →
+              Hire →
             </Link>
           </div>
         </div>

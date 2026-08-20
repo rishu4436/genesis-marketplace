@@ -2,7 +2,7 @@ import type { Agent } from "./types";
 import type { CategoryId } from "./categories";
 import { CATEGORIES } from "./categories";
 import { compareByScore } from "./agent-score";
-import { destinationRank } from "./hire-class";
+import { destinationRank, hireClassForAgent } from "./hire-class";
 import { toHundredPointScale } from "./feedback-score";
 import { compareByReadiness } from "./marketplace-score";
 
@@ -79,12 +79,14 @@ export function filterAgents(
     x402?: boolean;
     verified?: boolean;
     hasRatings?: boolean;
+    live?: boolean;
     q?: string;
   },
 ): Agent[] {
   let out = agents;
   if (filters.x402) out = out.filter((a) => a.x402_supported);
   if (filters.verified) out = out.filter((a) => a.is_verified);
+  if (filters.live) out = out.filter((a) => hireClassForAgent(a) === "live");
   if (filters.hasRatings) out = out.filter((a) => (a.total_feedbacks ?? 0) > 0);
   if (filters.q?.trim()) {
     const q = filters.q.trim().toLowerCase();

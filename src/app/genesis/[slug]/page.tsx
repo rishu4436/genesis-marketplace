@@ -99,7 +99,29 @@ export default async function GenesisAgentPage({ params }: Props) {
       </Link>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
-        <div>
+        <aside className="order-1 space-y-3 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/90">
+            <span className="font-bold text-[#F0B90B]">Hire-ready</span>
+            {" — "}
+            {BRAND.byBadge} seller we operate. Hire returns a structured
+            plan in about {agent.etaMinutes}m.
+          </div>
+          <SoftHireNote compact />
+          <TaskFitBadge fit={fit} />
+          <HireWizard
+            chainId={agent.chainId ?? 56}
+            tokenId={agent.tokenId || `genesis:${agent.slug}`}
+            agentName={agent.name}
+            categoryId={agent.categoryId}
+            genesisSlug={agent.slug}
+            hireReady
+            priceUsd={agent.basePriceUsd}
+            etaMinutes={agent.etaMinutes}
+            x402={agent.x402}
+          />
+          <AltanaPanel defaultAgent={agent.slug} compact />
+        </aside>
+        <div className="order-2 lg:order-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div
               className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${agent.accent} text-3xl font-bold text-black/80`}
@@ -135,6 +157,10 @@ export default async function GenesisAgentPage({ params }: Props) {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="mt-8">
+            <CategoryDepthPanel categoryId={agent.categoryId} />
           </div>
 
           {receiptScore && <ReceiptScorePanel score={receiptScore} />}
@@ -189,10 +215,6 @@ export default async function GenesisAgentPage({ params }: Props) {
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-10">
-            <CategoryDepthPanel categoryId={agent.categoryId} />
           </div>
 
           <div className="mt-10">
@@ -267,29 +289,6 @@ export default async function GenesisAgentPage({ params }: Props) {
             </section>
           )}
         </div>
-
-        <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/90">
-            <span className="font-bold text-[#F0B90B]">Hire-ready</span>
-            {" — "}
-            {BRAND.byBadge} seller we operate. Hire returns a structured
-            plan in about {agent.etaMinutes}m.
-          </div>
-          <SoftHireNote compact />
-          <TaskFitBadge fit={fit} />
-          <HireWizard
-            chainId={agent.chainId ?? 56}
-            tokenId={agent.tokenId || `genesis:${agent.slug}`}
-            agentName={agent.name}
-            categoryId={agent.categoryId}
-            genesisSlug={agent.slug}
-            hireReady
-            priceUsd={agent.basePriceUsd}
-            etaMinutes={agent.etaMinutes}
-            x402={agent.x402}
-          />
-          <AltanaPanel defaultAgent={agent.slug} compact />
-        </aside>
       </div>
     </div>
   );

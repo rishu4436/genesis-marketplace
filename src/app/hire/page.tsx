@@ -3,6 +3,7 @@ import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 import { HowHireWorks } from "@/components/HowHireWorks";
 import { SoftHireNote } from "@/components/SoftHireNote";
+import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 import { AgentCard } from "@/components/AgentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterBar, type BrowseFilters } from "@/components/FilterBar";
@@ -11,7 +12,11 @@ import { featuredSlotsForJob } from "@/lib/featured-slots";
 import { fetchHireablePool } from "@/lib/catalog-pool";
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
-import { sortForDestination } from "@/lib/hire-class";
+import {
+  catalogLiveStats,
+  isGenesisListing,
+  sortForDestination,
+} from "@/lib/hire-class";
 import {
   compareByReadiness,
   compositeFromAxes,
@@ -31,6 +36,7 @@ type Props = {
     x402?: string;
     verified?: string;
     ratings?: string;
+    live?: string;
   }>;
 };
 
@@ -51,6 +57,7 @@ function buildHireHref(
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
+  if (next.live === "1") p.set("live", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `/hire?${s}` : "/hire";
@@ -79,6 +86,7 @@ export default async function HirePage({ searchParams }: Props) {
     x402: sp.x402,
     verified: sp.verified,
     ratings: sp.ratings === "1" ? "1" : undefined,
+    live: sp.live === "1" ? "1" : undefined,
   };
 
   const pool = await fetchHireablePool({
@@ -86,16 +94,20 @@ export default async function HirePage({ searchParams }: Props) {
     sortMode,
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
+    live: filters.live === "1",
   });
   const quality = catalogFilterStats(pool.agents);
 
+  const liveStats = catalogLiveStats(quality.kept);
   const strictFilters = {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
+    live: filters.live === "1",
   };
   let catalog = filterAgents(quality.kept, strictFilters).filter(
-    (a) => !isFeaturedThirdParty(a.chain_id, a.token_id),
+    (a) =>
+      !isFeaturedThirdParty(a.chain_id, a.token_id) && !isGenesisListing(a),
   );
   let relaxed = false;
   if (catalog.length === 0 && quality.kept.length > 0) {
@@ -103,7 +115,10 @@ export default async function HirePage({ searchParams }: Props) {
       x402: false,
       verified: false,
       hasRatings: false,
-    }).filter((a) => !isFeaturedThirdParty(a.chain_id, a.token_id));
+    }).filter(
+      (a) =>
+        !isFeaturedThirdParty(a.chain_id, a.token_id) && !isGenesisListing(a),
+    );
     relaxed = catalog.length > 0;
   }
 
@@ -154,6 +169,9 @@ export default async function HirePage({ searchParams }: Props) {
         keys.
       </p>
       <SoftHireNote className="mt-6 max-w-xl" />
+      <div className="mt-6">
+        <PartnerStatusStrip compact />
+      </div>
 
       {agent && chainId && tokenId && (
         <div className="mt-6 max-w-xl rounded-2xl border border-[#F0B90B]/25 bg-[#F0B90B]/[0.06] px-4 py-3 text-sm text-amber-100">
@@ -253,8 +271,9 @@ export default async function HirePage({ searchParams }: Props) {
             More hireable agents
           </h2>
           <p className="mt-1 max-w-xl text-[13px] text-white/45">
-            Live third-party first, then indexed identities. Low-signal
-            collectibles stay hidden. Stars are a filter, not the default rank.
+            Live third-party first, then indexed identities. {liveStats.live}{" "}
+            live A2A · {liveStats.indexed} identity-only · {liveStats.rated}{" "}
+            rated in this sample. Stars are a filter, not the default rank.
           </p>
         </div>
         <Link href="/browse" className="text-sm font-semibold text-amber-300">
@@ -280,6 +299,7 @@ export default async function HirePage({ searchParams }: Props) {
         {filters.ratings === "1" && (
           <input type="hidden" name="ratings" value="1" />
         )}
+        {filters.live === "1" && <input type="hidden" name="live" value="1" />}
         <button type="submit" className="btn-primary !rounded-xl !py-3">
           Search
         </button>
@@ -311,7 +331,7 @@ export default async function HirePage({ searchParams }: Props) {
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-white/45">
         <span>
           {pool.error && pageAgents.length === 0
-            ? "Catalog unavailable"
+            ? "Index is slow — specialists above still hire"
             : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
           {relaxed && (
             <span className="ml-1 text-amber-200/70">
@@ -340,8 +360,8 @@ export default async function HirePage({ searchParams }: Props) {
       </div>
 
       {pool.error && pageAgents.length === 0 && (
-        <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          {pool.error}
+        <div className="mt-6 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          {pool.error}. The four specialists and featured seller still hire.
         </div>
       )}
 

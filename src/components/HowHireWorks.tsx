@@ -61,7 +61,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs text-white/55">
           <span className="font-semibold text-white/75">Indexed</span> = on-chain
-          identity in the catalog. Buy still works (structured brief).
+          identity only. View it — Hire is for specialists and live A2A.
         </div>
       </div>
     </section>

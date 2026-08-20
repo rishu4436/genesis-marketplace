@@ -14,6 +14,8 @@ import { LandingBackgroundCinematic } from "@/components/landing/archive/Landing
 import { CATEGORIES } from "@/lib/categories";
 import { GENESIS_AGENTS, genesisHref } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
+import { PartnerLiveBadges } from "@/components/PartnerLiveBadges";
+import { PARTNERS } from "@/lib/partners";
 
 const CATEGORY_META: Record<
   string,
@@ -547,6 +549,51 @@ export function LandingPageCinematic() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* PARTNERS */}
+      <section className="relative border-t border-white/[0.06] py-24 sm:py-28">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <FadeIn>
+            <p className="section-label">Partners</p>
+            <h2 className="mt-5 max-w-2xl font-display text-[clamp(1.9rem,4vw,3rem)] font-bold tracking-tight text-white">
+              Wired into hire.{" "}
+              <span className="text-white/40">Not a slide deck.</span>
+            </h2>
+            <p className="mt-4 max-w-lg text-sm text-white/50">
+              Catalog, ratings, live ticks, session keys, and advantage proof
+              all have a product surface.
+            </p>
+          </FadeIn>
+          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {PARTNERS.map((p, i) => (
+              <FadeIn key={p.id} delay={i * 0.05}>
+                <Link
+                  href={p.href}
+                  className="flex h-full flex-col rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                    {p.track}
+                  </p>
+                  <h3 className="mt-2 text-sm font-semibold text-white">
+                    {p.name}
+                  </h3>
+                  <p className="mt-2 flex-1 text-xs leading-relaxed text-white/50">
+                    {p.role}
+                  </p>
+                  <span className="mt-4 text-xs font-semibold text-[#F0B90B]">
+                    Open →
+                  </span>
+                </Link>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn delay={0.15}>
+            <div className="mt-10">
+              <PartnerLiveBadges />
+            </div>
+          </FadeIn>
         </div>
       </section>
 

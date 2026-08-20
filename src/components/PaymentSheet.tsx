@@ -193,8 +193,7 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
             Pay for {agentName}
           </h3>
           <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-            Card is a Stripe test demo (no account, no charge). Wallet is
-            live: your wallet, real BNB on BSC.
+            Demo card never charges. Pay with BNB is a real BSC transfer.
           </p>
         </div>
         <div className="text-right">
@@ -210,8 +209,8 @@ export function PaymentSheet({ agentName, amountUsd, onPaid, onCancel }: Props) 
       <div className="mt-4 grid grid-cols-2 gap-1.5">
         {(
           [
-            ["card", "Card · Stripe demo"],
-            ["wallet", "Wallet · live BSC"],
+            ["card", "Demo card (no charge)"],
+            ["wallet", "Pay with BNB (live)"],
           ] as const
         ).map(([id, label]) => (
           <button

@@ -4,6 +4,7 @@ import { JobResultClient } from "@/components/JobResultClient";
 import { JobReceiptPanel } from "@/components/JobReceiptPanel";
 import { JobSessionPanel } from "@/components/JobSessionPanel";
 import { JobDecisionPanel } from "@/components/JobDecisionPanel";
+import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 
 export const dynamic = "force-dynamic";
 
@@ -107,11 +108,34 @@ export default async function JobPage({ params }: Props) {
       <JobSessionPanel job={job} />
       <JobDecisionPanel job={job} />
 
+      <div className="mt-8">
+        <HirePartnerFollowup
+          jobId={job.id}
+          genesisSlug={job.genesisSlug}
+          categoryId={job.categoryId}
+          chainId={job.chainId}
+          tokenId={job.tokenId}
+        />
+      </div>
+
       {job.deliverable && (
         <div className="mt-8 space-y-4">
           <p className="text-sm leading-relaxed text-white/70">
             {job.deliverable.summary}
           </p>
+          {job.deliverable.sections[0] && (
+            <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
+                What to do now
+              </p>
+              <h2 className="mt-1 text-sm font-semibold text-white">
+                {job.deliverable.sections[0].heading}
+              </h2>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-white/65">
+                {job.deliverable.sections[0].body}
+              </p>
+            </div>
+          )}
 
           {job.deliverable.metrics?.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -127,7 +151,7 @@ export default async function JobPage({ params }: Props) {
             </div>
           )}
 
-          {job.deliverable.sections.map((s) => (
+          {job.deliverable.sections.slice(1).map((s) => (
             <div
               key={s.heading}
               className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
@@ -153,7 +177,10 @@ export default async function JobPage({ params }: Props) {
         <Link href="/dashboard" className="btn-solid !text-sm">
           My hires
         </Link>
-        <Link href={`${href}#buy`} className="btn-line !text-sm">
+        <Link
+          href={`${href}${job.task ? `?task=${encodeURIComponent(job.task)}` : ""}#buy`}
+          className="btn-line !text-sm"
+        >
           Hire again
         </Link>
         {job.task && (

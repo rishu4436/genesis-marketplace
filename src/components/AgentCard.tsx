@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Agent } from "@/lib/types";
-import { agentHref, agentKey, shortAddress } from "@/lib/scan";
+import { agentKey, shortAddress } from "@/lib/scan";
 import { CompareToggle } from "@/components/CompareTray";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { ScorePentagon } from "@/components/ScorePentagon";
@@ -11,7 +11,11 @@ import {
   computeAxes,
 } from "@/lib/marketplace-score";
 import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
-import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
+import {
+  hireClassForAgent,
+  hireClassLabel,
+  listingHref,
+} from "@/lib/hire-class";
 import {
   formatOnchainRating,
   hasOnchainRating,
@@ -35,11 +39,16 @@ export function AgentCard({
   const axes = computeAxes(agent);
   const composite = compositeFromAxes(axes);
   const gid = `card-${agent.chain_id}-${String(agent.token_id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const href = listingHref(agent);
+  const cls = hireClassForAgent(agent);
+  const canHire = cls === "genesis" || cls === "live";
+  const actionLabel = canHire ? ctaLabel : "View identity";
+  const actionHref = canHire ? `${href}#buy` : href;
 
   return (
     <div className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-amber-400/35 hover:bg-white/[0.06]">
       <div className="flex items-start gap-3">
-        <Link href={agentHref(agent)} className="shrink-0">
+        <Link href={href} className="shrink-0">
           <AgentAvatar
             src={agent.image_url}
             name={agent.name || `Agent #${agent.token_id}`}
@@ -48,7 +57,7 @@ export function AgentCard({
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <Link href={agentHref(agent)} className="min-w-0">
+            <Link href={href} className="min-w-0">
               <h3 className="truncate text-sm font-semibold text-white group-hover:text-amber-200">
                 {agent.name || `Agent #${agent.token_id}`}
               </h3>
@@ -72,28 +81,27 @@ export function AgentCard({
                 Registered
               </span>
             )}
-            {(() => {
-              const cls = hireClassForAgent(agent);
-              if (cls === "live" || isFeaturedThirdParty(agent.chain_id, agent.token_id)) {
-                return (
-                  <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
-                    {hireClassLabel("live")}
-                  </span>
-                );
-              }
-              return (
-                <span className="text-[10px] text-white/35">
-                  {hireClassLabel("indexed")}
-                </span>
-              );
-            })()}
+            {cls === "genesis" ? (
+              <span className="rounded-md bg-[#F0B90B] px-1.5 py-0.5 text-[10px] font-bold text-black">
+                By Genesis
+              </span>
+            ) : cls === "live" ||
+              isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
+              <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
+                {hireClassLabel("live")}
+              </span>
+            ) : (
+              <span className="text-[10px] text-white/35">
+                {hireClassLabel("indexed")}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       {/* Per-agent pentagon + blurb */}
       <Link
-        href={agentHref(agent)}
+        href={href}
         className="mt-3 flex flex-1 items-start gap-3"
       >
         <div className="shrink-0 rounded-xl border border-amber-400/15 bg-[#080a10] p-1">
@@ -146,10 +154,14 @@ export function AgentCard({
         <div className="ml-auto flex items-center gap-2">
           {showCompare && <CompareToggle agentKey={agentKey(agent)} />}
           <Link
-            href={`${agentHref(agent)}#buy`}
-            className="rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-semibold text-black transition hover:bg-amber-300"
+            href={actionHref}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+              canHire
+                ? "bg-amber-400 text-black hover:bg-amber-300"
+                : "border border-white/15 bg-white/5 text-white/70 hover:border-white/25"
+            }`}
           >
-            {ctaLabel}
+            {actionLabel}
           </Link>
         </div>
       </div>

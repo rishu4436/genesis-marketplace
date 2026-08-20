@@ -6,10 +6,35 @@
 import type { Agent } from "./types";
 import { CATEGORIES } from "./categories";
 import { isFeaturedThirdParty } from "./third-party-sellers";
+import { allGenesisAgents } from "./genesis-agents";
 
 export type HireClass = "genesis" | "live" | "indexed";
 
+export function matchingGenesisSlug(agent: Agent): string | null {
+  const flagged = (agent as Agent & { genesis_slug?: string; genesis_verified?: boolean });
+  if (flagged.genesis_slug) return flagged.genesis_slug;
+  if (agent.id?.startsWith("genesis:")) return agent.id.slice("genesis:".length);
+  const hit = allGenesisAgents().find(
+    (g) =>
+      Boolean(g.tokenId) &&
+      String(g.tokenId) === String(agent.token_id) &&
+      Number(g.chainId ?? 56) === Number(agent.chain_id),
+  );
+  return hit?.slug ?? null;
+}
+
+export function isGenesisListing(agent: Agent): boolean {
+  return matchingGenesisSlug(agent) != null;
+}
+
+export function listingHref(agent: Agent): string {
+  const slug = matchingGenesisSlug(agent);
+  if (slug) return `/genesis/${slug}`;
+  return `/agents/${agent.chain_id}/${agent.token_id}`;
+}
+
 export function hireClassForAgent(agent: Agent): HireClass {
+  if (isGenesisListing(agent)) return "genesis";
   if (isFeaturedThirdParty(agent.chain_id, agent.token_id)) return "live";
   if (agent.a2a_endpoint) return "live";
   return "indexed";
@@ -70,4 +95,24 @@ export function destinationRank(agent: Agent): number {
 
 export function sortForDestination(agents: Agent[]): Agent[] {
   return [...agents].sort((a, b) => destinationRank(b) - destinationRank(a));
+}
+
+export function catalogLiveStats(agents: Agent[]): {
+  live: number;
+  indexed: number;
+  rated: number;
+  total: number;
+} {
+  let live = 0;
+  let rated = 0;
+  for (const a of agents) {
+    if (hireClassForAgent(a) === "live") live += 1;
+    if ((a.total_feedbacks ?? 0) > 0 && (a.average_score ?? 0) > 0) rated += 1;
+  }
+  return {
+    live,
+    indexed: agents.length - live,
+    rated,
+    total: agents.length,
+  };
 }

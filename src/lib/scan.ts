@@ -8,7 +8,7 @@ const BASE =
 export const BSC_CHAIN_ID = 56;
 
 /** Partner API timeout — never hang the UI forever */
-const FETCH_MS = 8_000;
+const FETCH_MS = 4_500;
 
 function headers(): HeadersInit {
   const h: HeadersInit = {

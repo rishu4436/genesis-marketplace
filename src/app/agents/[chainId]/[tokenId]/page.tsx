@@ -97,7 +97,72 @@ export default async function AgentDetailPage({ params }: Props) {
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
-        <div>
+        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-white/50">
+            {isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
+              <>
+                <span className="font-semibold text-sky-300">
+                  Live third-party seller
+                </span>
+                {" — "}
+                not operated by Genesis. Hire negotiates their A2A endpoint and
+                pulls their operator report.
+              </>
+            ) : agent.a2a_endpoint ? (
+              <>
+                <span className="font-semibold text-sky-300">
+                  Live third-party
+                </span>
+                {" — "}
+                they have an A2A endpoint. Hire talks to them, not to us.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-white/70">
+                  Indexed identity
+                </span>
+                {" — "}
+                no live hire we can complete. We will not impersonate them.
+                Hire a By Genesis specialist instead.
+              </>
+            )}
+          </div>
+          {isFeaturedThirdParty(agent.chain_id, agent.token_id) ||
+          agent.a2a_endpoint ? (
+            <HireWizard
+              chainId={agent.chain_id}
+              tokenId={String(agent.token_id)}
+              agentName={agent.name || `Agent #${agent.token_id}`}
+              categoryId={categoryId}
+              hireReady={isFeaturedThirdParty(agent.chain_id, agent.token_id)}
+              priceUsd={
+                isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0
+              }
+              etaMinutes={1}
+              x402={Boolean(agent.x402_supported)}
+            />
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm font-semibold text-white">No live hire</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                This row is on-chain identity only. Open a specialist for a
+                plan you can run.
+              </p>
+              <Link href="/hire" className="btn-solid mt-3 inline-flex !text-sm">
+                Hire a specialist
+              </Link>
+            </div>
+          )}
+          <a
+            href={scanUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-full items-center justify-center rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/5"
+          >
+            View on 8004scan ↗
+          </a>
+        </aside>
+        <div className="order-2 lg:order-1">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <AgentAvatar
               src={agent.image_url}
@@ -334,53 +399,6 @@ export default async function AgentDetailPage({ params }: Props) {
             </section>
           )}
         </div>
-
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-white/50">
-            {isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
-              <>
-                <span className="font-semibold text-sky-300">
-                  Live third-party seller
-                </span>
-                {" — "}
-                not operated by Genesis. Buy negotiates their A2A endpoint and
-                pulls their operator report. We do not write a Genesis plan
-                under their name.
-              </>
-            ) : (
-              <>
-                <span className="font-semibold text-white/70">
-                  Indexed agent
-                </span>
-                {" — "}
-                ERC-8004 identity from 8004scan. If they have no live endpoint,
-                Buy records that honestly — we will not impersonate them.
-                Hire-ready sellers are{" "}
-                <span className="text-amber-200">By Genesis</span>.
-              </>
-            )}
-          </div>
-          <HireWizard
-            chainId={agent.chain_id}
-            tokenId={String(agent.token_id)}
-            agentName={agent.name || `Agent #${agent.token_id}`}
-            categoryId={categoryId}
-            hireReady={isFeaturedThirdParty(agent.chain_id, agent.token_id)}
-            priceUsd={
-              isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0
-            }
-            etaMinutes={1}
-            x402={Boolean(agent.x402_supported)}
-          />
-          <a
-            href={scanUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full items-center justify-center rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/5"
-          >
-            View on 8004scan ↗
-          </a>
-        </aside>
       </div>
     </div>
   );

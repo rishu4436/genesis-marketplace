@@ -17,6 +17,7 @@ import { PaymentSheet } from "@/components/PaymentSheet";
 import type { DemoPayment } from "@/lib/demo-pay";
 import { shortWallet } from "@/lib/demo-pay";
 import { SignInForm } from "@/components/SignInForm";
+import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 
 type Props = {
   chainId: number;
@@ -72,6 +73,7 @@ export function HireWizard({
     [x402, isHireReady],
   );
 
+  const briefKey = `genesis-last-brief:${genesisSlug || `${chainId}:${tokenId}`}`;
   const [task, setTask] = useState(() => defaultTaskForCategory(categoryId));
   const [rail, setRail] = useState<CommerceRail>(() => defaultRail(modes));
   const [buyerCtx, setBuyerCtx] = useState<BuyerContext | null>(null);
@@ -147,6 +149,11 @@ export function HireWizard({
       }
       setJob(json.data);
       persistJobLocal(json.data);
+      try {
+        localStorage.setItem(briefKey, brief);
+      } catch {
+        /* ignore */
+      }
       setSharePath(json.sharePath || `/jobs/${encodeURIComponent(json.data.id)}`);
       // Best-effort dual persist
       try {
@@ -173,6 +180,10 @@ export function HireWizard({
       const sp = new URLSearchParams(window.location.search);
       const t = (sp.get("task") || "").trim();
       if (t.length > 8) setTask(t);
+      else {
+        const saved = localStorage.getItem(briefKey);
+        if (saved && saved.trim().length > 8) setTask(saved);
+      }
       if (sp.get("buy") === "1" && !autobuyStarted.current) {
         autobuyStarted.current = true;
         const brief = t.length > 8 ? t : defaultTaskForCategory(categoryId);
@@ -237,6 +248,19 @@ export function HireWizard({
           <p className="mt-2 text-sm leading-relaxed text-white/65">
             {d?.summary}
           </p>
+          {d?.sections[0] && (
+            <div className="mt-4 rounded-xl border border-emerald-400/20 bg-black/25 px-3 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
+                What to do now
+              </p>
+              <p className="mt-1 text-xs font-semibold text-white">
+                {d.sections[0].heading}
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/60">
+                {d.sections[0].body}
+              </p>
+            </div>
+          )}
 
           <div className="mt-4 rounded-xl border border-amber-400/25 bg-black/30 px-3 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/70">
@@ -255,8 +279,9 @@ export function HireWizard({
           <div className="mt-3">
             <SignInForm
               jobId={job.id}
-              title="Save this hire to an account"
-              hint="Then Sign in on any browser and open My hires to see this agent again."
+              defaultMode="signup"
+              title="Keep this agent on your account"
+              hint="Create an account so My hires shows this plan on any phone. Guest copy stays in this browser."
             />
           </div>
 
@@ -325,6 +350,14 @@ export function HireWizard({
             {d.disclaimer}
           </p>
         )}
+
+        <HirePartnerFollowup
+          jobId={job.id}
+          genesisSlug={genesisSlug}
+          categoryId={categoryId}
+          chainId={chainId}
+          tokenId={tokenId}
+        />
 
         <div className="flex flex-wrap gap-2 pt-1">
           <Link href={path} className="btn-primary !px-4 !py-2 !text-xs">
@@ -468,7 +501,7 @@ export function HireWizard({
           {modes.map((m) => {
             const active = rail === m.rail;
             // Escrow selectable — still delivers full analysis + fund path note
-            const enabled = m.rail === "escrow" || m.available;
+            const enabled = m.available;
             return (
               <button
                 key={m.rail}
@@ -571,7 +604,8 @@ export function HireWizard({
       </label>
 
       <p className="mt-3 text-center text-[10px] leading-relaxed text-white/35">
-        You get a result page + claim code. Open that on any phone — do not buy again.
+        You get a result page + claim code. Save it to an account, then hire
+        again anytime with the same brief.
       </p>
     </div>
   );

@@ -7,7 +7,11 @@ import type { Agent } from "@/lib/types";
 import { hireClassForAgent, hireClassLabel } from "@/lib/hire-class";
 import { formatOnchainRating } from "@/lib/feedback-score";
 import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
-import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
+import {
+  allGenesisAgents,
+  genesisHref,
+  genesisToAgentCard,
+} from "@/lib/genesis-agents";
 import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
 import { rankGenesisForJob } from "@/lib/job-rank";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
@@ -36,6 +40,11 @@ export default async function ComparePage({ searchParams }: Props) {
     if (!parsed) continue;
     const res = await getAgentSafe(parsed.chainId, parsed.tokenId);
     if (res.data) agents.push(res.data);
+  }
+  if (agents.length === 0 && raw.length === 0 && !task) {
+    agents.push(
+      ...allGenesisAgents().slice(0, 3).map((g) => genesisToAgentCard(g)),
+    );
   }
 
   const rows: { label: string; values: string[] }[] = [];
@@ -85,8 +94,9 @@ export default async function ComparePage({ searchParams }: Props) {
       label: "What Buy returns",
       values: agents.map((a) => {
         const c = hireClassForAgent(a);
+        if (c === "genesis") return "Structured plan you execute";
         if (c === "live") return "Their quote + operator report";
-        return "Identity only (no impersonation)";
+        return "Identity only — not a live hire";
       }),
     });
     rows.push({
@@ -126,9 +136,8 @@ export default async function ComparePage({ searchParams }: Props) {
         Compare agents
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-white/55">
-        Same job, then eligibility, then receipt score. Ineligible specialists
-        stay hireable on their own job — they are not organic rank for this
-        brief.
+        Same job, then who can actually complete it. Empty compare loads
+        three specialists so you are not staring at a blank tray.
       </p>
 
       {jobRank && (

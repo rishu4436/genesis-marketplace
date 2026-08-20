@@ -6,6 +6,7 @@ export type BrowseFilters = {
   x402?: string;
   verified?: string;
   ratings?: string;
+  live?: string;
   page?: string;
 };
 
@@ -18,6 +19,7 @@ function hrefWith(base: string, current: BrowseFilters, patch: BrowseFilters) {
   if (next.x402 === "1") p.set("x402", "1");
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
+  if (next.live === "1") p.set("live", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `${base}?${s}` : base;
@@ -73,7 +75,14 @@ export function FilterBar({
         {chip(filters.ratings === "1", "Has ratings", {
           ratings: filters.ratings === "1" ? undefined : "1",
         })}
-        {(filters.x402 || filters.verified || filters.ratings || filters.sort) && (
+        {chip(filters.live === "1", "Live A2A", {
+          live: filters.live === "1" ? undefined : "1",
+        })}
+        {(filters.x402 ||
+          filters.verified ||
+          filters.ratings ||
+          filters.live ||
+          filters.sort) && (
           <Link
             href={filters.q ? `${basePath}?q=${encodeURIComponent(filters.q)}` : basePath}
             className="text-xs text-white/40 underline-offset-2 hover:text-white/70 hover:underline"

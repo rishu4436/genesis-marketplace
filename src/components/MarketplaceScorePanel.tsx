@@ -22,14 +22,21 @@ export async function MarketplaceScorePanel() {
             <p className="body-sm mt-1.5 max-w-xl">
               Market-average hire readiness from{" "}
               {snap.partner.name}. Reputation and Reach only count when an
-              agent has real on-chain ratings — Unrated is not a low score.
+              agent has real on-chain ratings — Unrated is not a low score.{" "}
+              <Link
+                href="/partners#score"
+                className="text-amber-300 hover:underline"
+              >
+                Partner hub
+              </Link>
+              .
             </p>
           </div>
           <div className="text-right text-[11px] text-white/35">
             <div>
               Sample {snap.sampleSize}
               {snap.partner.totalAgentsIndexed != null && (
-                <> · ~{snap.partner.totalAgentsIndexed.toLocaleString()} indexed</>
+                <> · ~{snap.partner.totalAgentsIndexed.toLocaleString("en-US")} indexed</>
               )}
             </div>
             <div suppressHydrationWarning>
@@ -81,7 +88,7 @@ export async function MarketplaceScorePanel() {
               {snap.partner.totalFeedbacks != null && (
                 <>
                   {" "}
-                  · {snap.partner.totalFeedbacks.toLocaleString()} ratings
+                  · {snap.partner.totalFeedbacks.toLocaleString("en-US")} ratings
                 </>
               )}
             </p>

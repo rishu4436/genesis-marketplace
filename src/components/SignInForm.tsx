@@ -5,6 +5,7 @@ import {
   discoverWallets,
   requestAccounts,
   signLoginMessage,
+  type DiscoveredWallet,
 } from "@/lib/wallet-pay";
 
 export type PublicAccount = {
@@ -36,12 +37,14 @@ export function SignInForm({
   onChange,
   jobId,
   redirectTo,
-  title = "Sign in to recover your hires",
-  hint = "Use the same email or wallet. My hires then shows the same plans on any browser.",
+  defaultMode = "login",
+  title = "Keep these hires on an account",
+  hint = "Create an account or sign in. My hires then shows the same plans on any browser.",
 }: {
   onChange?: (signedIn: boolean) => void;
   jobId?: string;
   redirectTo?: string;
+  defaultMode?: "login" | "signup";
   title?: string;
   hint?: string;
 }) {
@@ -49,9 +52,10 @@ export function SignInForm({
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [wallets, setWallets] = useState<DiscoveredWallet[] | null>(null);
 
   async function refresh() {
     const res = await fetch("/api/auth/me");
@@ -108,13 +112,24 @@ export function SignInForm({
     }
   }
 
-  async function walletIn() {
+  async function showWallets() {
+    setErr(null);
+    const found = await discoverWallets();
+    if (found.length === 0) {
+      setErr("No wallet in this browser");
+      return;
+    }
+    if (found.length === 1) {
+      await walletIn(found[0]);
+      return;
+    }
+    setWallets(found);
+  }
+
+  async function walletIn(pick: DiscoveredWallet) {
     setBusy(true);
     setErr(null);
     try {
-      const found = await discoverWallets();
-      const pick = found[0];
-      if (!pick) throw new Error("No wallet in this browser");
       const nonceRes = await fetch("/api/auth/wallet/nonce");
       const nonceJson = (await nonceRes.json()) as {
         data?: { nonce: string; message: string };
@@ -136,6 +151,7 @@ export function SignInForm({
       });
       const json = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(json.error || "Wallet sign-in failed");
+      setWallets(null);
       await afterAuth();
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Wallet sign-in failed");
@@ -212,7 +228,7 @@ export function SignInForm({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void walletIn()}
+            onClick={() => void showWallets()}
             className="btn-line !h-9 !text-sm disabled:opacity-40"
           >
             Wallet
@@ -222,10 +238,36 @@ export function SignInForm({
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
             className="text-xs text-white/40 hover:text-white/70"
           >
-            {mode === "login" ? "Need an account?" : "Have an account?"}
+            {mode === "login" ? "Create account" : "Already have an account?"}
           </button>
         </div>
       </form>
+      {wallets && wallets.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            Wallets in this browser
+          </p>
+          {wallets.map((w) => (
+            <button
+              key={w.uuid}
+              type="button"
+              disabled={busy}
+              onClick={() => void walletIn(w)}
+              className="flex w-full items-center gap-3 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2.5 text-left text-sm text-white/85 hover:border-amber-400/35 disabled:opacity-40"
+            >
+              {w.icon ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={w.icon} alt="" className="h-7 w-7 rounded-md" />
+              ) : (
+                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 text-[10px]">
+                  W
+                </span>
+              )}
+              <span className="font-medium">{w.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
       {err && <p className="mt-2 text-xs text-rose-200">{err}</p>}
     </div>
   );

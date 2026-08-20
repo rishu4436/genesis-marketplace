@@ -14,6 +14,18 @@ export default function TermixPage() {
         Required for the TermiX track ($6k / $3k / $1k). Run ≥3 tasks with vs
         without an agent; include time, cost, quality; ≥1 trading or security
         task. Hire Genesis agents to fill the “with agent” arm automatically.
+        The same report is linked from every job receipt.
+      </p>
+      <p className="mt-3 text-[12px] text-white/40">
+        Also on the{" "}
+        <a href="/advantage" className="text-amber-300 hover:underline">
+          advantage page
+        </a>{" "}
+        and{" "}
+        <a href="/partners#termix" className="text-amber-300 hover:underline">
+          partner hub
+        </a>
+        .
       </p>
       <div className="mt-8">
         <TermixWorkbench />

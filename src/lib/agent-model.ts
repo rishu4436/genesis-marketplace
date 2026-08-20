@@ -81,7 +81,7 @@ export function marketplaceTiers(opts?: {
       available: escrowOk,
       reason: escrowOk
         ? undefined
-        : "BSC testnet policy not whitelisted — use Full analysis",
+        : "Unavailable — policy not whitelisted. Use Full analysis.",
     },
   ];
 }

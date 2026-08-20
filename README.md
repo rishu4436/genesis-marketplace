@@ -70,6 +70,8 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/api/outcomes` | Outcomes ledger |
 | `/api/packages/buy` | Buy multi-agent package |
 | `/altana` | Altana session keys (partner track) |
+| `/partners` | Live partner probes + 8004scan hire-readiness dashboard |
+| `/api/partners/status` | 8004scan / Altana / TermiX / PCS / featured A2A |
 | `/api/altana/sessions` | Grant / list Altana sessions |
 
 ### Genesis verified agents
