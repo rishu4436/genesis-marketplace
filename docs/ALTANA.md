@@ -14,19 +14,32 @@ Partner track: scoped, revocable agent authority via [Altana](https://docs.altan
 
 ## Modes
 
-1. **Live** — default when `ALTANA_ADMIN_PRIVATE_KEY` is set. `grantSession` + Keystore `register: true` on BSC testnet. Testnet faucet is called automatically if the admin EOA is below 0.02 tBNB. Failures surface; they do not fall back to demo.
+1. **Live** — default when `ALTANA_ADMIN_PRIVATE_KEY` is set. `grantSession` + Keystore `register: true`. On testnet, a faucet tops up if the EOA is below 0.02 tBNB. On **mainnet**, fund ~0.05 BNB yourself. Failures surface; they do not fall back to demo.
 2. **Demo** — only if you check “Force demo”, or if no admin key is configured.
 
-Public proof (no keys) is written to `config/altana-proof.json` and shown on `/altana` and `/judge`.
+Public proof (no keys) is written to `config/altana-proof.json` **and** KV (`genesis:altana:proof`) so a Vercel grant survives. `/altana` and `/judge` prefer a chain-56 proof over the old testnet file.
 
 ## Env
 
 ```bash
 ALTANA_ADMIN_PRIVATE_KEY=0x...
-ALTANA_NETWORK=bnb-testnet
+# mainnet | bnb | 56   → BSC mainnet (prize proof)
+# bnb-testnet          → chain 97 (participant only)
+ALTANA_NETWORK=mainnet
 ```
 
-Faucet: https://testnet.bnbchain.org/faucet-smart
+Mainnet grant (do this for the Altana bounty):
+
+```bash
+# 1. Fund the admin EOA with ~0.05 BNB on BSC mainnet
+# 2. Local:
+npx --yes tsx scripts/grant-altana-mainnet.ts
+git add config/altana-proof.json && git commit -m "Record Altana mainnet Keystore grant." && git push
+# 3. Or Vercel: set the two env vars, redeploy, open /altana → Grant session → RangeKeeper
+# 4. Revoke once in-product. Paste the bscscan.com tx on the submit form.
+```
+
+Faucet (testnet only): https://testnet.bnbchain.org/faucet-smart
 
 ## Policies
 

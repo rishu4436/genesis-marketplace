@@ -13,7 +13,7 @@ import {
   signerFromPrivateKey,
 } from "@altananetwork/sdk";
 import { createPublicClient, http } from "viem";
-import { bscTestnet } from "viem/chains";
+import { bsc, bscTestnet } from "viem/chains";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { getPolicy, type AgentPolicyTemplate } from "./policies";
 import {
@@ -31,7 +31,11 @@ const MIN_LIVE_WEI = BigInt("20000000000000000"); // 0.02 tBNB
 const FAUCET_WEI = BigInt("50000000000000000"); // 0.05 tBNB
 
 export function altanaNetwork(): AltanaNetwork {
-  return process.env.ALTANA_NETWORK === "mainnet" ? "bnb" : "bnb-testnet";
+  const raw = (process.env.ALTANA_NETWORK || "").trim().toLowerCase();
+  if (raw === "mainnet" || raw === "bnb" || raw === "56" || raw === "bnb-mainnet") {
+    return "bnb";
+  }
+  return "bnb-testnet";
 }
 
 export function altanaChainId(): number {
@@ -88,8 +92,10 @@ export function altanaStatus() {
     keystore: altanaKeystore(),
     keystoreExplorer: explorerAddressUrl(altanaKeystore()),
     note: liveCapable
-      ? "Admin key configured — Grant session writes Keystore on BSC testnet"
-      : "Set ALTANA_ADMIN_PRIVATE_KEY + fund wallet for on-chain Keystore grants",
+      ? network === "bnb"
+        ? "Admin key configured — Grant session writes Keystore on BSC mainnet"
+        : "Admin key configured — Grant session writes Keystore on BSC testnet"
+      : "Set ALTANA_ADMIN_PRIVATE_KEY + ALTANA_NETWORK=mainnet + fund ~0.05 BNB for a mainnet Keystore grant",
     explorer:
       altanaChainId() === 56
         ? "https://bscscan.com"
@@ -204,6 +210,19 @@ async function ensureTestnetBalance(walletAddress: `0x${string}`): Promise<{
   );
 }
 
+async function ensureMainnetBalance(walletAddress: `0x${string}`): Promise<void> {
+  if (chainConfig().chainId !== 56) return;
+  const publicClient = createPublicClient({
+    chain: bsc,
+    transport: http("https://bsc-dataseed.binance.org"),
+  });
+  const bal = await publicClient.getBalance({ address: walletAddress });
+  if (bal >= MIN_LIVE_WEI) return;
+  throw new Error(
+    `Admin EOA ${walletAddress} has ${(Number(bal) / 1e18).toFixed(4)} BNB. Send ~0.05 BNB on BSC mainnet, then Grant again.`,
+  );
+}
+
 /**
  * Grant a session for a Genesis specialist.
  * Live is the default when the admin key is set.
@@ -272,6 +291,7 @@ export async function grantAgentSession(opts: {
   const admin = signerFromPrivateKey(adminKey());
   const wallet = await client.createWallet({ signer: admin });
   const funded = await ensureTestnetBalance(wallet.address);
+  await ensureMainnetBalance(wallet.address);
   const permissions = policyToSdkPermissions(policy);
 
   const session = await client.grantSession({

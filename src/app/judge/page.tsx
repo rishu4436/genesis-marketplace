@@ -111,8 +111,9 @@ export default async function JudgePage() {
             Altana · Keystore grant
           </p>
           <p className="mt-1 text-sm text-white">
-            {proof.agentName} historical testnet grant — marketplace hire is BSC
-            mainnet. Mainnet grant is the stronger Altana proof.
+            {proof.chainId === 56
+              ? `${proof.agentName} Keystore grant on BSC mainnet — this is the Altana track proof.`
+              : `${proof.agentName} historical testnet grant — marketplace hire is BSC mainnet. A mainnet grant is the stronger Altana proof.`}
           </p>
           <p className="mt-1 font-mono text-[10px] text-white/45 break-all">
             wallet {proof.walletAddress}

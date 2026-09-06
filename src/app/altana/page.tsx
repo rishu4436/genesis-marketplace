@@ -30,7 +30,7 @@ export default async function AltanaPage() {
         <strong className="text-white/80">spend caps</strong>,{" "}
         <strong className="text-white/80">allowlists</strong>, and{" "}
         <strong className="text-white/80">expiry</strong> — then revoke it
-        in-product. Testnet counts.
+        in-product. Testnet counts; a BSC mainnet grant is the prize proof.
       </p>
 
       <div className="panel mt-8 grid gap-3 sm:grid-cols-3">
@@ -171,7 +171,7 @@ export default async function AltanaPage() {
           <li>User can view permissions and revoke in-product</li>
           <li>
             Live grant writes Keystore when the admin key is set and the EOA has
-            tBNB — failures do not fall back to demo
+            BNB (mainnet) or tBNB (testnet) — failures do not fall back to demo
           </li>
           <li>
             Last live tx is saved to{" "}
