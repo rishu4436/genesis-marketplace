@@ -13,9 +13,6 @@ import {
 } from "@/lib/commerce";
 import { BuyerContextPanel } from "@/components/BuyerContextPanel";
 import type { BuyerContext } from "@/lib/buyer-context";
-import { PaymentSheet } from "@/components/PaymentSheet";
-import type { DemoPayment } from "@/lib/demo-pay";
-import { shortWallet } from "@/lib/demo-pay";
 import { SignInForm } from "@/components/SignInForm";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
@@ -46,7 +43,7 @@ function persistJobLocal(job: HireJob) {
   }
 }
 
-type Phase = "idle" | "pay" | "buying" | "working" | "done";
+type Phase = "idle" | "buying" | "working" | "done";
 
 export function HireWizard({
   chainId,
@@ -85,7 +82,6 @@ export function HireWizard({
   const [sharePath, setSharePath] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [payment, setPayment] = useState<DemoPayment | null>(null);
   const autobuyStarted = useRef(false);
 
   const canBuy = useMemo(() => task.trim().length > 8, [task]);
@@ -93,7 +89,7 @@ export function HireWizard({
   const displayEta = etaMinutes > 0 ? etaMinutes : 2;
   const loading = phase === "buying" || phase === "working";
 
-  function startCheckout() {
+  function startHire() {
     const brief = task.trim();
     if (brief.length <= 8) {
       setError("Add a short job brief first");
@@ -108,15 +104,10 @@ export function HireWizard({
     void buyAgent(brief);
   }
 
-  async function buyAgent(taskOverride?: string, paid?: DemoPayment | null) {
+  async function buyAgent(taskOverride?: string) {
     const brief = (taskOverride ?? task).trim();
     if (brief.length <= 8) {
       setError("Add a short job brief first");
-      return;
-    }
-    const receipt = paid ?? payment;
-    if (rail !== "free" && !receipt) {
-      setPhase("pay");
       return;
     }
     setPhase("buying");
@@ -141,7 +132,6 @@ export function HireWizard({
           autoFulfill: true,
           tier: rail === "escrow" ? "escrow" : "full",
           buyerContext: rail === "free" ? null : buyerCtx,
-          payment: receipt,
         }),
       });
       const json = (await res.json()) as {
@@ -151,7 +141,7 @@ export function HireWizard({
         error?: string;
       };
       if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || "Purchase failed");
+        throw new Error(json.error || "Hire failed");
       }
       setJob(json.data);
       persistJobLocal(json.data);
@@ -173,7 +163,7 @@ export function HireWizard({
       }
       setPhase("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Purchase failed");
+      setError(e instanceof Error ? e.message : "Hire failed");
       setPhase("idle");
     } finally {
       window.clearTimeout(workTimer);
@@ -312,18 +302,6 @@ export function HireWizard({
             />
           </div>
 
-          {job.payment && (
-            <p className="mt-3 text-[11px] text-white/50">
-              {job.payment.method === "card"
-                ? `Demo card · ${job.payment.brand || "Card"} •••• ${job.payment.last4} · no charge`
-                : `Wallet · ${shortWallet(job.payment.walletAddress)}${
-                    job.payment.amountBnb
-                      ? ` · ${job.payment.amountBnb} BNB`
-                      : ""
-                  }${job.payment.txHash ? ` · tx ${job.payment.txHash.slice(0, 10)}…` : ""}`}
-            </p>
-          )}
-
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-black/25 px-2 py-2">
               <div className="text-[10px] text-white/40">Listed</div>
@@ -413,29 +391,12 @@ export function HireWizard({
               setJob(null);
               setPhase("idle");
               setSharePath(null);
-              setPayment(null);
             }}
             className="rounded-full px-3 py-2 text-xs font-medium text-white/50 hover:text-white/80"
           >
             Hire again
           </button>
         </div>
-      </div>
-    );
-  }
-
-  if (phase === "pay") {
-    return (
-      <div id="buy" className="scroll-mt-28">
-        <PaymentSheet
-          agentName={agentName}
-          amountUsd={displayPrice}
-          onPaid={(p) => {
-            setPayment(p);
-            void buyAgent(undefined, p);
-          }}
-          onCancel={() => setPhase("idle")}
-        />
       </div>
     );
   }
@@ -474,10 +435,10 @@ export function HireWizard({
         <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2.5">
           <div className="flex items-center gap-2 text-xs font-medium text-amber-100">
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-200/30 border-t-amber-200" />
-            {phase === "buying" ? "Confirming purchase…" : "Agent is working…"}
+            {phase === "buying" ? "Starting hire…" : "Agent is working…"}
           </div>
           <div className="mt-2 flex gap-1">
-            {["Buy", "Work", "Result"].map((label, i) => {
+            {["Hire", "Work", "Result"].map((label, i) => {
               const step = phase === "buying" ? 0 : phase === "working" ? 1 : 2;
               const on = i <= step;
               return (
@@ -504,7 +465,7 @@ export function HireWizard({
       <button
         type="button"
         disabled={!canBuy || loading}
-        onClick={() => startCheckout()}
+        onClick={() => startHire()}
         className="btn-primary mt-4 w-full disabled:opacity-40"
       >
         {loading

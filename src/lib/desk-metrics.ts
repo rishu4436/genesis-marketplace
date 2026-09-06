@@ -20,10 +20,8 @@ let cached: { at: number; week: DeskWeek } | null = null;
 
 function isPaidEscrow(job: HireJob): boolean {
   if (job.status !== "delivered") return false;
-  const pay = job.payment;
-  if (!pay || pay.demo) return false;
-  if (pay.method === "wallet" && pay.txHash) return true;
-  return job.tier === "escrow" && job.quote?.protocol === "ERC-8183";
+  if (job.tier !== "escrow") return false;
+  return job.quote?.protocol === "ERC-8183";
 }
 
 export async function deskWeek(): Promise<DeskWeek> {

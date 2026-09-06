@@ -10,8 +10,6 @@ import { attachJob } from "@/lib/accounts";
 import { currentAccount } from "@/lib/session";
 import type { CommerceTier } from "@/lib/agent-model";
 import type { BuyerContext } from "@/lib/buyer-context";
-import type { DemoPayment } from "@/lib/demo-pay";
-import { verifyWalletPayment } from "@/lib/verify-wallet-pay";
 import { sealJob } from "@/lib/job-receipt";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
 import { incidentFromPolicyBreak } from "@/lib/job-decision";
@@ -22,8 +20,8 @@ export const maxDuration = 30;
 
 /**
  * POST /api/hire
- * Tiers (stockanalyst-inspired): free | full | escrow
- * Full = multi-source analysis + specialist plan + optional buyer context.
+ * Tiers: free | full (L0 plan-only) | escrow (redirects buyers to /fund).
+ * Card and wallet checkout are not a hire rail.
  */
 export async function POST(req: Request) {
   try {
@@ -41,12 +39,24 @@ export async function POST(req: Request) {
       autoFulfill?: boolean;
       tier?: CommerceTier;
       buyerContext?: BuyerContext | null;
-      payment?: DemoPayment | null;
+      /** Rejected — card/wallet checkout is not a hire rail. */
+      payment?: unknown;
     };
 
     if (!body.task?.trim()) {
       return NextResponse.json(
         { success: false, error: "task is required" },
+        { status: 400 },
+      );
+    }
+
+    if (body.payment) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Hire is L0 plan-only. Card and wallet checkout are not offered. Optional on-chain lock is /fund (ERC-8183).",
+        },
         { status: 400 },
       );
     }
@@ -88,21 +98,6 @@ export async function POST(req: Request) {
       buyerContext: body.buyerContext ?? null,
     });
 
-    if (body.payment?.status === "succeeded") {
-      if (body.payment.method === "wallet") {
-        const check = await verifyWalletPayment(body.payment);
-        if (!check.ok) {
-          return NextResponse.json(
-            { success: false, error: check.error || "Wallet payment failed" },
-            { status: 402 },
-          );
-        }
-        job.payment = { ...body.payment, demo: false };
-      } else {
-        job.payment = { ...body.payment, demo: true };
-      }
-    }
-
     try {
       const acc = await currentAccount();
       if (acc) {
@@ -131,7 +126,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: e instanceof Error ? e.message : "Buy failed",
+        error: e instanceof Error ? e.message : "Hire failed",
       },
       { status: 500 },
     );
