@@ -118,6 +118,5 @@ last_deploy_at = "2026-08-06T16:24:34Z"
 
 [identity]
 endpoint = "https://genesis-marketplace-one.vercel.app/api/apex/range-keeper"
-registered_at = "2026-08-18T10:07:53.553533+00:00"
-agent_id = 1773
-last_register_tx = "0xb924e0c2fcdb47d0057df5c1f757da58a704ad66d4761f015b7f4d17c979e1c4"
+registered_at = "2026-09-06T07:40:00+00:00"
+agent_id = 336622

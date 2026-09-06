@@ -119,6 +119,5 @@ last_deploy_at = "2026-08-06T16:18:33Z"
 
 [identity]
 endpoint = "https://genesis-marketplace-one.vercel.app/api/apex/health-sentinel"
-registered_at = "2026-08-18T10:08:22.775193+00:00"
-agent_id = 1775
-last_register_tx = "0x26e86f345369f34cff75324c081c55051dc2e53fd711521503d31ff6f771023c"
+registered_at = "2026-09-06T07:40:00+00:00"
+agent_id = 336625

@@ -119,6 +119,5 @@ last_deploy_at = "2026-08-06T16:14:40Z"
 
 [identity]
 endpoint = "https://genesis-marketplace-one.vercel.app/api/apex/yield-router"
-registered_at = "2026-08-18T10:08:08.387236+00:00"
-agent_id = 1774
-last_register_tx = "0xfb4a11c89b7583c78ba7c6ac1b7318c3c16ff81ee37ecb77aa59e86cb118b91c"
+registered_at = "2026-09-06T07:40:00+00:00"
+agent_id = 336624

@@ -5,40 +5,40 @@
   "platform_quota": 0,
   "agents": {
     "range-keeper": {
-      "tokenId": "",
+      "tokenId": "336622",
       "chainId": 56,
       "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/range-keeper",
       "walletAddress": "0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133",
       "agentId": "",
       "platformSlug": "",
-      "notes": "BSC mainnet. Previous testnet ERC-8004 was 1773. Hire path: marketplace APEX."
+      "notes": "BSC mainnet ERC-8004 #336622. Previous testnet was 1773. Hire path: marketplace APEX."
     },
     "gridwright": {
-      "tokenId": "",
+      "tokenId": "336623",
       "chainId": 56,
       "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/gridwright",
       "walletAddress": "0xee011fC24c9037908a819352b4485573483849f1",
       "agentId": "",
       "platformSlug": "",
-      "notes": "BSC mainnet. Previous testnet ERC-8004 was 1841. Hire path: marketplace APEX."
+      "notes": "BSC mainnet ERC-8004 #336623. Previous testnet was 1841. Hire path: marketplace APEX."
     },
     "yield-router": {
-      "tokenId": "",
+      "tokenId": "336624",
       "chainId": 56,
       "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/yield-router",
       "walletAddress": "0xe588cD118A7D960a5f64788Ed2F61e873daC97E4",
       "agentId": "",
       "platformSlug": "",
-      "notes": "BSC mainnet. Previous testnet ERC-8004 was 1774. Hire path: marketplace APEX."
+      "notes": "BSC mainnet ERC-8004 #336624. Previous testnet was 1774. Hire path: marketplace APEX."
     },
     "health-sentinel": {
-      "tokenId": "",
+      "tokenId": "336625",
       "chainId": 56,
       "serviceUrl": "https://genesis-marketplace-one.vercel.app/api/apex/health-sentinel",
       "walletAddress": "0x037ffBF18DF73812EC29D024AbB7e79DbB4356c8",
       "agentId": "",
       "platformSlug": "",
-      "notes": "BSC mainnet. Previous testnet ERC-8004 was 1775. Hire path: marketplace APEX."
+      "notes": "BSC mainnet ERC-8004 #336625. Previous testnet was 1775. Hire path: marketplace APEX."
     }
   }
 }

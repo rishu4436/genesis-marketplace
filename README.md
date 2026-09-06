@@ -90,7 +90,7 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 | # | Priority | Status |
 |---|----------|--------|
-| 1 | Studio agents + pins | **BSC mainnet** · hire on marketplace APEX. ERC-8004 register needs ~0.002 BNB/wallet |
+| 1 | Studio agents + pins | **BSC mainnet** ERC-8004 #336622–#336625 · hire on marketplace APEX |
 | 2 | Live hire negotiate | Marketplace APEX (`/api/apex/*`) |
 | 3 | TermiX report | `/termix` workbench + copy / **download .md** |
 | 4 | Buyer funding | Mainnet BNB + payment token `0xcE24…6666` for optional 8183 |
@@ -99,18 +99,17 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 ### Next
 
-1. Fund the four seller wallets with ~0.002 BNB each → `bag erc8004 register --network bsc-mainnet`
-2. AWS login → `bag deploy agent` (Studio CLI has AgentCore only, not Azure)
-3. Soft-hire via `/hire` still works without escrow
+1. AWS login → `bag deploy agent` (Studio CLI has AgentCore only, not Azure). Quota increase in flight.
+2. Soft-hire via `/hire` still works without escrow. ERC-8004 mainnet IDs are pinned.
 
 ### Live Studio sellers (BSC mainnet)
 
-| Agent | Category | Host |
-|-------|----------|------|
-| RangeKeeper | Rebalancing | Marketplace APEX |
-| YieldRouter | Yield | Marketplace APEX |
-| HealthSentinel | Health factor | Marketplace APEX |
-| Gridwright | Grid | Marketplace APEX |
+| Agent | Category | ERC-8004 | Host |
+|-------|----------|----------|------|
+| RangeKeeper | Rebalancing | 336622 | Marketplace APEX |
+| Gridwright | Grid | 336623 | Marketplace APEX |
+| YieldRouter | Yield | 336624 | Marketplace APEX |
+| HealthSentinel | Health factor | 336625 | Marketplace APEX |
 
 ### Judge paths
 
