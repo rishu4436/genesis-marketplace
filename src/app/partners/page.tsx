@@ -70,6 +70,12 @@ export default async function PartnersPage() {
             {p.metric && (
               <p className="mt-1 font-mono text-[12px] text-amber-200/80">
                 {p.metric}
+                {p.ms != null ? ` · ${p.ms}ms` : ""}
+              </p>
+            )}
+            {!p.metric && p.ms != null && (
+              <p className="mt-1 font-mono text-[12px] text-white/35">
+                probe {p.ms}ms
               </p>
             )}
             <ul className="mt-4 space-y-1 text-[13px] text-white/55">

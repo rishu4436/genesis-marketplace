@@ -570,13 +570,15 @@ async function fulfillCatalogHire(
   if (seller) {
     const result = await runThirdPartyHire(seller, input.task);
     const priceUsd = result.quote.accepted ? 0.1 : 0;
+    const sellerName = seller.name || input.agentName;
+    job = { ...job, agentName: sellerName };
     let next: HireJob = {
       ...pushTimeline(
         job,
         "quoted",
         result.quote.accepted
-          ? `Third-party quote accepted · ${seller.name}`
-          : `Third-party hire · ${seller.name}`,
+          ? `Third-party quote accepted · ${sellerName}`
+          : `Third-party hire · ${sellerName}`,
       ),
       quote: {
         priceUsd,
@@ -585,8 +587,8 @@ async function fulfillCatalogHire(
         protocol: "ERC-8183-sim",
         expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         notes: result.quote.accepted
-          ? `Signed quote from ${seller.name} — no Genesis on-chain lock`
-          : `Live payload from ${seller.name} — no on-chain lock`,
+          ? `Signed quote from ${sellerName} — no Genesis on-chain lock`
+          : `Live payload from ${sellerName} — no on-chain lock`,
         providerSig: result.quote.providerSig,
         live: result.live,
       } as HireQuote,
@@ -607,7 +609,7 @@ async function fulfillCatalogHire(
           next,
           "delivered",
           result.live
-            ? `Deliverable from ${seller.name}`
+            ? `Deliverable from ${sellerName}`
             : `Indexed seller unreachable · identity recorded`,
         ),
         deliverable: result.deliverable,

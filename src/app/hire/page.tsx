@@ -414,15 +414,18 @@ export default async function HirePage({ searchParams }: Props) {
       )}
 
       {safePage === 1 && identityPage.length > 0 && (
-        <div className="mt-14">
-          <p className="section-label">Unhireable</p>
-          <h2 className="mt-2 font-display text-xl font-bold text-white">
-            Indexed identities — not for hire
-          </h2>
-          <p className="mt-1 max-w-xl text-[13px] text-white/45">
-            On-chain ERC-8004 names with no live endpoint we can complete.
-            Marked Unhireable so they never look like a Buy.
-          </p>
+        <details className="mt-14 rounded-2xl border border-rose-500/20 bg-rose-500/[0.04] p-5">
+          <summary className="cursor-pointer list-none">
+            <p className="section-label">Unhireable</p>
+            <h2 className="mt-2 font-display text-xl font-bold text-white">
+              Show indexed identities
+            </h2>
+            <p className="mt-1 max-w-xl text-[13px] text-white/45">
+              {identitySorted.length} on-chain names with no live hire we
+              can complete. Marked Unhireable. Closed by default so the
+              hire floor stays specialists + live A2A.
+            </p>
+          </summary>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {identityPage.map((a) => (
               <AgentCard
@@ -434,13 +437,13 @@ export default async function HirePage({ searchParams }: Props) {
           </div>
           {identitySorted.length > identityPage.length && (
             <Link
-              href="/browse"
+              href="/browse?index=1"
               className="mt-4 inline-block text-sm font-semibold text-amber-300"
             >
-              Browse all unhireable →
+              Raw index →
             </Link>
           )}
-        </div>
+        </details>
       )}
 
       <div className="mt-12 max-w-3xl">

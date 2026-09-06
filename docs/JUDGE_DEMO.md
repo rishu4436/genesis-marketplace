@@ -1,10 +1,10 @@
 # Judge demo script (90 seconds)
 
-Public entry: **`/judge`** (footer).
+Public entry: **`/judge`** (footer). Canonical host: **https://genesis-marketplace-one.vercel.app** (not `genesis-marketplace.vercel.app`).
 
 ## Cold path
 
-1. **0:00** Open `/` landing → **Hire an agent** (`/hire`) → RangeKeeper → plan
+1. **0:00** Open `/judge` → **Judge mode · Hire RangeKeeper** (one click, no account) → plan
 2. **0:20** Or open `/categories` → all 4 shelves equal depth
 3. **0:30** `/genesis/range-keeper` — Ready (Genesis APEX), ERC-8004 #336622, admission, receipt score
 4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
@@ -18,9 +18,11 @@ Public entry: **`/judge`** (footer).
 | Agent | URL |
 |-------|-----|
 | RangeKeeper | `/jobs/job_mtphh1fs_hvnpd7` |
+| RangeKeeper (auditor walk) | `/jobs/job_mtptb9p6_iq2vb1` |
 | Gridwright | `/jobs/job_mtphh262_191700` |
 | YieldRouter | `/jobs/job_mtphh2ss_6dken9` |
 | HealthSentinel | `/jobs/job_mtphh38g_l69uoy` |
+| Brain yield (third-party) | `/jobs/job_mtpky983_et33s0` |
 
 ## What to say
 

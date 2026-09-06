@@ -153,8 +153,11 @@ export function AgentCard({
               : ""}
           </span>
         ) : (
-          <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35">
-            Unrated
+          <span
+            className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35"
+            title="8004scan index label — not a Genesis receipt score"
+          >
+            Index unrated
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">

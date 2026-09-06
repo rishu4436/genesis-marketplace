@@ -40,7 +40,11 @@ export async function PartnerStatusStrip({
           <Link
             key={p.id}
             href={p.href}
-            title={p.detail}
+            title={
+              p.ms != null
+                ? `${p.detail} · ${p.ms}ms`
+                : p.detail
+            }
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] text-white/70 hover:border-amber-400/30 hover:text-amber-100"
           >
             <span
@@ -49,6 +53,11 @@ export async function PartnerStatusStrip({
             <span>{p.name}</span>
             {p.metric && (
               <span className="hidden text-white/35 sm:inline">{p.metric}</span>
+            )}
+            {p.ms != null && p.ms > 0 && (
+              <span className="hidden font-mono text-white/30 sm:inline">
+                {p.ms}ms
+              </span>
             )}
           </Link>
         ))}

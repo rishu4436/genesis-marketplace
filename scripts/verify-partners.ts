@@ -8,7 +8,10 @@ import { growthLoops } from "../src/lib/growth-loops";
 import {
   catalogLiveStats,
   hireClassForAgent,
+  hireClassLabel,
+  hireRailLabel,
   isHireableListing,
+  isPublicHireableUrl,
   listingHref,
 } from "../src/lib/hire-class";
 import { filterAgents } from "../src/lib/agent-rank";
@@ -19,7 +22,7 @@ import {
   featuredAsAgent,
   isPinnedLiveSeller,
 } from "../src/lib/third-party-sellers";
-import { hireClassLabel, isPublicHireableUrl } from "../src/lib/hire-class";
+import { siteUrl, PRODUCTION_SITE_URL } from "../src/lib/site-url";
 import { brainHitToAgent } from "../src/lib/brain-find";
 import type { Agent } from "../src/lib/types";
 import { catalogDropReason } from "../src/lib/catalog-quality";
@@ -114,6 +117,27 @@ function main() {
   check(
     "indexed class label is Unhireable",
     hireClassLabel("indexed") === "Unhireable",
+  );
+  check(
+    "genesis hire rail is APEX plan hire",
+    hireRailLabel("genesis") === "Genesis APEX · plan hire",
+  );
+  check(
+    "canonical host is -one",
+    PRODUCTION_SITE_URL.includes("genesis-marketplace-one.vercel.app"),
+  );
+  check(
+    "siteUrl never emits stale alias",
+    siteUrl().includes("genesis-marketplace-one") ||
+      siteUrl().includes("localhost"),
+  );
+  check(
+    "toly.me vanity is dropped",
+    catalogDropReason({
+      ...indexed,
+      name: "toly.me",
+      description: "gm",
+    }) === "vanity-handle",
   );
   check(
     "bedrock AgentCore URL is not hireable",

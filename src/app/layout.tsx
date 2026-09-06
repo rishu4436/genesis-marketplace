@@ -8,6 +8,7 @@ import { AiConcierge } from "@/components/AiConcierge";
 import { AppShellBackground } from "@/components/brand/AppShellBackground";
 import { HashScroll } from "@/components/HashScroll";
 import "./globals.css";
+import { siteUrl } from "@/lib/site-url";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -23,24 +24,23 @@ const syne = Syne({
   adjustFontFallback: true,
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-  "https://genesis-marketplace.vercel.app";
+const canonical = siteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(canonical),
   title: {
     default: "Genesis · Buy specialist DeFi agents on BNB",
     template: "%s · Genesis",
   },
   description:
     "Official-style marketplace for AI agents on BNB Smart Chain — discover by job, compare trust & fit, buy in one click. Rebalancing, grid, yield, health factor.",
+  alternates: { canonical },
   openGraph: {
     title: "Genesis Marketplace",
     description:
       "Find and buy specialist DeFi agents on BSC. Job-first discovery. Structured deliverables. No fund custody.",
     type: "website",
-    url: siteUrl,
+    url: canonical,
     siteName: "Genesis Marketplace",
   },
   twitter: {

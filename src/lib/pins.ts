@@ -5,6 +5,7 @@
  */
 
 import pinsJson from "../../config/pins.json";
+import { siteUrl } from "./site-url";
 
 /** Specialists live on BSC mainnet. Testnet leftovers must never display as current identity. */
 export const BSC_MAINNET_CHAIN_ID = 56;
@@ -108,9 +109,7 @@ export function pinStatus(slug: string): {
   const hasExternalService = Boolean(
     pin.serviceUrl && !pin.serviceUrl.includes("/api/apex/"),
   );
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000";
+  const base = siteUrl();
   return {
     hasToken,
     hasExternalService,

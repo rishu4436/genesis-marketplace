@@ -70,7 +70,8 @@ export async function MarketplaceScorePanel() {
             </p>
             {snap.error && (
               <p className="mt-2 max-w-[280px] text-center text-[11px] text-amber-200/70">
-                Partner note: {snap.error}. Showing available sample.
+                8004scan sample lagged ({snap.error}). Pentagon still uses
+                the Genesis specialists plus whatever index rows arrived.
               </p>
             )}
           </div>

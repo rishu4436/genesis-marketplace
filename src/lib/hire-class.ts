@@ -89,6 +89,12 @@ export function hireClassHint(c: HireClass): string {
   return "On-chain identity · no live hire we can complete";
 }
 
+export function hireRailLabel(c: HireClass): string {
+  if (c === "genesis") return "Genesis APEX · plan hire";
+  if (c === "live") return "Live A2A";
+  return "None";
+}
+
 /** Completes a hire: By Genesis specialist or a live third-party endpoint. */
 export function isHireableListing(agent: Agent): boolean {
   return hireClassForAgent(agent) !== "indexed";

@@ -21,6 +21,7 @@ export type PartnerProbe = {
   mode: PartnerMode;
   detail: string;
   metric?: string;
+  ms?: number;
   href: string;
   docs?: string;
   powers: string[];
@@ -163,18 +164,29 @@ async function probeFeatured(): Promise<Pick<PartnerProbe, "ok" | "mode" | "deta
 let cached: { at: number; snap: PartnerSnapshot } | null = null;
 const CACHE_MS = 60_000;
 
+async function withMs<T extends object>(
+  fn: () => Promise<T>,
+): Promise<T & { ms: number }> {
+  const t0 = Date.now();
+  const result = await fn();
+  return { ...result, ms: Date.now() - t0 };
+}
+
 export async function probePartners(): Promise<PartnerSnapshot> {
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.snap;
 
   const [scan, altana, pcs, featured] = await Promise.all([
-    probe8004scan(),
-    probeAltana(),
-    probePcs(),
-    probeFeatured(),
+    withMs(probe8004scan),
+    withMs(probeAltana),
+    withMs(probePcs),
+    withMs(probeFeatured),
   ]);
-  const termix = probeTermix();
+  const termix = { ...probeTermix(), ms: 0 };
 
-  const byId: Record<PartnerId, Pick<PartnerProbe, "ok" | "mode" | "detail" | "metric">> = {
+  const byId: Record<
+    PartnerId,
+    Pick<PartnerProbe, "ok" | "mode" | "detail" | "metric" | "ms">
+  > = {
     "8004scan": scan,
     altana,
     termix,

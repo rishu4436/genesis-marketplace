@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
 import { CATEGORIES } from "@/lib/categories";
 import { GENESIS_AGENTS } from "@/lib/genesis-agents";
+import { siteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://genesis-marketplace.vercel.app";
+  const base = siteUrl();
 
   const staticRoutes = [
     "",

@@ -96,6 +96,7 @@ export function HireDashboard() {
   }
 
   useEffect(() => {
+    setJobs(loadLocal());
     loadServerFirst().finally(() => setReady(true));
   }, []);
 
@@ -113,15 +114,7 @@ export function HireDashboard() {
     setOpenId(null);
   }
 
-  if (!ready) {
-    return (
-      <div className="panel p-8 text-center">
-        <p className="body-sm">Loading hires…</p>
-      </div>
-    );
-  }
-
-  if (jobs.length === 0) {
+  if (!ready || jobs.length === 0) {
     return (
       <div className="panel-strong relative overflow-hidden px-6 py-16 text-center sm:px-10">
         <div
@@ -136,13 +129,22 @@ export function HireDashboard() {
             ∅
           </div>
           <h2 className="card-title mt-6 text-xl">
-            {signedIn ? "No hires on this account yet" : "No hires here yet"}
+            {!ready
+              ? "Your plans live here"
+              : signedIn
+                ? "No hires on this account yet"
+                : "Sign in to see hires on this account"}
           </h2>
           <p className="body mx-auto mt-3 max-w-sm">
-            {signedIn
-              ? "Hire a specialist. The plan is saved to this account."
-              : "Sign in so hires follow you, or open a claim code from another device."}
+            {!ready
+              ? "Checking this browser. If you are not signed in, recover a claim code or hire a specialist — no account required for a plan."
+              : signedIn
+                ? "Hire a specialist. The plan is saved to this account."
+                : "This page is empty until you sign in or paste a claim code. Guest hires still work from Hire — they just do not follow the browser until you recover them."}
           </p>
+          {!ready && (
+            <p className="mt-2 text-[11px] text-white/35">Checking account…</p>
+          )}
           <div className="mx-auto mt-6 max-w-md space-y-4 text-left">
             <HireAccountBar
               onChange={(ok) => {

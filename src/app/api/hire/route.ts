@@ -3,6 +3,7 @@ import { createJobWithLiveNegotiate } from "@/lib/hire-engine";
 import type { CategoryId } from "@/lib/categories";
 import type { HireIntent } from "@/lib/hire";
 import { getGenesisAgent } from "@/lib/genesis-agents";
+import { getFeaturedByToken } from "@/lib/third-party-sellers";
 import { BSC_MAINNET_CHAIN_ID } from "@/lib/pins";
 import { saveJob } from "@/lib/job-store";
 import { attachJob } from "@/lib/accounts";
@@ -56,6 +57,17 @@ export async function POST(req: Request) {
     const g = body.genesisSlug
       ? getGenesisAgent(body.genesisSlug)
       : undefined;
+    const pinned = getFeaturedByToken(
+      Number(body.chainId) || BSC_MAINNET_CHAIN_ID,
+      body.tokenId,
+    );
+    const rawName = (body.agentName || "").trim();
+    const stubName = !rawName || /^agent(?:\s*#?\d*)?$/i.test(rawName);
+    const agentName =
+      g?.name ||
+      (!stubName ? rawName : "") ||
+      pinned?.name ||
+      (body.tokenId ? `Agent #${body.tokenId}` : "Indexed seller");
 
     let job = await createJobWithLiveNegotiate({
       chainId: BSC_MAINNET_CHAIN_ID,
@@ -63,7 +75,7 @@ export async function POST(req: Request) {
         (g?.tokenId && g.chainId === 56 ? g.tokenId : null) ||
           (body.genesisSlug ? `genesis:${body.genesisSlug}` : body.tokenId),
       ),
-      agentName: body.agentName || g?.name || "Agent",
+      agentName,
       genesisSlug: body.genesisSlug,
       categoryId: body.categoryId ?? g?.categoryId,
       task: body.task.trim(),

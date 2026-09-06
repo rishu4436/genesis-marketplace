@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { getAgentSafe, parseAgentKey, shortAddress } from "@/lib/scan";
-import { rankScore } from "@/lib/agent-rank";
 import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import {
   hireClassForAgent,
   hireClassLabel,
+  hireRailLabel,
   listingHref,
+  matchingGenesisSlug,
 } from "@/lib/hire-class";
 import { formatOnchainRating } from "@/lib/feedback-score";
 import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
@@ -40,6 +41,10 @@ type Props = {
 export default async function ComparePage({ searchParams }: Props) {
   const sp = await searchParams;
   const task = (sp.task || "").trim();
+  const receiptScores = await scoreAllSpecialists();
+  const receiptBySlug = Object.fromEntries(
+    receiptScores.map((s) => [s.slug, s.composite]),
+  );
   const raw = (sp.ids || "")
     .split(",")
     .map((s) => s.trim())
@@ -82,33 +87,12 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "Hire readiness",
-      values: agents.map((a) =>
-        String(Math.round(compositeFromAxes(computeAxes(a)))),
-      ),
-    });
-    rows.push({
-      label: "Genesis fit",
-      values: agents.map((a) => {
-        const id = matchCategory(a.name || "", a.description || "");
-        return rankScore(a, id || undefined).toFixed(0);
-      }),
-    });
-    rows.push({
-      label: "On-chain rating",
-      values: agents.map((a) => formatOnchainRating(a)),
-    });
-    rows.push({
-      label: "Ratings",
-      values: agents.map((a) => String(a.total_feedbacks ?? 0)),
-    });
-    rows.push({
-      label: "Stars",
-      values: agents.map((a) => String(a.star_count ?? 0)),
-    });
-    rows.push({
       label: "Hire class",
       values: agents.map((a) => hireClassLabel(hireClassForAgent(a))),
+    });
+    rows.push({
+      label: "Hire rail",
+      values: agents.map((a) => hireRailLabel(hireClassForAgent(a))),
     });
     rows.push({
       label: "What Buy returns",
@@ -120,16 +104,42 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "x402",
-      values: agents.map((a) => (a.x402_supported ? "Yes" : "No")),
+      label: "Receipt score",
+      values: agents.map((a) => {
+        const slug = matchingGenesisSlug(a);
+        const n = slug ? receiptBySlug[slug] : null;
+        return n != null ? String(Math.round(n)) : "—";
+      }),
     });
     rows.push({
-      label: "Live A2A",
-      values: agents.map((a) => (a.a2a_endpoint ? "Yes" : "No")),
+      label: "Listing quality",
+      values: agents.map((a) =>
+        String(Math.round(compositeFromAxes(computeAxes(a)))),
+      ),
     });
     rows.push({
-      label: "Verified",
-      values: agents.map((a) => (a.is_verified ? "Yes" : "No")),
+      label: "Index rating",
+      values: agents.map((a) => {
+        const r = formatOnchainRating(a);
+        return r === "Unrated" ? "Unrated (8004scan)" : r;
+      }),
+    });
+    rows.push({
+      label: "Index ratings / stars",
+      values: agents.map(
+        (a) =>
+          `${a.total_feedbacks ?? 0} ratings · ${a.star_count ?? 0} stars`,
+      ),
+    });
+    rows.push({
+      label: "Pay rail",
+      values: agents.map((a) => {
+        const c = hireClassForAgent(a);
+        if (c === "genesis") return "Soft hire · optional ERC-8183";
+        if (a.x402_supported) return "x402 + A2A";
+        if (c === "live") return "A2A quote (0.1 $U typical)";
+        return "None";
+      }),
     });
     rows.push({
       label: "Owner",
@@ -144,7 +154,7 @@ export default async function ComparePage({ searchParams }: Props) {
   const jobRank = task
     ? rankGenesisForJob(
         task,
-        await scoreAllSpecialists(),
+        receiptScores,
         undefined,
         await listIncidents(),
       )
@@ -156,8 +166,9 @@ export default async function ComparePage({ searchParams }: Props) {
         Compare agents
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-white/55">
-        Same job, then who can actually complete it. Empty compare loads
-        three specialists so you are not staring at a blank tray.
+        Same job, then who can actually complete it. Receipt score is the
+        Genesis track record. 8004scan Unrated is an index label, not a
+        failed hire. Empty compare loads three specialists.
       </p>
 
       {jobRank && (

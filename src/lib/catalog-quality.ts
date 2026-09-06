@@ -5,6 +5,7 @@
  */
 
 import type { Agent } from "./types";
+import { isPinnedLiveSeller } from "./third-party-sellers";
 
 export type CatalogDropReason =
   | "empty"
@@ -14,7 +15,8 @@ export type CatalogDropReason =
   | "collectible-nft"
   | "prompt-dump"
   | "off-job"
-  | "test-stub";
+  | "test-stub"
+  | "vanity-handle";
 
 const TICKER_NAME =
   /^(8004ai|402ai|uuuai\d*|agentsai|onehaai|biuai)\b/i;
@@ -33,6 +35,9 @@ const PROMPT_DUMP =
 
 const OFF_JOB =
   /unibase|hinami|ヒナミ|shitcoin|shitscreener|wow gold|kansas city|white swan|clawdbot|poet screener|grindingpoet|hodlai|energy grid for silicon|epstein|world of warcraft|draw\.io diagram|football odds/i;
+
+/** Handle-as-name spam: toly.me, bobo.me, login.me */
+const VANITY_HANDLE = /^[a-z0-9_-]{2,20}\.(me|xyz|eth|sol|ai)$/i;
 
 function hay(agent: Agent): { name: string; desc: string } {
   return {
@@ -63,6 +68,7 @@ export function isNameStutter(name: string, description: string): boolean {
 }
 
 export function catalogDropReason(agent: Agent): CatalogDropReason | null {
+  if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return null;
   const { name, desc } = hay(agent);
   if (!name) return "empty";
   if (name.length <= 2 && !agent.is_verified) return "empty";
@@ -70,6 +76,7 @@ export function catalogDropReason(agent: Agent): CatalogDropReason | null {
   if (/^agentscan agent$/i.test(name)) return "ticker-spam";
 
   if (TICKER_NAME.test(name)) return "ticker-spam";
+  if (VANITY_HANDLE.test(name)) return "vanity-handle";
   if (/^test\.agent$/i.test(name) || /^test\./i.test(name) || /test\.agent/i.test(name)) {
     return "test-stub";
   }

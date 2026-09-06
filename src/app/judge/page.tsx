@@ -32,6 +32,17 @@ export default async function JudgePage() {
       <div className="mt-6">
         <PartnerStatusStrip compact />
       </div>
+      <Link
+        href="/genesis/range-keeper?task=Rebalance%20my%20PCS%20V3%20BNB%2FUSDT%20LP%20when%20out%20of%20range&buy=1#buy"
+        className="btn-primary mt-6 inline-flex !px-5 !py-2.5 !text-sm"
+      >
+        Judge mode · Hire RangeKeeper
+      </Link>
+      <p className="mt-2 text-[11px] text-white/40">
+        One click, no account. Prefills a PCS V3 brief and opens Hire.
+        Then open the receipt → /advantage → /altana revoke. Record that
+        as a 60–90s walkthrough for the intake form.
+      </p>
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
@@ -267,9 +278,11 @@ export default async function JudgePage() {
         {(
           [
             ["RangeKeeper", PROOF_JOBS["range-keeper"]],
+            ["RangeKeeper (auditor walk)", "job_mtptb9p6_iq2vb1"],
             ["Gridwright", PROOF_JOBS.gridwright],
             ["YieldRouter", PROOF_JOBS["yield-router"]],
             ["HealthSentinel", PROOF_JOBS["health-sentinel"]],
+            ["Brain yield (third-party)", "job_mtpky983_et33s0"],
           ] as const
         ).map(([name, id]) => (
           <li key={id}>

@@ -1,6 +1,7 @@
 import type { CategoryId } from "./categories";
 import type { Agent } from "./types";
 import { BSC_MAINNET_CHAIN_ID, getPin } from "./pins";
+import { siteUrl } from "./site-url";
 
 /**
  * Marketplace specialists operated by Genesis — one per job category so hire
@@ -127,13 +128,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
 ];
 
 function appBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
-  }
-  return "http://localhost:3000";
+  return siteUrl();
 }
 
 export function getGenesisAgent(slug: string): GenesisAgent | undefined {

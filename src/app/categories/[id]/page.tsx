@@ -179,14 +179,16 @@ export default async function CategoryDetailPage({
       )}
 
       {identity.length > 0 && (
-        <div className="mt-12">
-          <h2 className="card-title text-xl text-white">
-            Unhireable on this job
-          </h2>
-          <p className="body-sm mt-1">
-            On-chain identities with no live hire we can complete ·{" "}
-            {identityTotal} listed
-          </p>
+        <details className="mt-12 rounded-2xl border border-rose-500/20 bg-rose-500/[0.04] p-5">
+          <summary className="cursor-pointer list-none">
+            <h2 className="card-title text-xl text-white">
+              Show indexed identities
+            </h2>
+            <p className="body-sm mt-1">
+              {identityTotal} unhireable names on this job — marked, not
+              mixed with Hire.
+            </p>
+          </summary>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {identity.map((a) => (
               <AgentCard
@@ -216,7 +218,7 @@ export default async function CategoryDetailPage({
               )}
             </div>
           )}
-        </div>
+        </details>
       )}
 
       {hireable.length === 0 && identity.length === 0 && (
