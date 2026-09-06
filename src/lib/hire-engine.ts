@@ -581,7 +581,7 @@ async function fulfillCatalogHire(
         "quoted",
         result.quote.accepted
           ? `Third-party quote accepted · ${seller.name}`
-          : `Third-party hire · ${seller.name} (operator report)`,
+          : `Third-party hire · ${seller.name}`,
       ),
       quote: {
         priceUsd,
@@ -591,7 +591,7 @@ async function fulfillCatalogHire(
         expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         notes: result.quote.accepted
           ? `Signed quote from ${seller.name} — no Genesis on-chain lock`
-          : `Operator report from ${seller.name} — no on-chain lock`,
+          : `Live payload from ${seller.name} — no on-chain lock`,
         providerSig: result.quote.providerSig,
         live: result.live,
       } as HireQuote,
@@ -605,7 +605,7 @@ async function fulfillCatalogHire(
       next = pushTimeline(
         next,
         "fulfilling",
-        "Fetching seller quote + operator report…",
+        "Fetching seller quote + live payload…",
       );
       next = {
         ...pushTimeline(

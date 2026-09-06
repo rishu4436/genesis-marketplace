@@ -59,20 +59,6 @@ export function HirePartnerFollowup({
           </span>
           <span className="text-amber-300">→</span>
         </Link>
-        <Link
-          href={scan}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/80 hover:border-sky-400/30"
-        >
-          <span>
-            <span className="font-semibold text-white">8004scan identity</span>
-            <span className="mt-0.5 block text-[11px] text-white/40">
-              On-chain registration{numeric ? ` for #${id}` : ""}
-            </span>
-          </span>
-          <span className="text-amber-300">↗</span>
-        </Link>
         {bscscan && (
           <Link
             href={bscscan}
@@ -83,12 +69,26 @@ export function HirePartnerFollowup({
             <span>
               <span className="font-semibold text-white">BscScan identity</span>
               <span className="mt-0.5 block text-[11px] text-white/40">
-                ERC-8004 registry NFT #{id}
+                ERC-8004 registry NFT #{id} — canonical on-chain proof
               </span>
             </span>
             <span className="text-amber-300">↗</span>
           </Link>
         )}
+        <Link
+          href={scan}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/80 hover:border-sky-400/30"
+        >
+          <span>
+            <span className="font-semibold text-white">8004scan index</span>
+            <span className="mt-0.5 block text-[11px] text-white/40">
+              Partner catalog{numeric ? ` for #${id}` : ""} — may lag new mints
+            </span>
+          </span>
+          <span className="text-amber-300">↗</span>
+        </Link>
         {(genesisSlug === "range-keeper" || categoryId === "rebalancing") && (
           <Link
             href="/partners#pancakeswap"

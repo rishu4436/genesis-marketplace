@@ -30,7 +30,24 @@ function main() {
   );
 
   const grid = featuredSlotsForJob("grid-trading");
-  check("grid job has no featured pin", grid.length === 0);
+  check("grid job has a labeled featured pin", grid.length === 1, String(grid.length));
+  check(
+    "grid featured is Brain grid planner",
+    grid[0]?.slug === "brain-grid-planner",
+    grid[0]?.slug,
+  );
+  const yieldSlot = featuredSlotsForJob("yield-optimisation");
+  check(
+    "yield featured is Brain Venus yield",
+    yieldSlot[0]?.slug === "brain-venus-yield",
+    yieldSlot[0]?.slug,
+  );
+  const hfSlot = featuredSlotsForJob("health-factor");
+  check(
+    "health featured is Brain Venus HF",
+    hfSlot[0]?.slug === "brain-venus-hf",
+    hfSlot[0]?.slug,
+  );
 
   const ranked = rankGenesisForJob(JOB_CHIPS[0].task);
   const surface = decorateRankSurface(ranked);

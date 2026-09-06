@@ -6,6 +6,7 @@ import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { getCategory, CATEGORIES, type CategoryId } from "@/lib/categories";
 import { getAgentsForCategory } from "@/lib/category-agents";
 import { getGenesisAgentsByCategory } from "@/lib/genesis-agents";
+import { getFeaturedThirdParty } from "@/lib/third-party-sellers";
 import { BRAND } from "@/lib/brand";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { CategoryDepthPanel } from "@/components/CategoryDepthPanel";
@@ -45,6 +46,7 @@ export default async function CategoryDetailPage({
   const pageSize = 24;
 
   const genesis = getGenesisAgentsByCategory(id as CategoryId);
+  const outsider = getFeaturedThirdParty(id as CategoryId);
   const scores = await scoreAllSpecialists();
   const fitBySlug = Object.fromEntries(
     scores.map((s) => [s.slug, s.composite]),
@@ -113,8 +115,11 @@ export default async function CategoryDetailPage({
           </li>
           <li>
             Need a live outsider on this job — look for{" "}
-            <span className="text-sky-300">Live third-party</span> (rebalance:
-            ERC-8004 #265375).
+            <span className="text-sky-300">Live third-party</span>
+            {outsider
+              ? ` (${outsider.name} · #${outsider.tokenId})`
+              : ""}
+            .
           </li>
           <li>
             Identity-only 8004scan names are filtered out of this shelf.

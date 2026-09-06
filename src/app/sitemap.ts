@@ -28,6 +28,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/altana",
     "/partners",
     "/agents/56/265375",
+    "/agents/56/302258",
+    "/agents/56/304493",
+    "/agents/56/302257",
   ].map((p) => ({
     url: `${base}${p || "/"}`,
     lastModified: new Date(),

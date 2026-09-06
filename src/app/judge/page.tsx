@@ -71,9 +71,30 @@ export default async function JudgePage() {
             href="/agents/56/265375?buy=1#buy"
             className="text-amber-300 hover:underline"
           >
-            Third-party hire
+            LP rebalancer #265375
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/302258?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Brain grid #302258
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/304493?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Brain yield #304493
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/302257?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Brain HF #302257
           </Link>{" "}
-          — BNB LP Range Rebalancer (not By Genesis)
+          — not By Genesis
         </li>
         <li>
           <span className="font-semibold text-white">6.</span>{" "}
@@ -132,21 +153,21 @@ export default async function JudgePage() {
             {g.tokenId ? (
               <>
                 <a
-                  href={scanAgentUrl(56, g.tokenId)}
-                  className="text-amber-300 hover:underline"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  8004scan
-                </a>
-                {" · "}
-                <a
                   href={bscscanNftUrl(g.tokenId)}
                   className="text-amber-300 hover:underline"
                   target="_blank"
                   rel="noreferrer"
                 >
                   BscScan
+                </a>
+                {" · "}
+                <a
+                  href={scanAgentUrl(56, g.tokenId)}
+                  className="text-amber-300 hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  8004scan index
                 </a>
               </>
             ) : (
@@ -184,7 +205,8 @@ export default async function JudgePage() {
           <Link href="/categories" className="text-amber-300">
             four equal shelves
           </Link>{" "}
-          + specialists + pinned outsiders (rebalance #265375, grid #302258).
+          + specialists + pinned outsiders (#265375 LP, #302258 grid, #304493
+          yield, #302257 health).
         </li>
         <li>
           <span className="font-semibold text-white">TermiX</span> —{" "}

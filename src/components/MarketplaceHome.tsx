@@ -10,7 +10,7 @@ import { getCategory } from "@/lib/categories";
 import { BRAND } from "@/lib/brand";
 import { JOB_CHIPS } from "@/lib/job-chips";
 import {
-  FEATURED_THIRD_PARTY,
+  FEATURED_SELLERS,
   thirdPartyHref,
 } from "@/lib/third-party-sellers";
 
@@ -104,23 +104,26 @@ export async function MarketplaceHome() {
         })}
       </div>
 
-      <Link
-        href={`${thirdPartyHref(FEATURED_THIRD_PARTY)}#buy`}
-        className="mt-4 flex items-center gap-3 rounded-[12px] border border-white/[0.08] px-4 py-3 text-[13px] transition hover:border-white/20"
-      >
-        <span className="rounded-full border border-sky-400/25 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-sky-200/80">
-          Featured live
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-white">
-            {FEATURED_THIRD_PARTY.name}
-          </div>
-          <p className="truncate text-[12px] text-white/40">
-            {FEATURED_THIRD_PARTY.tagline}
-          </p>
-        </div>
-        <span className="shrink-0 text-[12px] text-white/45">Open →</span>
-      </Link>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {FEATURED_SELLERS.map((s) => (
+          <Link
+            key={s.slug}
+            href={`${thirdPartyHref(s)}#buy`}
+            className="flex items-center gap-3 rounded-[12px] border border-white/[0.08] px-4 py-3 text-[13px] transition hover:border-white/20"
+          >
+            <span className="rounded-full border border-sky-400/25 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-sky-200/80">
+              Live
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-white">
+                {s.name}
+              </div>
+              <p className="truncate text-[12px] text-white/40">{s.tagline}</p>
+            </div>
+            <span className="shrink-0 text-[12px] text-white/45">Open →</span>
+          </Link>
+        ))}
+      </div>
 
       <div className="mt-12 max-w-3xl">
         <HowHireWorks />

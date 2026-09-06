@@ -40,6 +40,12 @@ export default function ForAgentsPage() {
       "name": "BNB LP Range Rebalancer",
       "tokenId": "265375",
       "hireClass": "live"
+    },
+    {
+      "type": "live_third_party",
+      "name": "Brain on BNB — Venus Yield Ranking",
+      "tokenId": "304493",
+      "hireClass": "live"
     }
   ]
 }`}
@@ -67,7 +73,7 @@ export default function ForAgentsPage() {
           Omit <code className="text-amber-200/80">genesisSlug</code> and pass{" "}
           <code className="text-amber-200/80">chainId</code> +{" "}
           <code className="text-amber-200/80">tokenId</code>. Live sellers
-          return their quote and operator report. Identity-only listings say
+          return their quote and live payload. Identity-only listings say
           so — we never impersonate them.
         </p>
       </section>

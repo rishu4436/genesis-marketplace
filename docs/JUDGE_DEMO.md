@@ -10,7 +10,7 @@ Public entry: **`/judge`** (footer).
 4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
 5. **1:00** Open result / share · My hires `/dashboard`
 6. **1:15** `/advantage` — with vs without, live 2026-09-06 receipts
-7. **1:20** Third-party `/agents/56/265375?buy=1`
+7. **1:20** Third-party `/agents/56/265375?buy=1` (LP) · `/agents/56/302258` (grid) · `/agents/56/304493` (yield) · `/agents/56/302257` (health)
 8. **1:25** `/partners` — live 8004scan, Altana, TermiX, PCS, featured A2A
 
 ## Live proof jobs (no buy required)
@@ -32,4 +32,4 @@ Public entry: **`/judge`** (footer).
 |-----------|------|
 | Functionality | `/` → hire → plan without dead ends |
 | Data quality | Trust passport, live slot0/Venus, hashed receipts from today |
-| Diversity | `/categories` + 4 genesis agents + pinned outsiders |
+| Diversity | `/categories` + 4 genesis agents + 4 pinned outsiders (one A2A per job) |

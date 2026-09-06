@@ -32,6 +32,7 @@ export type OnchainPool = {
 export type OnchainVenus = {
   asset: string;
   supplyAprPct: number | null;
+  naiveAprPct?: number | null;
   ok: boolean;
   detail: string;
 };
@@ -41,7 +42,24 @@ export type OnchainMarket = {
   rpc: string | null;
   pools: OnchainPool[];
   venus: OnchainVenus[];
+  blockTimeSec?: number | null;
+  blocksPerYear?: number | null;
+  blockTimeSource?: string;
 };
+
+/** 3-second blocks — still what many published BSC yield figures assume. */
+export const NAIVE_BLOCKS_PER_YEAR = 10_512_000;
+const SECONDS_PER_YEAR = 365.25 * 24 * 3600;
+const ASSUMED_BLOCK_SEC = 0.45;
+
+const CORE_VTOKENS: { asset: string; address: string }[] = [
+  { asset: "lisUSD", address: "0x689e0dab47ab16bcae87ec18491692bf621dc6ab" },
+  { asset: "USDT", address: "0xfD5840Cd36d94D7229439859C0112a4185BC0255" },
+  { asset: "FDUSD", address: "0xc4eF4229FEC74CCFE17B2BDEF7715FAC740BA0BA" },
+  { asset: "USDC", address: "0xeca88125a5adbe82614ffc12d0db554e2e2867c8" },
+  { asset: "BNB", address: "0xA07c5b74C9B40447a954e1466938b865b6BBea36" },
+  { asset: "ETH", address: "0xf508fCD89b8bd15579dc79A6827cB4686A3592c8" },
+];
 
 function padAddr(a: string): string {
   return a.replace(/^0x/i, "").toLowerCase().padStart(64, "0");
@@ -181,32 +199,98 @@ async function readPool(
   };
 }
 
-async function readVenusSupply(rpc: string): Promise<OnchainVenus> {
-  const hex = await ethCall(rpc, VUSDT, "0xae9d70b0");
+async function rpcResult(
+  rpc: string,
+  method: string,
+  params: unknown[],
+): Promise<unknown> {
+  try {
+    const res = await jobFetch(rpc, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      signal:
+        typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
+          ? AbortSignal.timeout(3500)
+          : undefined,
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { result?: unknown };
+    return json.result ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function measureBlockTime(rpc: string): Promise<{
+  sec: number;
+  blocksPerYear: number;
+  from: number;
+  to: number;
+} | null> {
+  const latest = (await rpcResult(rpc, "eth_getBlockByNumber", [
+    "latest",
+    false,
+  ])) as { number?: string; timestamp?: string } | null;
+  if (!latest?.number || !latest.timestamp) return null;
+  const to = parseInt(latest.number, 16);
+  const span = 200;
+  const from = Math.max(1, to - span);
+  const older = (await rpcResult(rpc, "eth_getBlockByNumber", [
+    `0x${from.toString(16)}`,
+    false,
+  ])) as { timestamp?: string } | null;
+  if (!older?.timestamp) return null;
+  const t1 = parseInt(latest.timestamp, 16);
+  const t0 = parseInt(older.timestamp, 16);
+  if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 <= t0) return null;
+  const sec = (t1 - t0) / (to - from);
+  if (sec < 0.2 || sec > 4) return null;
+  return { sec, blocksPerYear: SECONDS_PER_YEAR / sec, from, to };
+}
+
+async function readVenusMarket(
+  rpc: string,
+  asset: string,
+  address: string,
+  blocksPerYear: number,
+): Promise<OnchainVenus> {
+  const hex = await ethCall(rpc, address, "0xae9d70b0");
   if (!hex) {
     return {
-      asset: "USDT",
+      asset,
       supplyAprPct: null,
       ok: false,
-      detail: "vUSDT supplyRatePerBlock failed",
+      detail: `v${asset} supplyRatePerBlock failed`,
     };
   }
   const rate = decodeUint(hex, 0);
-  const blocksYear = 10_512_000;
-  const apr = (Number(rate) / 1e18) * blocksYear * 100;
+  const perBlock = Number(rate) / 1e18;
+  const apr = perBlock * blocksPerYear * 100;
+  const naive = perBlock * NAIVE_BLOCKS_PER_YEAR * 100;
   if (!Number.isFinite(apr)) {
     return {
-      asset: "USDT",
+      asset,
       supplyAprPct: null,
       ok: false,
       detail: "rate decode failed",
     };
   }
+  if (apr > 200) {
+    return {
+      asset,
+      supplyAprPct: null,
+      naiveAprPct: Number.isFinite(naive) ? Math.round(naive * 100) / 100 : null,
+      ok: false,
+      detail: `implausible supply APR ${apr.toExponential(2)} — skipped (deprecated market?)`,
+    };
+  }
   return {
-    asset: "USDT",
-    supplyAprPct: Math.round(apr * 100) / 100,
+    asset,
+    supplyAprPct: Math.round(apr * 10000) / 10000,
+    naiveAprPct: Math.round(naive * 10000) / 10000,
     ok: true,
-    detail: `Venus vUSDT supplyRatePerBlock`,
+    detail: `Venus v${asset} supplyRatePerBlock`,
   };
 }
 
@@ -215,15 +299,35 @@ export async function fetchOnchainMarket(): Promise<OnchainMarket> {
   let rpc: string | null = null;
   let pools: OnchainPool[] = [];
   let venus: OnchainVenus[] = [];
+  let blockTimeSec: number | null = null;
+  let blocksPerYear: number | null = null;
+  let blockTimeSource = "unavailable";
 
   for (const url of RPCS) {
     const probe = await readPool(url, WBNB, USDT, 500, "BNB/USDT", "USDT per BNB");
     if (probe.ok || probe.pool) {
       rpc = url;
-      const cake = await readPool(url, CAKE, USDT, 2500, "CAKE/USDT", "USDT per CAKE");
-      const ven = await readVenusSupply(url);
+      const measured = await measureBlockTime(url);
+      if (measured) {
+        blockTimeSec = measured.sec;
+        blocksPerYear = measured.blocksPerYear;
+        blockTimeSource = `measured over ${measured.to - measured.from} blocks (${measured.from}–${measured.to})`;
+      } else {
+        blockTimeSec = ASSUMED_BLOCK_SEC;
+        blocksPerYear = SECONDS_PER_YEAR / ASSUMED_BLOCK_SEC;
+        blockTimeSource = `assumed ${ASSUMED_BLOCK_SEC}s BSC post-Maxwell — not measured this call`;
+      }
+      const bpy = blocksPerYear;
+      const [cake, ...markets] = await Promise.all([
+        readPool(url, CAKE, USDT, 2500, "CAKE/USDT", "USDT per CAKE"),
+        ...CORE_VTOKENS.map((v) =>
+          readVenusMarket(url, v.asset, v.address, bpy),
+        ),
+      ]);
       pools = [probe, cake];
-      venus = [ven];
+      venus = markets
+        .slice()
+        .sort((a, b) => (b.supplyAprPct ?? -1) - (a.supplyAprPct ?? -1));
       break;
     }
   }
@@ -255,7 +359,15 @@ export async function fetchOnchainMarket(): Promise<OnchainMarket> {
     };
   }
 
-  return { fetchedAt, rpc, pools, venus };
+  return {
+    fetchedAt,
+    rpc,
+    pools,
+    venus,
+    blockTimeSec,
+    blocksPerYear,
+    blockTimeSource,
+  };
 }
 
 export type PcsNftPosition = {
@@ -359,13 +471,28 @@ export function formatOnchainSection(m: OnchainMarket): string {
     }
     return `• Venus ${v.asset} supply APR: ${v.supplyAprPct}% (on-chain rate, not a promise)`;
   });
+  const usdt = m.venus.find((v) => v.asset === "USDT" && v.ok);
+  const naiveNote =
+    usdt?.naiveAprPct != null
+      ? `Naive 3s-constant USDT supply APR would be ${usdt.naiveAprPct}% — the old ${NAIVE_BLOCKS_PER_YEAR.toLocaleString("en-US")} blocks/year understates live BSC rates.`
+      : `The old ${NAIVE_BLOCKS_PER_YEAR.toLocaleString("en-US")} blocks/year (3s) constant understates live BSC rates by ~6.7x.`;
+  const btLine =
+    m.blockTimeSec != null && m.blocksPerYear != null
+      ? `Block time ${m.blockTimeSec.toFixed(4)}s · ~${Math.round(m.blocksPerYear).toLocaleString("en-US")} blocks/year (${m.blockTimeSource || "measured"}). ${naiveNote}`
+      : `Block time unavailable. ${naiveNote}`;
+  const top = m.venus.find((v) => v.ok && v.supplyAprPct != null);
+  const rankLead = top
+    ? `Top live venue in this scan: Venus ${top.asset} at ${top.supplyAprPct}% supply APR.`
+    : "No Venus market returned a usable supply APR this call.";
   return [
-    "Live BSC reads (eth_call). If a line is unavailable, the plan falls back to specialist math — we do not invent a tick.",
+    "Live BSC reads (eth_call). If a line is unavailable, the plan falls back to specialist math — we do not invent a tick or APR.",
     "",
     "PancakeSwap V3 slot0",
     ...poolLines,
     "",
-    "Venus lending",
+    "Venus lending — supply APR from supplyRatePerBlock × measured blocks/year",
+    btLine,
+    rankLead,
     ...venusLines,
     "",
     `Fetched ${m.fetchedAt}${m.rpc ? ` · ${m.rpc.replace(/^https:\/\//, "")}` : ""}`,

@@ -8,7 +8,7 @@ import { AgentCard } from "@/components/AgentCard";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterBar, type BrowseFilters } from "@/components/FilterBar";
 import { BRAND } from "@/lib/brand";
-import { featuredSlotsForJob } from "@/lib/featured-slots";
+import { allFeaturedSlots } from "@/lib/featured-slots";
 import { fetchHireablePool } from "@/lib/catalog-pool";
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
@@ -239,25 +239,27 @@ export default async function HirePage({ searchParams }: Props) {
         })}
       </div>
 
-      {featuredSlotsForJob("rebalancing").map((f) => (
-        <div
-          key={f.slug}
-          className="mt-6 rounded-2xl border border-sky-400/20 bg-sky-400/[0.05] px-5 py-4"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-200/80">
-            Featured · not organic rank
-          </p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-white">{f.name}</p>
-              <p className="mt-0.5 text-[12px] text-white/45">{f.tagline}</p>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {allFeaturedSlots().map((f) => (
+          <div
+            key={f.slug}
+            className="rounded-2xl border border-sky-400/20 bg-sky-400/[0.05] px-5 py-4"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-200/80">
+              Featured · not organic rank
+            </p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">{f.name}</p>
+                <p className="mt-0.5 text-[12px] text-white/45">{f.tagline}</p>
+              </div>
+              <Link href={f.buyHref} className="btn-line !h-9 !text-xs">
+                Hire featured
+              </Link>
             </div>
-            <Link href={f.buyHref} className="btn-line !h-9 !text-xs">
-              Hire featured
-            </Link>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       <div className="mt-14 flex flex-wrap items-end justify-between gap-3">
         <div>

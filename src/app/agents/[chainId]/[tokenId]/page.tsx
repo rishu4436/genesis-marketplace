@@ -30,7 +30,12 @@ import {
   formatFeedbackScore,
   formatOnchainRating,
 } from "@/lib/feedback-score";
-import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
+import {
+  getFeaturedByToken,
+  isFeaturedThirdParty,
+  resolveCatalogAgent,
+} from "@/lib/third-party-sellers";
+import { bscscanNftUrl } from "@/lib/proof-jobs";
 
 export const revalidate = 90;
 
@@ -41,9 +46,10 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { chainId, tokenId } = await params;
   const res = await getAgentSafe(Number(chainId), tokenId);
+  const agent = resolveCatalogAgent(Number(chainId), tokenId, res.data);
   return {
-    title: res.data?.name || `Agent #${tokenId}`,
-    description: res.data?.description,
+    title: agent?.name || `Agent #${tokenId}`,
+    description: agent?.description,
   };
 }
 
@@ -53,7 +59,8 @@ export default async function AgentDetailPage({ params }: Props) {
   if (!Number.isFinite(cid)) notFound();
 
   const agentRes = await getAgentSafe(cid, tokenId);
-  const agent = agentRes.data;
+  const agent = resolveCatalogAgent(cid, tokenId, agentRes.data);
+  const featured = getFeaturedByToken(cid, tokenId);
 
   if (!agent) {
     return (
@@ -105,8 +112,10 @@ export default async function AgentDetailPage({ params }: Props) {
                   Live third-party seller
                 </span>
                 {" — "}
-                not operated by Genesis. Hire negotiates their A2A endpoint and
-                pulls their operator report.
+                not operated by Genesis. Hire negotiates their A2A endpoint
+                {featured?.restBase
+                  ? " and pulls their operator report."
+                  : " and returns their signed quote plus their public measured sample."}
               </>
             ) : agent.a2a_endpoint ? (
               <>
@@ -154,12 +163,20 @@ export default async function AgentDetailPage({ params }: Props) {
             </div>
           )}
           <a
-            href={scanUrl}
+            href={bscscanNftUrl(String(agent.token_id))}
             target="_blank"
             rel="noreferrer"
             className="flex w-full items-center justify-center rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/5"
           >
-            View on 8004scan ↗
+            View on BscScan ↗
+          </a>
+          <a
+            href={scanUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-full items-center justify-center rounded-xl border border-white/10 px-4 py-2 text-xs font-medium text-white/55 transition hover:bg-white/5"
+          >
+            8004scan index (may lag) ↗
           </a>
         </aside>
         <div className="order-2 lg:order-1">

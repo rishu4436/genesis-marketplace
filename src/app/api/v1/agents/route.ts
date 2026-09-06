@@ -84,7 +84,7 @@ export async function GET(req: Request) {
     hireApi: `${origin}/api/hire`,
     a2a: s.a2aCardUrl || null,
     rest: s.restBase,
-    note: "Not operated by Genesis. Hire returns their quote + operator report when the endpoint answers.",
+    note: "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
   }));
 
   const claimed = claims.map((c) => ({

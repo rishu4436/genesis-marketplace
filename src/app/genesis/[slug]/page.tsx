@@ -186,7 +186,8 @@ export default async function GenesisAgentPage({ params }: Props) {
             </h2>
             <p className="body-sm mt-1.5 max-w-xl">
               Partner-index signals (stars, reach, x402). These are labels,
-              not the receipt score above. Unrated is not a low score.
+              not the receipt score above. Unrated is not a low score. The
+              index may lag new mints — BscScan is the on-chain NFT proof.
             </p>
             <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-center">
               <div className="flex flex-col items-center">

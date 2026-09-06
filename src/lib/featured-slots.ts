@@ -3,7 +3,7 @@
  * Buying stars or a featured pin cannot move organic rank.
  */
 
-import type { CategoryId } from "./categories";
+import { CATEGORIES, type CategoryId } from "./categories";
 import {
   getFeaturedThirdParty,
   thirdPartyHref,
@@ -58,6 +58,10 @@ export function featuredSlotsForJob(
       tagline: seller.tagline,
     },
   ];
+}
+
+export function allFeaturedSlots(task?: string): FeaturedSlot[] {
+  return CATEGORIES.flatMap((c) => featuredSlotsForJob(c.id, task));
 }
 
 export function featuredNeverInOrganic(

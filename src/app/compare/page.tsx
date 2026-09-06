@@ -115,7 +115,7 @@ export default async function ComparePage({ searchParams }: Props) {
       values: agents.map((a) => {
         const c = hireClassForAgent(a);
         if (c === "genesis") return "Structured plan you execute";
-        if (c === "live") return "Their quote + operator report";
+        if (c === "live") return "Their quote + live payload";
         return "Identity only — not a live hire";
       }),
     });

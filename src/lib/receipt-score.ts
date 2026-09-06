@@ -147,7 +147,12 @@ export function mandateEvidence(
   const categoryBar: Record<string, number> = {
     rebalancing: onchain ? 18 : 11,
     "grid-trading": /spacing|drawdown|level/i.test(blob) ? 14 : 7,
-    "yield-optimisation": /venus|\bapr\b|split/i.test(blob) ? 9 : 4,
+    "yield-optimisation":
+      /supply apr/i.test(blob) && /venus/i.test(blob)
+        ? 18
+        : /venus|\bapr\b|split/i.test(blob)
+          ? 9
+          : 4,
     "health-factor":
       /\bhf\b|health factor|collateral/i.test(blob) ? 16 : 8,
   };
