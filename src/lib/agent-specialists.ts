@@ -18,6 +18,7 @@ export type ParsedBrief = {
   low?: number;
   high?: number;
   protocol?: string;
+  nftId?: string;
   keywords: string[];
 };
 
@@ -155,6 +156,11 @@ export function parseBrief(task: string): ParsedBrief {
     asset = pair.split("-")[0];
   }
 
+  const nftM = raw.match(
+    /\b(?:nft|position|lp)\s*(?:id|token|#)?\s*[:#]?\s*(\d{3,12})\b/i,
+  );
+  const nftId = nftM?.[1];
+
   // Levels: "12 levels", "12-level", "12 level geometric"
   const levelM = raw.match(/\b(\d{1,3})[-\s]*(?:levels?|rungs?)\b/i);
   const levels = levelM ? Number(levelM[1]) : undefined;
@@ -220,6 +226,7 @@ export function parseBrief(task: string): ParsedBrief {
     low,
     high,
     protocol,
+    nftId,
     keywords,
   };
 }
@@ -324,7 +331,12 @@ function expertRebalance(
       {
         heading: "Range diagnosis",
         body: table([
-          ["Assumption", "PCS V3 concentrated position near range edge"],
+          [
+            "Assumption",
+            p.nftId
+              ? `PCS V3 NFT #${p.nftId} — ticks from chain when RPC answers; otherwise near range edge`
+              : "PCS V3 concentrated position near range edge (pass nft #id in the brief to read the position)",
+          ],
           ["Est. time out-of-range (24–48h)", `~${oor.toFixed(0)}%`],
           [
             "Fee capture vs in-range baseline",
@@ -399,7 +411,7 @@ function expertRebalance(
       { label: "Agent", value: name },
     ],
     disclaimer:
-      "Expert plan from RangeKeeper — illustrative math from your brief, not live on-chain reads unless connected. Not financial advice. No funds moved.",
+      "RangeKeeper: on-chain slot0/Venus when RPC answers; band/IL/fee math is specialist rules from your brief. We do not invent a missing tick. Plan only — not financial advice. No funds moved.",
   };
 }
 
@@ -493,7 +505,7 @@ function expertGrid(
       { label: "Agent", value: name },
     ],
     disclaimer:
-      "Strategy brief from Gridwright. Bounds inferred when not provided. You place orders. Not financial advice.",
+      "Gridwright: live BNB/USDT slot0 when RPC answers; grid spacing/DD pause is specialist math from your brief. You place orders. Not financial advice.",
   };
 }
 
@@ -640,7 +652,7 @@ function expertYield(
       { label: "Agent", value: name },
     ],
     disclaimer:
-      "YieldRouter plan uses illustrative rankings. Verify live APRs and TVL before depositing. Not financial advice.",
+      "YieldRouter: Venus supply APR is on-chain when RPC answers; venue ranking is specialist rules. Verify live TVL before depositing. Not financial advice.",
   };
 }
 
@@ -753,7 +765,7 @@ function expertHealth(
       { label: "Agent", value: name },
     ],
     disclaimer:
-      "HealthSentinel simulation from your brief parameters. Always confirm live HF in the protocol UI before acting. Not financial advice.",
+      "HealthSentinel: Venus rates are on-chain when RPC answers; shock HF is specialist math from your brief. Confirm live HF in the protocol UI before acting. Not financial advice.",
   };
 }
 

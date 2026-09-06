@@ -183,12 +183,12 @@ export default function AdvantagePage() {
         <p className="font-semibold text-white/80">Method notes</p>
         <ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-relaxed">
           <li>
-            With-agent runs used Genesis marketplace buy path against live or
-            local sellers (soft purchase — plan deliverables).
+            With-agent runs are 2026-09-06 Genesis hires (soft purchase — plan
+            deliverables). Open the linked receipts.
           </li>
           <li>
-            Without-agent estimates are realistic manual baselines for the same
-            briefs (spreadsheet / explorer / farm UI).
+            Without-agent times are operator-timed baselines for the same
+            briefs — not an independent third-party trial.
           </li>
           <li>
             Quality is weighted: trading ×1.2, security ×{t.securityWeight}.

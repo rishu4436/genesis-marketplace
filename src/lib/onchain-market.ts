@@ -10,6 +10,8 @@ export const USDT = "0x55d398326f99059fF775485246999027B3197955";
 export const CAKE = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
 export const PCS_V3_FACTORY = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865";
 export const VUSDT = "0xfD5840Cd36d94D7229439859C0112a4185BC0255";
+/** PancakeSwap V3 NonfungiblePositionManager (BSC) */
+export const PCS_V3_NPM = "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364";
 
 const RPCS = [
   "https://bsc-dataseed.binance.org",
@@ -254,6 +256,94 @@ export async function fetchOnchainMarket(): Promise<OnchainMarket> {
   }
 
   return { fetchedAt, rpc, pools, venus };
+}
+
+export type PcsNftPosition = {
+  nftId: string;
+  ok: boolean;
+  token0: string | null;
+  token1: string | null;
+  feeBps: number | null;
+  tickLower: number | null;
+  tickUpper: number | null;
+  liquidity: string | null;
+  detail: string;
+};
+
+function decodeAddrSlot(hex: string, slot: number): string {
+  const h = hex.replace(/^0x/i, "");
+  const start = slot * 64 + 24;
+  return `0x${h.slice(start, start + 40).toLowerCase()}`;
+}
+
+function decodeInt24Slot(hex: string, slot: number): number {
+  const word = decodeUint(hex, slot);
+  const signed = word >= BigInt(1) << BigInt(255)
+    ? word - (BigInt(1) << BigInt(256))
+    : word;
+  return Number(signed);
+}
+
+export async function fetchPcsNftPosition(
+  nftId: string,
+): Promise<PcsNftPosition> {
+  const id = nftId.replace(/\D/g, "");
+  const empty: PcsNftPosition = {
+    nftId: id,
+    ok: false,
+    token0: null,
+    token1: null,
+    feeBps: null,
+    tickLower: null,
+    tickUpper: null,
+    liquidity: null,
+    detail: "No NFT id",
+  };
+  if (!id) return empty;
+  const data = `0x99fbab88${padUint(BigInt(id))}`;
+  for (const rpc of RPCS) {
+    const hex = await ethCall(rpc, PCS_V3_NPM, data);
+    if (!hex || hex === "0x") continue;
+    try {
+      const token0 = decodeAddrSlot(hex, 2);
+      const token1 = decodeAddrSlot(hex, 3);
+      const fee = Number(decodeUint(hex, 4));
+      const tickLower = decodeInt24Slot(hex, 5);
+      const tickUpper = decodeInt24Slot(hex, 6);
+      const liq = decodeUint(hex, 7).toString();
+      return {
+        nftId: id,
+        ok: true,
+        token0,
+        token1,
+        feeBps: Number.isFinite(fee) ? fee / 100 : null,
+        tickLower,
+        tickUpper,
+        liquidity: liq,
+        detail: `NPM ${PCS_V3_NPM} · ${rpc.replace(/^https:\/\//, "")}`,
+      };
+    } catch {
+      continue;
+    }
+  }
+  return {
+    ...empty,
+    detail: "positions() eth_call failed — NFT not read",
+  };
+}
+
+export function formatPcsNftSection(p: PcsNftPosition): string {
+  if (!p.ok) {
+    return `PCS V3 NFT #${p.nftId}: unavailable — ${p.detail}. Band math falls back to the brief.`;
+  }
+  return [
+    `PCS V3 NFT #${p.nftId} (read-only — we do not touch the position)`,
+    `• token0 ${p.token0}`,
+    `• token1 ${p.token1}`,
+    `• fee ${p.feeBps}% · tickLower ${p.tickLower} · tickUpper ${p.tickUpper}`,
+    `• liquidity ${p.liquidity}`,
+    `• ${p.detail}`,
+  ].join("\n");
 }
 
 export function formatOnchainSection(m: OnchainMarket): string {

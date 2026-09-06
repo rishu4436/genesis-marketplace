@@ -11,6 +11,9 @@ import type { HireJob } from "./hire-engine";
 import { normalizeClaimCode } from "./hire-engine";
 import { SEED_JOBS } from "./seed-jobs";
 import { sealJob } from "./job-receipt";
+import { PROOF_JOB_IDS } from "./proof-jobs";
+
+const JOBS_INDEX_KEY = "genesis:jobs:ids";
 
 const memory = new Map<string, HireJob>();
 const claims = new Map<string, string>();
@@ -183,6 +186,7 @@ export async function saveJob(job: HireJob): Promise<HireJob> {
         sealed.id,
       );
     }
+    await indexJobId(sealed.id);
   }
   if (sealed.payment?.walletAddress) {
     await indexWalletJob(sealed.payment.walletAddress, sealed.id);
@@ -245,6 +249,22 @@ export async function findJobReceipt(raw: string): Promise<HireJob | null> {
   return getJobByClaim(q);
 }
 
+async function indexJobId(id: string) {
+  if (!id) return;
+  const raw = await kvCmd<string>("GET", JOBS_INDEX_KEY);
+  let ids: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) ids = parsed.map(String);
+    } catch {
+      ids = [];
+    }
+  }
+  const next = [id, ...ids.filter((x) => x !== id)].slice(0, 500);
+  await kvCmd("SET", JOBS_INDEX_KEY, JSON.stringify(next));
+}
+
 export async function listJobs(limit = 50): Promise<HireJob[]> {
   ensureSeeds();
   try {
@@ -267,6 +287,26 @@ export async function listJobs(limit = 50): Promise<HireJob[]> {
   } catch {
     /* disk unavailable */
   }
+
+  const extraIds = new Set<string>(PROOF_JOB_IDS);
+  const fromKv = await kvCmd<string>("GET", JOBS_INDEX_KEY);
+  if (fromKv) {
+    try {
+      const parsed = JSON.parse(fromKv) as unknown;
+      if (Array.isArray(parsed)) {
+        for (const id of parsed) extraIds.add(String(id));
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  await Promise.all(
+    [...extraIds].map(async (id) => {
+      if (memory.has(id)) return;
+      await getJob(id);
+    }),
+  );
+
   return [...memory.values()]
     .map(hydrateEvidence)
     .sort(

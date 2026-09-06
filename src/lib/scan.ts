@@ -235,5 +235,9 @@ export function shortAddress(addr?: string | null, chars = 4) {
 }
 
 export function explorerAgentUrl(agent: Agent) {
-  return `https://8004scan.io/agents/bsc/${agent.token_id}`;
+  const id = String(agent.token_id || "");
+  if (/^\d+$/.test(id)) {
+    return `https://8004scan.io/agents/${agent.chain_id || 56}/${id}`;
+  }
+  return "https://8004scan.io/agents?chain=56";
 }

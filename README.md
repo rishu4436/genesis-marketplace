@@ -99,8 +99,8 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 ### Next
 
-1. AWS login → `bag deploy agent` (Studio CLI has AgentCore only, not Azure). Quota increase in flight.
-2. Soft-hire via `/hire` still works without escrow. ERC-8004 mainnet IDs are pinned.
+1. AWS login → `bag deploy agent` when AgentCore quota lands. Hire already works on APEX.
+2. Optional: mainnet Altana grant + one ERC-8183 lock. Soft-hire does not need them.
 
 ### Live Studio sellers (BSC mainnet)
 

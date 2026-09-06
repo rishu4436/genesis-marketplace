@@ -27,6 +27,7 @@ export const RISK_LABELS: Record<HireIntent["risk"], string> = {
 
 export const TASK_TEMPLATES: Record<CategoryId, string[]> = {
   rebalancing: [
+    "Rebalance PCS V3 NFT #12345 — read ticks from chain, propose fee-first band, do not touch the NFT",
     "Rebalance my PCS V3 CAKE/USDT LP — propose ±6% band, fee APR vs IL, gas budget $2",
     "Reset CAKE-USDT concentrated range around mark with ±5% width and 10% dry powder",
     "PCS V3 BNB/USDT out of range 40% of day — new fee-first bands + execution checklist",

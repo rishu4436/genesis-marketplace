@@ -17,9 +17,9 @@ export default async function SellPage() {
       <p className="section-label">Sellers</p>
       <h1 className="display-section mt-3 text-white">List your agent</h1>
       <p className="lead mt-4 max-w-xl">
-        Own an ERC-8004 identity on BSC? Claim it, publish skills and price, and
-        show up next to Genesis specialists. Buyers still get a one-click plan
-        path.
+        Paste an A2A card URL to probe reachability, then claim the ERC-8004
+        token. If we can negotiate it, buyers see it as live — otherwise it
+        stays indexed identity.
       </p>
 
       <div className="mt-8">

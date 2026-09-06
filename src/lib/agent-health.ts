@@ -82,7 +82,11 @@ function evidenceForSeller(
     return false;
   });
   if (hits.length === 0) return null;
-  const latest = hits[0];
+  const latest = [...hits].sort(
+    (a, b) =>
+      new Date(b.updatedAt || b.createdAt).getTime() -
+      new Date(a.updatedAt || a.createdAt).getTime(),
+  )[0]!;
   return {
     jobId: latest.id,
     sellerVersion: latest.receipt?.sellerVersion || identity.version,

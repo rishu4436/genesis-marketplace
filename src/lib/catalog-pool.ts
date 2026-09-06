@@ -6,6 +6,9 @@
 
 import type { Agent } from "./types";
 import { listAgentsSafe, searchAgentsSafe, dedupeAgents } from "./scan";
+import { kvCmd } from "./kv";
+
+const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v1";
 
 export type CatalogSortMode = "rank" | "score" | "newest" | "ratings";
 
@@ -128,9 +131,42 @@ export async function fetchHireablePool(opts: {
 
   const results = await Promise.all(jobs);
   const { error, apiTotal } = collect(results, collected);
+  const agents = dedupeAgents(collected);
+
+  if (agents.length) {
+    await kvCmd(
+      "SET",
+      CATALOG_CACHE_KEY,
+      JSON.stringify({ agents, apiTotal, savedAt: Date.now() }),
+      "EX",
+      900,
+    );
+    return { agents, error: null, apiTotal };
+  }
+
+  const cached = await kvCmd<string>("GET", CATALOG_CACHE_KEY);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached) as {
+        agents?: Agent[];
+        apiTotal?: number | null;
+      };
+      if (parsed.agents?.length) {
+        return {
+          agents: parsed.agents,
+          error: error
+            ? `${error} · showing last good catalog`
+            : null,
+          apiTotal: parsed.apiTotal ?? apiTotal,
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+  }
 
   return {
-    agents: dedupeAgents(collected),
+    agents,
     error: collected.length ? null : error,
     apiTotal,
   };

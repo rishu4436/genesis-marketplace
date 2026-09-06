@@ -124,7 +124,7 @@ export async function getAgentsForCategory(
   let ranked = dedupeAgents([...withHits, ...without]);
   const featured = getFeaturedThirdParty(categoryId);
   if (featured) {
-    ranked = dedupeAgents([featuredAsAgent(), ...ranked]);
+    ranked = dedupeAgents([featuredAsAgent(featured), ...ranked]);
   }
 
   const totalMatched = ranked.length;
@@ -154,9 +154,13 @@ export async function getAgentsForCategory(
     hasMore,
     source,
     error:
-      hireable.length || identity.length
+      hireable.length
         ? null
-        : errors[0] || "No agents found",
+        : errors[0]
+          ? `${errors[0]} · specialist + pinned outsider still listed`
+          : identity.length
+            ? null
+            : "No agents found",
   };
 }
 

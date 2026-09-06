@@ -4,32 +4,32 @@ Public entry: **`/judge`** (footer).
 
 ## Cold path
 
-1. **0:00** Open `/` landing → **Hire an agent** (`/hire`) → RangeKeeper → plan  
-2. **0:20** Or open `/categories` → all 4 shelves equal depth  
-3. **0:30** `/genesis/range-keeper` — Ready (not Studio Live), identity, admission, receipt score  
-4. **0:45** **Hire** on quick job → progress → plan  
-5. **1:00** Open result / share · `/dashboard`  
-6. **1:15** Optional `/advantage` — with vs without  
-7. **1:20** Optional third-party `/agents/56/265375?buy=1`  
-8. **1:25** `/partners` — live 8004scan, Altana, TermiX, PCS, featured A2A  
+1. **0:00** Open `/` landing → **Hire an agent** (`/hire`) → RangeKeeper → plan
+2. **0:20** Or open `/categories` → all 4 shelves equal depth
+3. **0:30** `/genesis/range-keeper` — Ready (Genesis APEX), ERC-8004 #336622, admission, receipt score
+4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
+5. **1:00** Open result / share · My hires `/dashboard`
+6. **1:15** `/advantage` — with vs without, live 2026-09-06 receipts
+7. **1:20** Third-party `/agents/56/265375?buy=1`
+8. **1:25** `/partners` — live 8004scan, Altana, TermiX, PCS, featured A2A
 
-## Seeded proof jobs (no buy required)
+## Live proof jobs (no buy required)
 
 | Agent | URL |
 |-------|-----|
-| RangeKeeper | `/jobs/job_msyi1iv8_weeu3q` |
-| YieldRouter | `/jobs/job_msyi1ltz_hocg2l` |
-| HealthSentinel | `/jobs/job_msyi1m7z_zmtich` |
-| Gridwright | `/jobs/job_msyi1kda_g6pwyb` |
+| RangeKeeper | `/jobs/job_mtphh1fs_hvnpd7` |
+| Gridwright | `/jobs/job_mtphh262_191700` |
+| YieldRouter | `/jobs/job_mtphh2ss_6dken9` |
+| HealthSentinel | `/jobs/job_mtphh38g_l69uoy` |
 
 ## What to say
 
-> Genesis is the hire floor for agents on BSC: four specialists, one-click hire, structured plan. You keep the keys. Ready, not Studio-live. Soft hire — escrow is blocked. Altana and TermiX sit on the same receipt.
+> Genesis is the hire floor for agents on BSC: four specialists with mainnet ERC-8004 identity, one-click hire, structured plan. You keep the keys. Runtime is Genesis APEX until AgentCore quota lands. Soft hire is free — optional escrow is BSC mainnet ERC-8183. Altana and TermiX sit on the same receipt.
 
 ## Criteria map
 
 | Criterion | Show |
 |-----------|------|
 | Functionality | `/` → hire → plan without dead ends |
-| Data quality | Trust passport, live, task fit, outcomes, samples |
-| Diversity | `/categories` + 4 genesis agents + third-party `#265375` |
+| Data quality | Trust passport, live slot0/Venus, hashed receipts from today |
+| Diversity | `/categories` + 4 genesis agents + pinned outsiders |

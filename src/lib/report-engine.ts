@@ -24,7 +24,9 @@ import type { CommerceTier } from "./agent-model";
 import { enrichDeliverableWithAi } from "./ai/intelligence";
 import {
   fetchOnchainMarket,
+  fetchPcsNftPosition,
   formatOnchainSection,
+  formatPcsNftSection,
 } from "./onchain-market";
 import { hasXaiKey } from "./ai/xai-client";
 
@@ -122,6 +124,10 @@ export async function buildFullReport(
   let onchainBlock = "";
   try {
     onchainBlock = formatOnchainSection(await fetchOnchainMarket());
+    if (p.nftId) {
+      onchainBlock +=
+        "\n\n" + formatPcsNftSection(await fetchPcsNftPosition(p.nftId));
+    }
   } catch {
     onchainBlock =
       "On-chain BSC read failed. Plan uses specialist math only — no invented tick or APR.";
@@ -183,8 +189,8 @@ export async function buildFullReport(
     heading: "Data sources",
     body:
       marketBlock +
-      "\n\n• On-chain: PCS V3 slot0 + Venus supplyRatePerBlock (eth_call)\n" +
-      "• Specialist engine: Genesis expert rules (band/HF/grid/yield math)\n" +
+      "\n\n• On-chain: PCS V3 slot0 + Venus supplyRatePerBlock (eth_call). Missing reads stay labeled unavailable.\n" +
+      "• Specialist engine: band / grid / HF / venue math from the brief — not an invented tick or APR\n" +
       "• CoinGecko: spot fallback only\n" +
       `• Model: genesis-v2 · fetched ${snaps[0]?.fetchedAt || "n/a"}`,
   };

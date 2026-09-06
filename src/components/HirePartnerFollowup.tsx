@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { advantageHrefForHire } from "@/lib/advantage-report";
+import { bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
+import { getPin } from "@/lib/pins";
 
 export function HirePartnerFollowup({
   jobId,
@@ -16,10 +18,13 @@ export function HirePartnerFollowup({
 }) {
   const advantage = advantageHrefForHire({ genesisSlug, categoryId });
   const altana = genesisSlug ? `/genesis/${genesisSlug}#altana` : "/altana";
-  const scan =
-    tokenId && String(tokenId) !== "0"
-      ? `https://8004scan.io/agents/bsc/${tokenId}`
-      : "https://8004scan.io";
+  const pinId = genesisSlug ? getPin(genesisSlug).tokenId : undefined;
+  const id = (pinId || tokenId || "").replace(/^genesis:/, "");
+  const numeric = /^\d+$/.test(id);
+  const scan = numeric
+    ? scanAgentUrl(chainId || 56, id)
+    : "https://8004scan.io/agents?chain=56";
+  const bscscan = numeric ? bscscanNftUrl(id) : null;
 
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
@@ -63,11 +68,27 @@ export function HirePartnerFollowup({
           <span>
             <span className="font-semibold text-white">8004scan identity</span>
             <span className="mt-0.5 block text-[11px] text-white/40">
-              On-chain registration for #{tokenId}
+              On-chain registration{numeric ? ` for #${id}` : ""}
             </span>
           </span>
           <span className="text-amber-300">↗</span>
         </Link>
+        {bscscan && (
+          <Link
+            href={bscscan}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/80 hover:border-sky-400/30"
+          >
+            <span>
+              <span className="font-semibold text-white">BscScan identity</span>
+              <span className="mt-0.5 block text-[11px] text-white/40">
+                ERC-8004 registry NFT #{id}
+              </span>
+            </span>
+            <span className="text-amber-300">↗</span>
+          </Link>
+        )}
         {(genesisSlug === "range-keeper" || categoryId === "rebalancing") && (
           <Link
             href="/partners#pancakeswap"

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { SEED_JOBS } from "@/lib/seed-jobs";
 import { readLiveProof } from "@/lib/altana/proof";
 import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
+import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
+import { allGenesisAgents } from "@/lib/genesis-agents";
 
 export const metadata = {
   title: "Judge path",
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function JudgePage() {
   const proof = await readLiveProof();
+  const specialists = allGenesisAgents();
 
   return (
     <div className="mx-auto max-w-lg px-5 py-12 sm:px-8">
@@ -20,12 +22,12 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        Studio trial expired. Hire runs on{" "}
+        Hire runs on{" "}
         <span className="text-white/75">Genesis APEX</span> (Ready, not
-        Studio-live). Specialists + optional ERC-8183 escrow are on{" "}
-        <span className="text-white/75">BSC mainnet</span>. Hire is
-        plan-only unless you lock escrow; Altana is a post-hire grant on the
-        same receipt.
+        Studio-live) until Bedrock AgentCore quota lands. Specialists are{" "}
+        <span className="text-white/75">ERC-8004 on BSC mainnet</span>
+        {" "}#336622–#336625. Hire is plan-only; optional escrow is mainnet
+        ERC-8183. Altana is a post-hire grant on the same specialist.
       </p>
       <div className="mt-6">
         <PartnerStatusStrip compact />
@@ -46,14 +48,15 @@ export default async function JudgePage() {
           >
             RangeKeeper
           </Link>{" "}
-          — buy once
+          — buy once (pass <code className="text-white/70">nft #id</code> to
+          read the PCS position)
         </li>
         <li>
           <span className="font-semibold text-white">3.</span>{" "}
           <Link href="/advantage" className="text-amber-300 hover:underline">
             Advantage
           </Link>{" "}
-          — with vs without
+          — with vs without, live receipts
         </li>
         <li>
           <span className="font-semibold text-white">4.</span>{" "}
@@ -84,11 +87,11 @@ export default async function JudgePage() {
       {proof ? (
         <div className="mt-8 rounded-xl border border-violet-400/25 bg-violet-500/10 p-4">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-200/80">
-            Altana · live Keystore grant
+            Altana · Keystore grant
           </p>
           <p className="mt-1 text-sm text-white">
             {proof.agentName} historical testnet grant — marketplace hire is BSC
-            mainnet
+            mainnet. Mainnet grant is the stronger Altana proof.
           </p>
           <p className="mt-1 font-mono text-[10px] text-white/45 break-all">
             wallet {proof.walletAddress}
@@ -120,6 +123,40 @@ export default async function JudgePage() {
       )}
 
       <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-white/40">
+        Mainnet ERC-8004
+      </h2>
+      <ul className="mt-3 space-y-1.5 text-[13px] text-white/60">
+        {specialists.map((g) => (
+          <li key={g.slug}>
+            {g.name} #{g.tokenId || "pending"} ·{" "}
+            {g.tokenId ? (
+              <>
+                <a
+                  href={scanAgentUrl(56, g.tokenId)}
+                  className="text-amber-300 hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  8004scan
+                </a>
+                {" · "}
+                <a
+                  href={bscscanNftUrl(g.tokenId)}
+                  className="text-amber-300 hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  BscScan
+                </a>
+              </>
+            ) : (
+              "pin missing"
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-white/40">
         Criteria map
       </h2>
       <ul className="mt-3 space-y-2 text-[13px] text-white/60">
@@ -128,66 +165,61 @@ export default async function JudgePage() {
           <Link href="/" className="text-amber-300">
             /
           </Link>{" "}
-          chip → Buy → result. No dead end.
+          → hire → plan. No dead end. Soft hire is free; escrow is optional
+          mainnet ERC-8183.
         </li>
         <li>
           <span className="font-semibold text-white">Data quality</span> —
           hashed receipt{" "}
           <Link
-            href="/jobs/job_msyi1iv8_weeu3q"
+            href={`/jobs/${PROOF_JOBS["range-keeper"]}`}
             className="text-amber-300"
           >
-            job_msyi1iv8
+            RangeKeeper today
           </Link>
-          , PCS slot0 + Venus rate on a fresh hire, Genesis APEX Ready (not
-          Studio-live).
+          , PCS slot0 + Venus on the plan, ERC-8004 #336622.
         </li>
         <li>
           <span className="font-semibold text-white">Diversity</span> —{" "}
           <Link href="/categories" className="text-amber-300">
             four equal shelves
           </Link>{" "}
-          + specialists + one live outsider.
+          + specialists + pinned outsiders (rebalance #265375, grid #302258).
         </li>
         <li>
           <span className="font-semibold text-white">TermiX</span> —{" "}
           <Link href="/advantage" className="text-amber-300">
             /advantage
           </Link>{" "}
-          four tasks (one per job), trading ×1.2, security ×1.4, DIY misses vs receipt.
-          Linked from the job receipt.
-        </li>
-        <li>
-          <span className="font-semibold text-white">Partners</span> —{" "}
-          <Link href="/partners" className="text-amber-300">
-            /partners
-          </Link>{" "}
-          live 8004scan index, PCS slot0, Altana proof, featured A2A card.
-        </li>
-        <li>
-          <span className="font-semibold text-white">PancakeSwap</span> —
-          RangeKeeper plans + live BNB/USDT LP report.
+          four tasks, live job ids, operator-timed DIY labeled as such.
         </li>
         <li>
           <span className="font-semibold text-white">Machine buyers</span> —{" "}
           <Link href="/for-agents" className="text-amber-300">
             /for-agents
           </Link>{" "}
-          · GET /api/v1/agents
+          · GET /api/v1/agents · POST /api/v1/hire
         </li>
       </ul>
 
       <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-white/40">
-        Seeded results
+        Live proof jobs (2026-09-06)
       </h2>
       <ul className="mt-3 space-y-1.5">
-        {SEED_JOBS.map((j) => (
-          <li key={j.id}>
+        {(
+          [
+            ["RangeKeeper", PROOF_JOBS["range-keeper"]],
+            ["Gridwright", PROOF_JOBS.gridwright],
+            ["YieldRouter", PROOF_JOBS["yield-router"]],
+            ["HealthSentinel", PROOF_JOBS["health-sentinel"]],
+          ] as const
+        ).map(([name, id]) => (
+          <li key={id}>
             <Link
-              href={`/jobs/${encodeURIComponent(j.id)}`}
+              href={`/jobs/${id}`}
               className="text-sm text-white/70 hover:text-amber-300"
             >
-              {j.agentName} →
+              {name} → {id}
             </Link>
           </li>
         ))}

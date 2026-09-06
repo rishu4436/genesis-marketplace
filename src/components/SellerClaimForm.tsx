@@ -14,6 +14,7 @@ export function SellerClaimForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
+  const [probe, setProbe] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -146,14 +147,52 @@ export function SellerClaimForm() {
       </label>
 
       <label className="block text-xs text-white/50">
-        Service URL (optional)
+        Service / A2A card URL (optional)
         <input
           value={serviceUrl}
           onChange={(e) => setServiceUrl(e.target.value)}
           className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 font-mono text-sm text-white outline-none focus:ring-2 focus:ring-amber-400/30"
-          placeholder="https://…"
+          placeholder="https://…/.well-known/agent-card.json"
         />
       </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className="btn-secondary !text-xs"
+          disabled={!serviceUrl || loading}
+          onClick={async () => {
+            setProbe(null);
+            setError(null);
+            try {
+              const res = await fetch("/api/sell/probe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: serviceUrl }),
+              });
+              const json = (await res.json()) as {
+                success?: boolean;
+                error?: string;
+                data?: { name?: string; hireable?: boolean };
+              };
+              if (!json.success) {
+                setProbe(`Not hireable yet: ${json.error || "no card"}`);
+              } else {
+                setProbe(
+                  `Reachable${json.data?.name ? ` · ${json.data.name}` : ""} — claim to list`,
+                );
+                if (json.data?.name && !displayName) {
+                  setDisplayName(json.data.name);
+                }
+              }
+            } catch {
+              setProbe("Probe failed");
+            }
+          }}
+        >
+          Probe A2A card
+        </button>
+        {probe && <p className="text-[11px] text-white/50">{probe}</p>}
+      </div>
 
       <label className="flex items-center gap-2 text-xs text-white/60">
         <input

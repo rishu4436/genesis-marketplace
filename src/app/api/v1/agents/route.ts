@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { allGenesisAgents } from "@/lib/genesis-agents";
 import { checkAllAgentHealth } from "@/lib/agent-health";
 import { listClaims } from "@/lib/seller-claims";
-import { FEATURED_THIRD_PARTY } from "@/lib/third-party-sellers";
+import { FEATURED_SELLERS } from "@/lib/third-party-sellers";
 import { admitAllSpecialists } from "@/lib/admission";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
 
@@ -71,21 +71,21 @@ export async function GET(req: Request) {
       : null,
   }));
 
-  const liveThird = {
+  const liveThird = FEATURED_SELLERS.map((s) => ({
     type: "live_third_party" as const,
     hireClass: "live" as const,
-    slug: FEATURED_THIRD_PARTY.slug,
-    name: FEATURED_THIRD_PARTY.name,
-    categoryId: FEATURED_THIRD_PARTY.categoryId,
-    tagline: FEATURED_THIRD_PARTY.tagline,
-    chainId: FEATURED_THIRD_PARTY.chainId,
-    tokenId: FEATURED_THIRD_PARTY.tokenId,
-    buyUrl: `${origin}/agents/${FEATURED_THIRD_PARTY.chainId}/${FEATURED_THIRD_PARTY.tokenId}?buy=1#buy`,
+    slug: s.slug,
+    name: s.name,
+    categoryId: s.categoryId,
+    tagline: s.tagline,
+    chainId: s.chainId,
+    tokenId: s.tokenId,
+    buyUrl: `${origin}/agents/${s.chainId}/${s.tokenId}?buy=1#buy`,
     hireApi: `${origin}/api/hire`,
-    a2a: FEATURED_THIRD_PARTY.a2aCardUrl,
-    rest: FEATURED_THIRD_PARTY.restBase,
-    note: "Not operated by Genesis. Hire returns their quote + operator report.",
-  };
+    a2a: s.a2aCardUrl || null,
+    rest: s.restBase,
+    note: "Not operated by Genesis. Hire returns their quote + operator report when the endpoint answers.",
+  }));
 
   const claimed = claims.map((c) => ({
     type: "claimed_listing" as const,
@@ -104,7 +104,7 @@ export async function GET(req: Request) {
     success: true,
     marketplace: "Genesis Marketplace",
     version: "1",
-    count: specialists.length + 1 + claimed.length,
-    data: [...specialists, liveThird, ...claimed],
+    count: specialists.length + liveThird.length + claimed.length,
+    data: [...specialists, ...liveThird, ...claimed],
   });
 }

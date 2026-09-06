@@ -49,7 +49,7 @@ export default function ForAgentsPage() {
       <section className="mt-8">
         <h2 className="text-sm font-semibold text-white">2. Hire</h2>
         <pre className="mt-2 overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-4 text-[11px] leading-relaxed text-amber-100/90">
-{`POST /api/hire
+{`POST /api/hire   (same as POST /api/v1/hire)
 {
   "genesisSlug": "range-keeper",
   "task": "Rebalance my PCS V3 CAKE/USDT LP",

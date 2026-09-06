@@ -15,8 +15,16 @@ import {
   allGenesisAgents,
   genesisHref,
   genesisToAgentCard,
+  getGenesisAgentsByCategory,
 } from "@/lib/genesis-agents";
-import { FEATURED_THIRD_PARTY, thirdPartyHref } from "@/lib/third-party-sellers";
+import {
+  FEATURED_SELLERS,
+  featuredAsAgent,
+  getFeaturedThirdParty,
+  thirdPartyHref,
+} from "@/lib/third-party-sellers";
+import { CompareHireAll } from "@/components/CompareHireAll";
+import { detectCategory } from "@/lib/job-chips";
 import { rankGenesisForJob } from "@/lib/job-rank";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
 import { listIncidents } from "@/lib/slash-store";
@@ -45,10 +53,18 @@ export default async function ComparePage({ searchParams }: Props) {
     const res = await getAgentSafe(parsed.chainId, parsed.tokenId);
     if (res.data) agents.push(res.data);
   }
-  if (agents.length === 0 && raw.length === 0 && !task) {
-    agents.push(
-      ...allGenesisAgents().slice(0, 3).map((g) => genesisToAgentCard(g)),
-    );
+  if (agents.length === 0 && raw.length === 0) {
+    const cat = task ? detectCategory(task) : null;
+    if (cat) {
+      const g = getGenesisAgentsByCategory(cat)[0];
+      if (g) agents.push(genesisToAgentCard(g));
+      const feat = getFeaturedThirdParty(cat);
+      if (feat) agents.push(featuredAsAgent(feat));
+    } else {
+      agents.push(
+        ...allGenesisAgents().slice(0, 3).map((g) => genesisToAgentCard(g)),
+      );
+    }
   }
 
   const rows: { label: string; values: string[] }[] = [];
@@ -213,12 +229,15 @@ export default async function ComparePage({ searchParams }: Props) {
             {g.name}
           </Link>
         ))}
-        <Link
-          href={thirdPartyHref(FEATURED_THIRD_PARTY)}
-          className="rounded-full border border-sky-400/25 px-3 py-1 text-sky-300 hover:border-sky-400/50"
-        >
-          {FEATURED_THIRD_PARTY.name}
-        </Link>
+        {FEATURED_SELLERS.map((s) => (
+          <Link
+            key={s.slug}
+            href={thirdPartyHref(s)}
+            className="rounded-full border border-sky-400/25 px-3 py-1 text-sky-300 hover:border-sky-400/50"
+          >
+            {s.name}
+          </Link>
+        ))}
         <Link
           href="/compare?task=Rebalance%20my%20PCS%20V3%20LP%20when%20out%20of%20range"
           className="rounded-full border border-emerald-400/25 px-3 py-1 text-emerald-200 hover:border-emerald-400/50"
@@ -232,6 +251,10 @@ export default async function ComparePage({ searchParams }: Props) {
           Same job · health
         </Link>
       </div>
+
+      {task && agents.length > 0 && (
+        <CompareHireAll task={task} agents={agents} />
+      )}
 
       <ComparePicker initialIds={raw} />
 
