@@ -21,16 +21,20 @@ function check(name: string, ok: boolean, detail?: string) {
 
 function main() {
   const rebal = featuredSlotsForJob("rebalancing", JOB_CHIPS[0].task);
-  check("rebalance has a featured slot", rebal.length === 1, String(rebal.length));
+  check("rebalance has featured slots", rebal.length >= 1, String(rebal.length));
   check("featured is labeled not organic", rebal[0]?.organic === false);
   check("featured paidRank is false", rebal[0]?.paidRank === false);
   check(
-    "featured is the partner listing",
+    "featured lead is the LP partner listing",
     rebal[0]?.slug === FEATURED_THIRD_PARTY.slug,
+  );
+  check(
+    "rebalance also pins Brain pricer",
+    rebal.some((s) => s.slug === "brain-rebalance-pricer"),
   );
 
   const grid = featuredSlotsForJob("grid-trading");
-  check("grid job has a labeled featured pin", grid.length === 1, String(grid.length));
+  check("grid job has a labeled featured pin", grid.length >= 1, String(grid.length));
   check(
     "grid featured is Brain grid planner",
     grid[0]?.slug === "brain-grid-planner",
@@ -38,9 +42,12 @@ function main() {
   );
   const yieldSlot = featuredSlotsForJob("yield-optimisation");
   check(
-    "yield featured is Brain Venus yield",
-    yieldSlot[0]?.slug === "brain-venus-yield",
-    yieldSlot[0]?.slug,
+    "yield featured includes Brain Venus yield",
+    yieldSlot.some((s) => s.slug === "brain-venus-yield"),
+  );
+  check(
+    "yield featured includes Brain PCS fee tier",
+    yieldSlot.some((s) => s.slug === "brain-pcs-fee-tier"),
   );
   const hfSlot = featuredSlotsForJob("health-factor");
   check(

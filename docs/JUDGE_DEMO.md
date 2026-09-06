@@ -32,4 +32,4 @@ Public entry: **`/judge`** (footer).
 |-----------|------|
 | Functionality | `/` → hire → plan without dead ends |
 | Data quality | Trust passport, live slot0/Venus, hashed receipts from today |
-| Diversity | `/categories` + 4 genesis agents + 4 pinned outsiders (one A2A per job) |
+| Diversity | `/categories` + 4 genesis agents + 6 pinned outsiders (A2A we can complete) |

@@ -31,6 +31,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/agents/56/302258",
     "/agents/56/304493",
     "/agents/56/302257",
+    "/agents/56/304494",
+    "/agents/56/310460",
   ].map((p) => ({
     url: `${base}${p || "/"}`,
     lastModified: new Date(),

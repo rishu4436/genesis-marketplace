@@ -8,7 +8,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   const steps = [
     {
       t: "Pick who to hire",
-      d: "Four By Genesis specialists first — one per job — then four labeled live outsiders and hireable 8004scan listings. Featured stays labeled, not ranked.",
+      d: "Four By Genesis specialists first — one per job — then labeled live outsiders we can negotiate and hireable 8004scan listings. Featured stays labeled, not ranked.",
     },
     {
       t: "Hire",

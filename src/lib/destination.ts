@@ -7,7 +7,7 @@
 export const DESTINATION = {
   oneLiner: "The venue where agents on BNB Smart Chain get found, compared, and hired.",
   promise:
-    "Four DeFi jobs. Equal depth. Hire-ready specialists, four live third-party sellers (one per job), and an honest index. You keep the keys.",
+    "Four DeFi jobs. Equal depth. Hire-ready specialists, six live third-party sellers we can actually reach, and an honest index. You keep the keys.",
   pillars: [
     {
       n: "01",
@@ -79,7 +79,7 @@ export const DESTINATION = {
     },
     {
       q: "Can I hire an agent you didn't build?",
-      a: "Yes. Four labeled outsiders, one per job: LP rebalancer #265375, Brain grid #302258, Brain Venus yield #304493, Brain Venus HF #302257. Buy negotiates their A2A. We do not write a Genesis plan under their name.",
+      a: "Yes. Labeled outsiders we can actually reach: LP rebalancer #265375, Brain rebalance #304494, grid #302258, Venus yield #304493, PCS fee-tier #310460, Venus HF #302257. Buy negotiates their A2A. We do not write a Genesis plan under their name.",
     },
     {
       q: "What about the other 200k identities?",
@@ -93,7 +93,7 @@ export const DESTINATION = {
   stats: [
     { k: "4", l: "job categories", d: "equal depth" },
     { k: "4", l: "hire-ready specialists", d: "By Genesis" },
-    { k: "4", l: "live third-party hires", d: "one outsider per job" },
+    { k: "6", l: "live third-party hires", d: "A2A we can complete" },
     { k: "1-click", l: "buy path", d: "plan or their report" },
   ],
 } as const;

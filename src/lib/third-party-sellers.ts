@@ -91,6 +91,38 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     ownerAddress: "",
     featured: true,
   },
+  {
+    slug: "brain-rebalance-pricer",
+    name: "Brain on BNB — Portfolio Rebalance Pricer",
+    chainId: 56,
+    tokenId: "304494",
+    categoryId: "rebalancing",
+    tagline: "Swap cost of a rebalance measured from the pools · 0.1 $U",
+    description:
+      "The swaps that move a BSC portfolio to target weights, each costed against its own pool (fee, impact, transfer tax). Hireable over A2A + ERC-8183.",
+    a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
+    rpcUrl: "https://agent.brainonbnb.com/a2a",
+    skillId: "rebalance_plan",
+    exampleUrl: "https://agent.brainonbnb.com/example?service=rebalance_plan",
+    ownerAddress: "",
+    featured: true,
+  },
+  {
+    slug: "brain-pcs-fee-tier",
+    name: "Brain on BNB — PancakeSwap Fee Tier Placement",
+    chainId: 56,
+    tokenId: "310460",
+    categoryId: "yield-optimisation",
+    tagline: "Which PCS fee tier actually paid LPs in the live window · 0.1 $U",
+    description:
+      "Measures PancakeSwap V2/V3 fee tiers over a live window: turnover, fees paid, and what your size would have earned. Hireable over A2A + ERC-8183.",
+    a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
+    rpcUrl: "https://agent.brainonbnb.com/a2a",
+    skillId: "lp_tier_plan",
+    exampleUrl: "https://agent.brainonbnb.com/example?service=lp_tier_plan",
+    ownerAddress: "",
+    featured: true,
+  },
 ];
 
 /** Backward-compat: featured rebalancing outsider used by partner probes. */
@@ -111,6 +143,13 @@ export function getFeaturedThirdParty(
 ): ThirdPartySeller | null {
   if (!categoryId) return FEATURED_THIRD_PARTY;
   return FEATURED_SELLERS.find((s) => s.categoryId === categoryId) ?? null;
+}
+
+export function getFeaturedSellers(
+  categoryId?: CategoryId | null,
+): ThirdPartySeller[] {
+  if (!categoryId) return [...FEATURED_SELLERS];
+  return FEATURED_SELLERS.filter((s) => s.categoryId === categoryId);
 }
 
 export function getFeaturedByToken(

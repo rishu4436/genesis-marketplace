@@ -9,7 +9,7 @@ import { rankScore } from "./agent-rank";
 import { compareByScore } from "./agent-score";
 import { filterHireableCatalog } from "./catalog-quality";
 import { isHireableListing, splitHireable } from "./hire-class";
-import { featuredAsAgent, getFeaturedThirdParty } from "./third-party-sellers";
+import { featuredAsAgent, getFeaturedSellers } from "./third-party-sellers";
 import type { Agent } from "./types";
 
 function textMatch(agent: Agent, keywords: string[]): number {
@@ -122,9 +122,9 @@ export async function getAgentsForCategory(
     .filter((a) => textMatch(a, cat.keywords) === 0)
     .sort(compareByScore);
   let ranked = dedupeAgents([...withHits, ...without]);
-  const featured = getFeaturedThirdParty(categoryId);
-  if (featured) {
-    ranked = dedupeAgents([featuredAsAgent(featured), ...ranked]);
+  const featured = getFeaturedSellers(categoryId).map((s) => featuredAsAgent(s));
+  if (featured.length) {
+    ranked = dedupeAgents([...featured, ...ranked]);
   }
 
   const totalMatched = ranked.length;

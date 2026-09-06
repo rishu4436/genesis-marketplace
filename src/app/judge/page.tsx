@@ -93,6 +93,20 @@ export default async function JudgePage() {
             className="text-amber-300 hover:underline"
           >
             Brain HF #302257
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/304494?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Brain rebalance #304494
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/310460?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Brain PCS tier #310460
           </Link>{" "}
           — not By Genesis
         </li>
@@ -206,8 +220,8 @@ export default async function JudgePage() {
           <Link href="/categories" className="text-amber-300">
             four equal shelves
           </Link>{" "}
-          + specialists + pinned outsiders (#265375 LP, #302258 grid, #304493
-          yield, #302257 health).
+          + specialists + pinned outsiders (#265375 LP, #304494 rebalance,
+          #302258 grid, #304493 yield, #310460 PCS tier, #302257 health).
         </li>
         <li>
           <span className="font-semibold text-white">TermiX</span> —{" "}
