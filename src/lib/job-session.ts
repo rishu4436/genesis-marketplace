@@ -88,7 +88,7 @@ export function planSessionPolicy(input: {
     output: "structured-plan",
     venues: mandate.venues,
     hosts: [...PLAN_HOST_ALLOWLIST],
-    maxCalls: input.maxCalls ?? 8,
+    maxCalls: input.maxCalls ?? 20,
     timeoutMs: input.timeoutMs ?? 25_000,
     expiresAt: new Date(Date.now() + ttl).toISOString(),
     escrowRequired: false,
