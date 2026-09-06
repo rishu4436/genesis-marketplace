@@ -128,8 +128,11 @@ function main() {
   );
   check(
     "siteUrl never emits stale alias",
-    siteUrl().includes("genesis-marketplace-one") ||
-      siteUrl().includes("localhost"),
+    siteUrl() === PRODUCTION_SITE_URL || siteUrl().includes("localhost"),
+  );
+  check(
+    "siteUrl ignores ephemeral Vercel hosts",
+    !siteUrl().includes("-rishu4436s-projects.vercel.app"),
   );
   check(
     "toly.me vanity is dropped",
