@@ -30,16 +30,16 @@ function check(name: string, ok: boolean, detail?: string) {
 
 async function main() {
   check("escrow is not required", ESCROW_STANCE.required === false);
-  check("escrow is honestly blocked", ESCROW_STANCE.available === false);
+  check("escrow is available on mainnet", ESCROW_STANCE.available === true);
   check(
-    "escrow reason is PolicyNotWhitelisted",
-    ESCROW_STANCE.reason === "PolicyNotWhitelisted",
+    "escrow reason is BscMainnet",
+    ESCROW_STANCE.reason === "BscMainnet",
   );
 
   const session = grantPlanSession({
     jobId: "job_test_iso",
     chainId: 56,
-    tokenId: "1773",
+    tokenId: "genesis:range-keeper",
     genesisSlug: "range-keeper",
     categoryId: "rebalancing",
   });
@@ -88,7 +88,7 @@ async function main() {
   const tight = grantPlanSession({
     jobId: "job_test_calls",
     chainId: 56,
-    tokenId: "1773",
+    tokenId: "genesis:range-keeper",
     genesisSlug: "range-keeper",
     categoryId: "rebalancing",
   });
@@ -107,7 +107,7 @@ async function main() {
   const spendy = grantPlanSession({
     jobId: "job_test_spend",
     chainId: 56,
-    tokenId: "1773",
+    tokenId: "genesis:range-keeper",
     categoryId: "rebalancing",
   });
   (spendy.policy as { spend: string }).spend = "1";

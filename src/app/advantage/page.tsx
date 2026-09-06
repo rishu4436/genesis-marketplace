@@ -20,7 +20,7 @@ export default function AdvantagePage() {
         Agent Advantage Report
       </h1>
       <p className="lead mt-4 max-w-2xl">
-        Three concrete jobs. Same brief, two ways. Trading is weighted 1.2×.
+        Four concrete jobs — one per official category. Same brief, two ways. Trading is weighted 1.2×.
         Security (liquidation) is weighted 1.4×. Quality is what the receipt
         contains versus what DIY actually missed — not a vibe score.
       </p>

@@ -2,8 +2,8 @@
  * On-chain ERC-8183 buy / status / fetch / settle via `bag` CLI.
  * Buyer wallet = studio project under BUYER_PROJECT (default RangeKeeper).
  *
- * Requires funded buyer wallet: tBNB (for ERC-20 approve) + U (payment token).
- * Many commerce writes are MegaFuel-sponsored on bsc-testnet.
+ * Requires funded buyer wallet: BNB (for ERC-20 approve) + mainnet payment token.
+ * Many commerce writes are MegaFuel-sponsored. Default network is bsc-mainnet.
  */
 
 import { spawn } from "child_process";
@@ -129,7 +129,7 @@ export async function onchainBuy(opts: {
     "--deadline-min",
     String(opts.deadlineMin ?? 60),
     "--network",
-    opts.network || "bsc-testnet",
+    opts.network || "bsc-mainnet",
   ];
   const { code, stdout, stderr } = await runBag(args, cwd);
   const raw = `${stdout}\n${stderr}`;
@@ -179,7 +179,7 @@ export async function onchainBuyByAgentId(opts: {
     "--deadline-min",
     String(opts.deadlineMin ?? 60),
     "--network",
-    opts.network || "bsc-testnet",
+    opts.network || "bsc-mainnet",
   ];
   if (opts.budgetU != null) {
     args.push("--budget-u", String(opts.budgetU));
@@ -212,7 +212,7 @@ export async function onchainBuyByAgentId(opts: {
 
 export async function onchainStatus(
   jobId: number,
-  network = "bsc-testnet",
+  network = "bsc-mainnet",
 ): Promise<OnchainStatus> {
   const cwd = buyerProjectRoot();
   const { code, stdout, stderr } = await runBag(
@@ -229,7 +229,7 @@ export async function onchainStatus(
 
 export async function onchainFetch(
   jobId: number,
-  network = "bsc-testnet",
+  network = "bsc-mainnet",
 ): Promise<OnchainStatus> {
   const cwd = buyerProjectRoot();
   const { code, stdout, stderr } = await runBag(
@@ -247,7 +247,7 @@ export async function onchainFetch(
 export async function onchainSettle(
   jobId: number,
   action: "approve" | "dispute" | "reject" = "approve",
-  network = "bsc-testnet",
+  network = "bsc-mainnet",
 ): Promise<OnchainStatus> {
   const cwd = buyerProjectRoot();
   const { code, stdout, stderr } = await runBag(
@@ -339,23 +339,15 @@ export function fundingAddresses(): {
       getPin("range-keeper").walletAddress ||
       "0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133",
     sellers,
-    uToken: "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565",
+    uToken: "0xcE24439F2D9C6a2289F741120FE202248B666666",
     faucets: [
       {
-        name: "BNB Chain testnet faucet (tBNB)",
-        url: "https://www.bnbchain.org/en/testnet-faucet",
+        name: "Send BNB on BNB Smart Chain (chain 56) — not Ethereum, not testnet",
+        url: "https://bscscan.com/",
       },
       {
-        name: "Chainstack BSC testnet faucet",
-        url: "https://faucet.chainstack.com/bnb-testnet-faucet",
-      },
-      {
-        name: "$U testnet faucet (United Stables)",
-        url: "https://united-coin-u.github.io/u-faucet/",
-      },
-      {
-        name: "QuickNode BSC faucet",
-        url: "https://faucet.quicknode.com/binance-smart-chain/bnb-testnet",
+        name: "Mainnet payment token U (commerce.paymentToken)",
+        url: "https://bscscan.com/token/0xcE24439F2D9C6a2289F741120FE202248B666666",
       },
     ],
   };

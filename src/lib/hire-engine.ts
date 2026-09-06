@@ -26,6 +26,7 @@ import {
   runThirdPartyHire,
 } from "./third-party-hire";
 import { getAgentSafe } from "./scan";
+import { BSC_MAINNET_CHAIN_ID, isTestnetIdentity } from "./pins";
 import type { JobReceipt, JobSpec } from "./job-spec";
 import type { JobDecision } from "./job-decision";
 import {
@@ -200,8 +201,8 @@ export function buildQuote(
     protocol: "ERC-8183-sim",
     expiresAt: expires,
     notes: g
-      ? `Soft-hire quote for ${g.name} (no payment). Live negotiate used when seller is reachable.`
-      : `Soft-hire quote for ${intent.agentName || "agent"} (no payment).`,
+      ? `Soft-hire quote for ${g.name} — no payment, no on-chain lock (ERC-8183-sim).`
+      : `Soft-hire quote for ${intent.agentName || "agent"} — no payment, no on-chain lock (ERC-8183-sim).`,
     live: false,
   };
 }
@@ -278,6 +279,12 @@ export async function createJobWithLiveNegotiate(input: {
     ? getGenesisAgent(input.genesisSlug)
     : undefined;
   const serviceUrl = g?.serviceUrl;
+  const chainId = g ? BSC_MAINNET_CHAIN_ID : Number(input.chainId || BSC_MAINNET_CHAIN_ID);
+  const tokenId = g
+    ? g.tokenId && !isTestnetIdentity(chainId, g.tokenId)
+      ? g.tokenId
+      : `genesis:${g.slug}`
+    : String(input.tokenId);
 
   const tier: CommerceTier = input.tier || "full";
   const id = jobId();
@@ -288,8 +295,8 @@ export async function createJobWithLiveNegotiate(input: {
     createdAt,
     updatedAt: createdAt,
     status: "negotiating",
-    chainId: input.chainId,
-    tokenId: input.tokenId,
+    chainId,
+    tokenId,
     agentName: input.agentName,
     genesisSlug: input.genesisSlug,
     categoryId: input.categoryId,
@@ -420,18 +427,18 @@ export async function createJobWithLiveNegotiate(input: {
             ...pushTimeline(
               job,
               "quoted",
-              `Live quote · $${priceUsd} · ${g?.name || input.agentName}`,
+              `Soft-hire quote · $${priceUsd} · ${g?.name || input.agentName} · ERC-8183-sim`,
             ),
             quote: {
               priceUsd,
-              currency: a2a.currency || "U",
+              currency: a2a.currency || "USD-sim",
               etaMinutes: g?.etaMinutes ?? 2,
-              protocol: "ERC-8183-live",
+              protocol: "ERC-8183-sim",
               expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-              notes: `Signed quote from ${g?.name || input.genesisSlug}`,
+              notes: `Soft-hire quote from ${g?.name || input.genesisSlug} — no on-chain lock`,
               providerSig: a2a.provider_sig,
               rawPrice: a2a.price != null ? String(a2a.price) : undefined,
-              live: true,
+              live: false,
             },
           };
           if (input.autoFulfill !== false) {
@@ -485,18 +492,23 @@ export async function createJobWithLiveNegotiate(input: {
           ...pushTimeline(
             job,
             "quoted",
-            `Live negotiate OK · $${priceUsd} · ${isGenesisApex ? "Genesis A2A" : "external service"}`,
+            `Negotiate OK · $${priceUsd} · ${isGenesisApex ? "Genesis APEX · ERC-8183-sim" : "external service · ERC-8183-sim"}`,
           ),
           quote: {
             priceUsd,
-            currency: (data.currency as string) || "USD",
+            currency: isGenesisApex
+              ? "USD-sim"
+              : (data.currency as string) || "USD-sim",
             etaMinutes: eta as number,
-            protocol: "ERC-8183-live",
+            protocol: "ERC-8183-sim",
             expiresAt: expires,
-            notes: (data.notes as string) || "Live A2A quote",
+            notes: isGenesisApex
+              ? `Soft-hire quote for ${g?.name || "specialist"} — no payment, no on-chain lock.`
+              : (data.notes as string) ||
+                "Soft-hire A2A quote — no on-chain lock",
             providerSig: data.provider_sig as string | undefined,
             rawPrice: data.price != null ? String(data.price) : undefined,
-            live: true,
+            live: false,
           },
         };
 
@@ -573,11 +585,11 @@ async function fulfillCatalogHire(
         priceUsd,
         currency: "USD",
         etaMinutes: 1,
-        protocol: result.quote.accepted ? "ERC-8183-live" : "ERC-8183",
+        protocol: "ERC-8183-sim",
         expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         notes: result.quote.accepted
-          ? `Signed quote from ${seller.name}`
-          : `Live operator report from ${seller.name}`,
+          ? `Signed quote from ${seller.name} — no Genesis on-chain lock`
+          : `Operator report from ${seller.name} — no on-chain lock`,
         providerSig: result.quote.providerSig,
         live: result.live,
       } as HireQuote,
@@ -745,7 +757,7 @@ export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
     deliverable.sections = [
       {
         heading: "On-chain escrow path",
-        body: "Escrow is optional and currently blocked (PolicyNotWhitelisted). Soft deliverable is available now.",
+        body: "Escrow is optional on BSC mainnet ERC-8183. Soft deliverable is available now so you are never blocked.",
       },
       ...deliverable.sections,
     ];

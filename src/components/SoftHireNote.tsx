@@ -12,8 +12,8 @@ export function SoftHireNote({
     return (
       <p className={`text-[12px] leading-relaxed text-white/40 ${className}`}>
         {tone === "ops"
-          ? "Soft hire · plan only · you keep the keys · escrow blocked (PolicyNotWhitelisted)"
-          : "Plan only · you keep the keys · the agent does not move funds"}
+          ? "Soft hire · plan only · you keep the keys · optional mainnet escrow on /fund"
+          : "Plan only. You keep the keys. Soft hire is free — the agent does not move funds."}
       </p>
     );
   }
@@ -25,13 +25,14 @@ export function SoftHireNote({
       {tone === "ops" ? (
         <>
           You get a structured plan. The agent does not move funds or hold
-          keys. On-chain escrow is blocked (testnet PolicyNotWhitelisted) — we
-          do not fake a lock. Hire is not an Altana session.
+          keys. Optional on-chain escrow is BSC mainnet ERC-8183. Hire is not
+          an Altana session.
         </>
       ) : (
         <>
-          Plan only. You keep the keys. The agent does not move funds or hold
-          them. Create an account so the plan follows you.
+          Plan only. You keep the keys. Soft hire is free — the agent does
+          not move funds. Optional on-chain lock is BSC mainnet ERC-8183.
+          Create an account so the plan follows you.
         </>
       )}
     </div>

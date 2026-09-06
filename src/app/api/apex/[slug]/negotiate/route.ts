@@ -108,7 +108,7 @@ export async function POST(req: Request, ctx: Ctx) {
     chain_id: agent.chainId ?? 56,
     provider: agent.name,
     provider_slug: agent.slug,
-    protocol: "ERC-8183",
+    protocol: "ERC-8183-sim",
     quote_expires_at: expires,
     eta_minutes: quote.etaMinutes,
     // Demo sig placeholder — real Studio agents return EIP-191 provider_sig

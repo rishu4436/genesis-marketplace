@@ -22,8 +22,10 @@ export default async function JudgePage() {
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
         Studio trial expired. Hire runs on{" "}
         <span className="text-white/75">Genesis APEX</span> (Ready, not
-        Studio-live). Escrow is blocked (PolicyNotWhitelisted). Hire is
-        plan-only; Altana is a post-hire grant on the same receipt.
+        Studio-live). Specialists + optional ERC-8183 escrow are on{" "}
+        <span className="text-white/75">BSC mainnet</span>. Hire is
+        plan-only unless you lock escrow; Altana is a post-hire grant on the
+        same receipt.
       </p>
       <div className="mt-6">
         <PartnerStatusStrip compact />
@@ -85,7 +87,8 @@ export default async function JudgePage() {
             Altana · live Keystore grant
           </p>
           <p className="mt-1 text-sm text-white">
-            {proof.agentName} session on BSC testnet
+            {proof.agentName} historical testnet grant — marketplace hire is BSC
+            mainnet
           </p>
           <p className="mt-1 font-mono text-[10px] text-white/45 break-all">
             wallet {proof.walletAddress}
@@ -136,8 +139,8 @@ export default async function JudgePage() {
           >
             job_msyi1iv8
           </Link>
-          , PCS slot0 + Venus rate on a fresh hire, Genesis A2A Live (not
-          the expired Studio trial).
+          , PCS slot0 + Venus rate on a fresh hire, Genesis APEX Ready (not
+          Studio-live).
         </li>
         <li>
           <span className="font-semibold text-white">Diversity</span> —{" "}
@@ -151,7 +154,7 @@ export default async function JudgePage() {
           <Link href="/advantage" className="text-amber-300">
             /advantage
           </Link>{" "}
-          three tasks, trading ×1.2, security ×1.4, DIY misses vs receipt.
+          four tasks (one per job), trading ×1.2, security ×1.4, DIY misses vs receipt.
           Linked from the job receipt.
         </li>
         <li>

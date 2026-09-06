@@ -8,6 +8,7 @@ import {
 import { rankScore } from "./agent-rank";
 import { compareByScore } from "./agent-score";
 import { filterHireableCatalog } from "./catalog-quality";
+import { isHireableListing, splitHireable } from "./hire-class";
 import { featuredAsAgent, getFeaturedThirdParty } from "./third-party-sellers";
 import type { Agent } from "./types";
 
@@ -22,6 +23,9 @@ function textMatch(agent: Agent, keywords: string[]): number {
 
 export type CategoryAgentsResult = {
   agents: Agent[];
+  hireable: Agent[];
+  identity: Agent[];
+  identityTotal: number;
   totalMatched: number;
   page: number;
   pageSize: number;
@@ -48,6 +52,9 @@ export async function getAgentsForCategory(
   if (!cat) {
     return {
       agents: [],
+      hireable: [],
+      identity: [],
+      identityTotal: 0,
       totalMatched: 0,
       page,
       pageSize,
@@ -121,9 +128,11 @@ export async function getAgentsForCategory(
   }
 
   const totalMatched = ranked.length;
+  const { hireable, identity: identityAll } = splitHireable(ranked);
   const start = (page - 1) * pageSize;
-  const agents = ranked.slice(start, start + pageSize);
-  const hasMore = start + pageSize < totalMatched;
+  const identity = identityAll.slice(start, start + pageSize);
+  const hasMore = start + pageSize < identityAll.length;
+  const agents = hireable.slice(0, pageSize);
 
   const source =
     withHits.length >= 4
@@ -136,12 +145,18 @@ export async function getAgentsForCategory(
 
   return {
     agents,
+    hireable,
+    identity,
+    identityTotal: identityAll.length,
     totalMatched,
     page,
     pageSize,
     hasMore,
     source,
-    error: agents.length ? null : errors[0] || "No agents found",
+    error:
+      hireable.length || identity.length
+        ? null
+        : errors[0] || "No agents found",
   };
 }
 
@@ -187,13 +202,15 @@ export async function getRelatedAgents(
 
   const pool = filterHireableCatalog(
     dedupeAgents([...(search.data || []), ...(list.data || [])]),
-  ).filter(
-    (a) =>
-      !(
-        a.chain_id === agent.chain_id &&
-        String(a.token_id) === String(agent.token_id)
-      ),
-  );
+  )
+    .filter(isHireableListing)
+    .filter(
+      (a) =>
+        !(
+          a.chain_id === agent.chain_id &&
+          String(a.token_id) === String(agent.token_id)
+        ),
+    );
 
   return pool.sort(compareByScore).slice(0, limit);
 }

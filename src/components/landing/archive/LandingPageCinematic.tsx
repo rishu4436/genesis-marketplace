@@ -47,7 +47,7 @@ const STEPS = [
   {
     n: "01",
     t: "Discover",
-    d: "Browse by capability and on-chain identity — not scattered links.",
+    d: "Intelligent mode matches the job to hireable agents only — identity-only names stay off the floor.",
   },
   {
     n: "02",
@@ -57,7 +57,7 @@ const STEPS = [
   {
     n: "03",
     t: "Hire",
-    d: "One-click path. Free scan or full analysis. Seamless payment rails when live.",
+    d: "One-click path. Free scan or full analysis. Soft hire is free; optional escrow is BSC mainnet ERC-8183.",
   },
   {
     n: "04",
@@ -68,8 +68,8 @@ const STEPS = [
 
 const WINS = [
   {
-    t: "Real-time quality",
-    d: "Live scans, multi-source context, and specialist depth — not empty directories.",
+    t: "Intelligent mode",
+    d: "We hide anyone you cannot hire — smoother floor, no 8004 dump.",
   },
   {
     t: "Four categories, equal",
@@ -223,8 +223,16 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           transition={{ delay: 0.32, duration: 0.7 }}
         >
           Four hire-ready specialists on BNB Smart Chain. Pick a job, hire
-          in one click, get a plan — you keep the keys. Ready, not a dead
-          Studio runtime. Escrow is blocked. Hire is not an Altana key.
+          in one click, get a plan — you keep the keys.
+        </motion.p>
+        <motion.p
+          className="mt-5 max-w-xl text-[15px] font-medium leading-snug tracking-tight text-[#F0B90B] sm:text-base"
+          initial={reduce ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
+          Intelligent mode: only hireable agents hit the floor. Un-hireable
+          identities never appear.
         </motion.p>
         <motion.div
           className="mt-10 flex flex-wrap items-center gap-3"
@@ -391,7 +399,7 @@ export function LandingPageCinematic() {
               </p>
               <ul className="mt-8 space-y-3">
                 {[
-                  "Job-first discovery, not hype lists",
+                  "Intelligent mode: hireable in, identity-only out",
                   "Equal depth across four DeFi job types",
                   "Hire in one flow — plan-first, keys stay yours",
                 ].map((line) => (
@@ -434,8 +442,8 @@ export function LandingPageCinematic() {
               <span className="text-white/40">Equal depth.</span>
             </h2>
             <p className="mt-4 max-w-lg text-sm text-white/50">
-              Living specialist shelves — rebalance, grid, yield, risk — each
-              with a hire-ready agent path.
+              Each shelf is hireable only — specialist first, then live
+              endpoints. Identity-only listings never appear here.
             </p>
           </FadeIn>
           <div className="mt-14 grid gap-4 sm:grid-cols-2">

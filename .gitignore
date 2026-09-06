@@ -55,3 +55,11 @@ studio/**/app/agent/.venv/
 studio/**/wheels/
 studio/**/app/agent/wheels/
 
+# AgentCore CDK (nested gitignores should catch these; keep as belt-and-suspenders)
+studio/**/agentcore/cdk/node_modules/
+studio/**/agentcore/cdk/cdk.out/
+studio/**/agentcore/cdk/dist/
+studio/**/agentcore/cdk/.cdk.staging/
+studio/deploy-results.json
+*.windows-path-patch
+

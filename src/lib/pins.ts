@@ -6,6 +6,11 @@
 
 import pinsJson from "../../config/pins.json";
 
+/** Specialists live on BSC mainnet. Testnet leftovers must never display as current identity. */
+export const BSC_MAINNET_CHAIN_ID = 56;
+const BSC_TESTNET_CHAIN_ID = 97;
+const TESTNET_TOKEN_IDS = new Set(["1773", "1774", "1775", "1841"]);
+
 export type AgentPin = {
   tokenId?: string;
   chainId?: number;
@@ -27,6 +32,30 @@ export type PinsFile = {
 function loadPinsFile(): PinsFile {
   const parsed = pinsJson as PinsFile;
   return { ...parsed, agents: parsed.agents || {} };
+}
+
+export function isTestnetIdentity(
+  chainId?: number | null,
+  tokenId?: string | null,
+): boolean {
+  if (Number(chainId) === BSC_TESTNET_CHAIN_ID) return true;
+  if (tokenId && TESTNET_TOKEN_IDS.has(String(tokenId))) return true;
+  return false;
+}
+
+/** Drop chain 97 / Studio trial token IDs even if env still pins them. */
+export function sanitizePin(pin: AgentPin): AgentPin {
+  const next: AgentPin = {
+    ...pin,
+    chainId: pin.chainId || BSC_MAINNET_CHAIN_ID,
+  };
+  if (isTestnetIdentity(next.chainId, next.tokenId) || !next.tokenId) {
+    next.chainId = BSC_MAINNET_CHAIN_ID;
+    next.tokenId = undefined;
+  } else {
+    next.chainId = BSC_MAINNET_CHAIN_ID;
+  }
+  return next;
 }
 
 function envPin(slug: string): AgentPin {
@@ -55,12 +84,12 @@ export function getPin(slug: string): AgentPin {
   const file = loadPinsFile();
   const fromFile = file.agents[slug] || {};
   const fromEnv = envPin(slug);
-  return {
+  return sanitizePin({
     ...fromFile,
     ...Object.fromEntries(
       Object.entries(fromEnv).filter(([, v]) => v !== undefined && v !== ""),
     ),
-  };
+  });
 }
 
 export function getPinsFile(): PinsFile {

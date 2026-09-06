@@ -10,6 +10,7 @@ import { BRAND } from "@/lib/brand";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { CategoryDepthPanel } from "@/components/CategoryDepthPanel";
 import { JobIntentSearch } from "@/components/JobIntentSearch";
+import { scoreAllSpecialists } from "@/lib/receipt-score";
 
 export const revalidate = 90;
 
@@ -44,8 +45,14 @@ export default async function CategoryDetailPage({
   const pageSize = 24;
 
   const genesis = getGenesisAgentsByCategory(id as CategoryId);
-  const { agents, source, error, totalMatched, hasMore } =
-    await getAgentsForCategory(id as CategoryId, { page, pageSize });
+  const scores = await scoreAllSpecialists();
+  const fitBySlug = Object.fromEntries(
+    scores.map((s) => [s.slug, s.composite]),
+  );
+  const { hireable, error } = await getAgentsForCategory(id as CategoryId, {
+    page,
+    pageSize,
+  });
 
   const browseAllHref = `/browse?q=${encodeURIComponent(cat.searchQueries[0])}`;
   const browseOpenHref = "/browse";
@@ -84,7 +91,7 @@ export default async function CategoryDetailPage({
             href={browseOpenHref}
             className="text-xs font-semibold text-amber-300 hover:text-amber-200"
           >
-            Browse all BSC agents →
+            Browse hireable →
           </Link>
         </div>
       </div>
@@ -110,8 +117,7 @@ export default async function CategoryDetailPage({
             ERC-8004 #265375).
           </li>
           <li>
-            Indexed identity only — Buy will say so. We will not write a
-            Genesis plan under their name.
+            Identity-only 8004scan names are filtered out of this shelf.
           </li>
         </ul>
       </div>
@@ -120,19 +126,12 @@ export default async function CategoryDetailPage({
       <div className="panel mt-8 px-4 py-3.5 sm:px-5">
         <p className="text-sm text-white/60">
           <span className="font-semibold text-white/80">
-            {totalMatched > 0
-              ? `${totalMatched}+ agents`
-              : "Agents"}{" "}
+            Intelligent mode
           </span>
-          hireable matches for this shelf from the on-chain index (8004scan /
-          BSC). Collectible and stutter listings are hidden. We show a ranked
-          page of{" "}
-          <span className="font-semibold text-white/70">{pageSize}</span> at a
-          time — the broader index is in{" "}
-          <Link href={browseOpenHref} className="text-amber-300 hover:underline">
-            Browse
-          </Link>
-          .
+          {" — "}
+          {hireable.length} hireable listing
+          {hireable.length === 1 ? "" : "s"} on this job. Identity-only names
+          are hidden.
         </p>
       </div>
 
@@ -146,32 +145,23 @@ export default async function CategoryDetailPage({
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {genesis.map((a) => (
-            <GenesisAgentCard key={a.slug} agent={a} />
+            <GenesisAgentCard
+              key={a.slug}
+              agent={a}
+              receiptFit={fitBySlug[a.slug]}
+            />
           ))}
         </div>
       </div>
 
-      <div className="mt-12 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="card-title text-xl text-white">
-            More agents on-chain
-          </h2>
+      {hireable.length > 0 && (
+        <div className="mt-12">
+          <h2 className="card-title text-xl text-white">Hireable on this job</h2>
           <p className="body-sm mt-1">
-            Ranked for this category · page {page}
-            {totalMatched ? ` · ${totalMatched} in this shelf pool` : ""}
-            {source ? ` · ${source}` : ""}
+            Live third-party endpoints we can negotiate · {hireable.length}
           </p>
-        </div>
-        <span className="text-xs font-medium text-white/40">
-          Showing {agents.length}
-          {totalMatched ? ` of ${totalMatched}` : ""}
-        </span>
-      </div>
-
-      {agents.length > 0 ? (
-        <>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {agents.map((a) => (
+            {hireable.map((a) => (
               <AgentCard
                 key={a.id || a.agent_id}
                 agent={a}
@@ -179,44 +169,19 @@ export default async function CategoryDetailPage({
               />
             ))}
           </div>
+        </div>
+      )}
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex gap-2">
-              {page > 1 && (
-                <Link
-                  href={`/categories/${cat.id}?page=${page - 1}`}
-                  className="btn-secondary !py-2 !text-sm"
-                >
-                  ← Previous
-                </Link>
-              )}
-              {hasMore && (
-                <Link
-                  href={`/categories/${cat.id}?page=${page + 1}`}
-                  className="btn-primary !py-2 !text-sm"
-                >
-                  Next page →
-                </Link>
-              )}
-            </div>
-            <Link
-              href={browseAllHref}
-              className="text-sm font-semibold text-amber-300 hover:text-amber-200"
-            >
-              See more in full catalog →
-            </Link>
-          </div>
-        </>
-      ) : (
+      {hireable.length === 0 && (
         <div className="mt-8">
           <EmptyState
-            title="No index matches on this page"
+            title="No other live listings on this job"
             body={
               error ||
-              `No catalog matches yet. The ${BRAND.byBadge} specialist above is still hireable, or browse the full BSC index.`
+              `The ${BRAND.byBadge} specialist above is still hireable. Intelligent mode hid identity-only names.`
             }
-            actionHref={browseOpenHref}
-            actionLabel="Browse all agents"
+            actionHref="/hire"
+            actionLabel="Open hire floor"
           />
         </div>
       )}
@@ -234,9 +199,9 @@ export default async function CategoryDetailPage({
             BSC has a large ERC-8004 index; we only list hireable identities.
             Use{" "}
             <Link href="/browse" className="text-amber-300 hover:underline">
-              Browse
+              Browse hireable
             </Link>{" "}
-            for the filtered catalog.
+            for the same filter across jobs.
           </li>
           <li>
             Only some agents accept hire; {BRAND.byBadge} specialists are always

@@ -74,7 +74,10 @@ async function probeAltana(): Promise<Pick<PartnerProbe, "ok" | "mode" | "detail
     return {
       ok: true,
       mode: "proof",
-      detail: `${proof.agentName} Keystore grant on chain ${proof.chainId}`,
+      detail:
+        proof.chainId === 97
+          ? `${proof.agentName} historical testnet grant (marketplace hire is BSC mainnet)`
+          : `${proof.agentName} Keystore grant on chain ${proof.chainId}`,
       metric: `${proof.transactionHash.slice(0, 10)}…`,
     };
   }

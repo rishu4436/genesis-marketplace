@@ -1,11 +1,11 @@
-import { MarketplaceHome } from "@/components/MarketplaceHome";
+import { LandingPageCinematic } from "@/components/landing/archive/LandingPageCinematic";
 
 export const metadata = {
-  title: "Hire DeFi agents on BNB",
+  title: "The agent marketplace for the Smart Money Era",
   description:
-    "Name a job. Hire a specialist. Get a plan. You keep the keys.",
+    "Intelligent mode: only agents you can hire appear. Four specialists on BNB Smart Chain — you keep the keys.",
 };
 
 export default function HomePage() {
-  return <MarketplaceHome />;
+  return <LandingPageCinematic />;
 }

@@ -12,8 +12,13 @@ import {
   computeAxes,
 } from "@/lib/marketplace-score";
 import { catalogFilterStats } from "@/lib/catalog-quality";
-import { isGenesisListing, sortForDestination } from "@/lib/hire-class";
+import {
+  isGenesisListing,
+  isHireableListing,
+  sortForDestination,
+} from "@/lib/hire-class";
 import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
+import { CatalogModeNav } from "@/components/CatalogModeNav";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -28,6 +33,7 @@ type Props = {
     verified?: string;
     ratings?: string;
     live?: string;
+    index?: string;
     /** @deprecated use ratings=1 */
     feedback?: string;
   }>;
@@ -46,6 +52,7 @@ function buildBrowseHref(
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
   if (next.live === "1") p.set("live", "1");
+  if (next.index === "1") p.set("index", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `/browse?${s}` : "/browse";
@@ -78,14 +85,17 @@ export default async function BrowsePage({ searchParams }: Props) {
     verified: sp.verified,
     ratings: hasRatings ? "1" : undefined,
     live: sp.live === "1" ? "1" : undefined,
+    index: sp.index === "1" ? "1" : undefined,
   };
+
+  const showIndex = filters.index === "1";
 
   const pool = await fetchHireablePool({
     q: q || undefined,
     sortMode,
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
-    live: filters.live === "1",
+    live: !showIndex,
   });
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
@@ -95,10 +105,13 @@ export default async function BrowsePage({ searchParams }: Props) {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
-    live: filters.live === "1",
+    live: !showIndex,
   });
+  if (!showIndex) {
+    agents = agents.filter(isHireableListing);
+  }
   let relaxed = false;
-  if (agents.length === 0 && quality.kept.length > 0) {
+  if (showIndex && agents.length === 0 && quality.kept.length > 0) {
     agents = filterAgents(quality.kept, {});
     relaxed = agents.length > 0;
   }
@@ -146,22 +159,19 @@ export default async function BrowsePage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <div className="max-w-2xl">
-        <p className="section-label">Index</p>
-        <h1 className="display-section mt-3 text-white">Hire floor, then index</h1>
+        <p className="section-label">Browse</p>
+        <h1 className="display-section mt-3 text-white">
+          {showIndex ? "Raw identity index" : "Hireable agents"}
+        </h1>
         <p className="lead mt-3">
-          Specialists first. Live third-party next. 8004scan stars are a
-          filter, not the default rank. This page is the catalog — hire
-          starts at /hire.
+          {showIndex
+            ? "ERC-8004 names including identity-only rows. Intelligent mode is off."
+            : "Intelligent mode is on: only agents you can actually hire appear — per category, no identity dump."}
         </p>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/hire" className="btn-primary !py-2 !text-sm">
-          Hire specialists
-        </Link>
-        <Link href="/categories" className="btn-secondary !py-2 !text-sm">
-          Four jobs
-        </Link>
+      <div className="mt-6">
+        <CatalogModeNav active={showIndex ? "index" : "browse"} />
       </div>
 
       <form className="mt-8 flex flex-col gap-3 sm:flex-row" action="/browse">
@@ -217,14 +227,14 @@ export default async function BrowsePage({ searchParams }: Props) {
       )}
 
       <div className="mt-6">
-        <FilterBar filters={filters} />
+        <FilterBar filters={filters} surface="browse" />
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-white/45">
         <span>
           {pool.error && pageAgents.length === 0
             ? "—"
-            : `${q ? "Search" : "Hireable index"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+            : `${q ? "Search" : showIndex ? "Raw index" : "Hireable"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
           {relaxed && (
             <span className="ml-1 text-amber-200/70">
               · no exact filter match — showing closest listings
@@ -250,6 +260,14 @@ export default async function BrowsePage({ searchParams }: Props) {
           )}
         </span>
         <div className="flex gap-3">
+          {!showIndex && (
+            <Link
+              href="/browse?index=1"
+              className="text-white/35 hover:text-white/60"
+            >
+              Raw identity index
+            </Link>
+          )}
           <Link href="/compare" className="text-amber-300 hover:text-amber-200">
             Compare tray
           </Link>

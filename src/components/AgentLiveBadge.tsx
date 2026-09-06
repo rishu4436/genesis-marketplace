@@ -10,10 +10,12 @@ import type { AgentHealth } from "@/lib/agent-health";
 type Props = {
   slug: string;
   className?: string;
+  /** Server-rendered health so the money page never flashes Checking… */
+  initial?: AgentHealth | null;
 };
 
-export function AgentLiveBadge({ slug, className = "" }: Props) {
-  const [h, setH] = useState<AgentHealth | null>(null);
+export function AgentLiveBadge({ slug, className = "", initial = null }: Props) {
+  const [h, setH] = useState<AgentHealth | null>(initial);
 
   useEffect(() => {
     let cancelled = false;

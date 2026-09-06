@@ -50,7 +50,16 @@ function main() {
 
   for (const agent of agents) {
     const id = identityFromGenesis(agent);
-    check(`${agent.slug} has ERC-8004 token`, id.erc8004, id.tokenId || "");
+    check(
+      `${agent.slug} is BSC mainnet`,
+      id.chainId === 56,
+      String(id.chainId),
+    );
+    check(
+      `${agent.slug} is not a testnet token leftover`,
+      !id.tokenId || !["1773", "1774", "1775", "1841"].includes(id.tokenId),
+      id.tokenId || "pending",
+    );
     check(`${agent.slug} has controller`, Boolean(id.controller), id.controller || "");
     check(
       `${agent.slug} mandate forbids funds`,
@@ -131,13 +140,26 @@ function main() {
     }
   }
 
-  const live = classifyHealth(boundChecks({ platform: { ok: true, detail: "up" } }));
-  check("bound + platform = Live", live.status === "live" && live.label === "Live");
+  const studio = classifyHealth(
+    boundChecks({ platform: { ok: true, detail: "Studio card reachable" } }),
+  );
+  check(
+    "bound + Studio card = Live · Studio",
+    studio.status === "live" && studio.label === "Live · Studio",
+  );
+
+  const apex = classifyHealth(
+    boundChecks({ platform: { ok: true, detail: "up" } }),
+  );
+  check(
+    "APEX platform is Ready, not Studio Live",
+    apex.status === "local" && apex.label.includes("Ready"),
+  );
 
   const ready = classifyHealth(boundChecks());
   check(
     "bound without platform = Ready, not Live",
-    ready.status === "local" && ready.label === "Ready",
+    ready.status === "local" && ready.label.includes("Ready"),
   );
 
   const drift = classifyHealth(

@@ -1,0 +1,44 @@
+﻿{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "Gridwright",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "Gridwright"
+  },
+  "runtimes": [
+    {
+      "name": "Gridwright",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/agent/",
+      "runtimeVersion": "PYTHON_3_14",
+      "networkMode": "PUBLIC",
+      "protocol": "A2A",
+      "envVars": [
+        {
+          "name": "BNBAGENT_RUNTIME_SECRET_ID",
+          "value": "bnbagent/Gridwright/runtime"
+        },
+        {
+          "name": "STUDIO_AUDIT_LOG_PATH",
+          "value": "/tmp/.studio/audit-log.jsonl"
+        }
+      ]
+    }
+  ],
+  "memories": [],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [],
+  "payments": []
+}
+

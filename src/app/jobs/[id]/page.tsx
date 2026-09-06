@@ -101,7 +101,7 @@ export default async function JobPage({ params }: Props) {
         {job.task}
       </p>
       <p className="mt-3 text-[12px] leading-relaxed text-white/40">
-        Plan only. You keep the keys. Soft hire — escrow is not live.
+        Plan only. You keep the keys. Soft hire is free — optional on-chain lock is BSC mainnet ERC-8183.
       </p>
 
       <JobReceiptPanel job={job} />

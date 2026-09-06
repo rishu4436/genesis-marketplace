@@ -1,5 +1,5 @@
 /**
- * TermiX Agent Advantage Report — three real tasks, with vs without.
+ * TermiX Agent Advantage Report — four real tasks (one per official job), with vs without.
  * Trading + security weighted. Linked to live receipts. No invented PnL.
  */
 
@@ -156,6 +156,47 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
         "Baseline → shock HF, soft/hard alerts, staged repay. Security-weighted. Open the receipt.",
     },
   },
+  {
+    id: "usdt-yield",
+    title: "Park USDT on BSC — no venue split",
+    category: "Yield optimisation",
+    stakes: "trading",
+    weight: 1.2,
+    taskBrief:
+      "Park 1800 USDT on BSC. Rank liquid lending vs a PCS farm sleeve under a $2.50 gas budget. 36h recheck. No deposits — plan only.",
+    diyMissed: [
+      "Copied a farm APY screenshot with no risk band",
+      "Ignored Venus supply rate on-chain vs advertised farm APR",
+      "No gas budget — two rotations ate the week's yield",
+      "No dry-powder sleeve — 100% in one venue",
+    ],
+    agentProof: [
+      "Risk-banded venue ranking, not a single APY",
+      "On-chain Venus rate when RPC answers",
+      "Split + dry powder + recheck window",
+      "Hashed receipt you can show a third party",
+    ],
+    without: {
+      timeMin: 40,
+      costUsd: 0,
+      quality: 2.0,
+      method: "Farm UI + a tweet thread named 'best APR BSC'",
+      outputSummary:
+        "Chased the loudest farm APR. DIY either overpays gas or sits in a venue that compressed overnight.",
+    },
+    withAgent: {
+      agentName: "YieldRouter",
+      genesisSlug: "yield-router",
+      jobId: "job_msyi1ltz_hocg2l",
+      timeMin: 3,
+      costUsd: 7,
+      quality: 4.2,
+      method: "Genesis hire · YieldRouter full analysis · receipt below",
+      outputTitle: "Yield route brief · USDT on BSC",
+      outputSummary:
+        "Ranked venues, suggested split, gas cap. You still deposit. The plan is the product.",
+    },
+  },
 ];
 
 export function advantageHrefForHire(opts: {
@@ -172,6 +213,9 @@ export function advantageHrefForHire(opts: {
   }
   if (slug === "health-sentinel" || cat === "health-factor") {
     return "/advantage#hf-shock";
+  }
+  if (slug === "yield-router" || cat === "yield-optimisation") {
+    return "/advantage#usdt-yield";
   }
   return "/advantage";
 }

@@ -33,10 +33,39 @@ export function listingHref(agent: Agent): string {
   return `/agents/${agent.chain_id}/${agent.token_id}`;
 }
 
+/** Directory leaks — names that must never look hireable. */
+const JUNK_NAME =
+  /^(test\.agent|test agent|test[._-]agent|demo\.agent|foo\.agent)$/i;
+
+const GENERIC_SLEEP_BOT =
+  /while you sleep|personalized yield strategies|automated crypto trading bot with dca/i;
+const GENERIC_BOT_NAME =
+  /^(defibot|tradepilot|defimatrix)(\.agent)?$/i;
+
+export function isDirectoryLeak(agent: Agent): boolean {
+  const name = (agent.name || "").trim();
+  const desc = (agent.description || "").trim();
+  if (!name) return true;
+  if (JUNK_NAME.test(name)) return true;
+  if (/^test\./i.test(name)) return true;
+  if (/test\.agent/i.test(name)) return true;
+  if (GENERIC_BOT_NAME.test(name)) return true;
+  if (GENERIC_SLEEP_BOT.test(name) || GENERIC_SLEEP_BOT.test(desc)) return true;
+  return false;
+}
+
+function hasPublicA2a(agent: Agent): boolean {
+  const u = (agent.a2a_endpoint || "").trim();
+  if (!/^https:\/\//i.test(u)) return false;
+  if (/localhost|127\.0\.0\.1|\.example\./i.test(u)) return false;
+  return u.length >= 24;
+}
+
 export function hireClassForAgent(agent: Agent): HireClass {
   if (isGenesisListing(agent)) return "genesis";
+  if (isDirectoryLeak(agent)) return "indexed";
   if (isFeaturedThirdParty(agent.chain_id, agent.token_id)) return "live";
-  if (agent.a2a_endpoint) return "live";
+  if (hasPublicA2a(agent)) return "live";
   return "indexed";
 }
 
@@ -50,6 +79,24 @@ export function hireClassHint(c: HireClass): string {
   if (c === "genesis") return "Hire-ready specialist · structured plan";
   if (c === "live") return "We negotiate their endpoint · their report";
   return "On-chain identity · no live hire we can complete";
+}
+
+/** Completes a hire: By Genesis specialist or a live third-party endpoint. */
+export function isHireableListing(agent: Agent): boolean {
+  return hireClassForAgent(agent) !== "indexed";
+}
+
+export function splitHireable<T extends Agent>(agents: T[]): {
+  hireable: T[];
+  identity: T[];
+} {
+  const hireable: T[] = [];
+  const identity: T[] = [];
+  for (const a of agents) {
+    if (isHireableListing(a)) hireable.push(a);
+    else identity.push(a);
+  }
+  return { hireable, identity };
 }
 
 const DEFI_NEEDLES = [
@@ -100,18 +147,26 @@ export function sortForDestination(agents: Agent[]): Agent[] {
 export function catalogLiveStats(agents: Agent[]): {
   live: number;
   indexed: number;
+  hireable: number;
+  identity: number;
   rated: number;
   total: number;
 } {
   let live = 0;
+  let genesis = 0;
   let rated = 0;
   for (const a of agents) {
-    if (hireClassForAgent(a) === "live") live += 1;
+    const cls = hireClassForAgent(a);
+    if (cls === "live") live += 1;
+    if (cls === "genesis") genesis += 1;
     if ((a.total_feedbacks ?? 0) > 0 && (a.average_score ?? 0) > 0) rated += 1;
   }
+  const hireable = live + genesis;
   return {
     live,
     indexed: agents.length - live,
+    hireable,
+    identity: agents.length - hireable,
     rated,
     total: agents.length,
   };

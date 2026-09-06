@@ -18,6 +18,8 @@ import type { DemoPayment } from "@/lib/demo-pay";
 import { shortWallet } from "@/lib/demo-pay";
 import { SignInForm } from "@/components/SignInForm";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
+import { ESCROW_STANCE } from "@/lib/escrow-stance";
+import { SOFT_HIRE_SHORT } from "@/lib/copy";
 
 type Props = {
   chainId: number;
@@ -68,7 +70,7 @@ export function HireWizard({
       commerceModesForAgent({
         x402,
         hireReady: isHireReady,
-        escrowAvailable: false,
+        escrowAvailable: ESCROW_STANCE.available,
       }),
     [x402, isHireReady],
   );
@@ -98,7 +100,11 @@ export function HireWizard({
       return;
     }
     setError(null);
-    // Soft hire: deliver the plan immediately. Escrow/payment is optional.
+    if (rail === "escrow") {
+      window.location.href = "/fund";
+      return;
+    }
+    // Soft hire: deliver the plan immediately. Escrow is a separate /fund path.
     void buyAgent(brief);
   }
 
@@ -489,7 +495,7 @@ export function HireWizard({
             : `Hire · $${displayPrice}`}
       </button>
       <p className="mt-2 text-center text-[10px] text-white/40">
-        Soft hire · plan only · you keep the keys · escrow is not live
+        {SOFT_HIRE_SHORT}
       </p>
 
       <div className="mt-4">
@@ -507,7 +513,13 @@ export function HireWizard({
                   type="button"
                   disabled={loading}
                   title={m.description}
-                  onClick={() => setRail(m.rail)}
+                  onClick={() => {
+                    if (m.rail === "escrow") {
+                      window.location.href = "/fund";
+                      return;
+                    }
+                    setRail(m.rail);
+                  }}
                   className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                     active
                       ? "bg-amber-400 text-black"
@@ -524,8 +536,8 @@ export function HireWizard({
         </p>
         {modes.some((m) => m.rail === "escrow" && !m.available) && (
           <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
-            On-chain escrow is unavailable (policy not whitelisted). Optional
-            path:{" "}
+            Optional on-chain lock is BSC mainnet ERC-8183 — not part of
+            soft hire.{" "}
             <Link href="/fund" className="text-amber-300/80 hover:underline">
               /fund
             </Link>

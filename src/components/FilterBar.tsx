@@ -30,9 +30,11 @@ function hrefWith(base: string, current: BrowseFilters, patch: BrowseFilters) {
 export function FilterBar({
   basePath = "/browse",
   filters,
+  surface = "browse",
 }: {
   basePath?: string;
   filters: BrowseFilters;
+  surface?: "hire" | "browse";
 }) {
   const chip = (
     active: boolean,
@@ -77,17 +79,13 @@ export function FilterBar({
         {chip(filters.ratings === "1", "Has ratings", {
           ratings: filters.ratings === "1" ? undefined : "1",
         })}
-        {chip(filters.live === "1", "Live A2A", {
-          live: filters.live === "1" ? undefined : "1",
-        })}
-        {chip(filters.index === "1", "Full index", {
-          index: filters.index === "1" ? undefined : "1",
-        })}
+        {surface === "browse" && filters.index === "1"
+          ? chip(true, "Raw index", { index: undefined })
+          : null}
         {(filters.x402 ||
           filters.verified ||
           filters.ratings ||
           filters.live ||
-          filters.index ||
           filters.sort) && (
           <Link
             href={filters.q ? `${basePath}?q=${encodeURIComponent(filters.q)}` : basePath}

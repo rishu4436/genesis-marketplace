@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 
 const SELLERS = [
-  { slug: "yield-router", label: "YieldRouter (platform)" },
-  { slug: "health-sentinel", label: "HealthSentinel (platform)" },
-  { slug: "range-keeper", label: "RangeKeeper (platform)" },
+  { slug: "yield-router", label: "YieldRouter" },
+  { slug: "health-sentinel", label: "HealthSentinel" },
+  { slug: "range-keeper", label: "RangeKeeper" },
+  { slug: "gridwright", label: "Gridwright" },
 ];
 
 export function OnchainHirePanel() {

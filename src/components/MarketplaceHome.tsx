@@ -5,6 +5,7 @@ import { HowHireWorks } from "@/components/HowHireWorks";
 import { SoftHireNote } from "@/components/SoftHireNote";
 import { getAllCategorySnapshots } from "@/lib/category-agents";
 import { allGenesisAgents, genesisHref } from "@/lib/genesis-agents";
+import { scoreAllSpecialists } from "@/lib/receipt-score";
 import { getCategory } from "@/lib/categories";
 import { BRAND } from "@/lib/brand";
 import { JOB_CHIPS } from "@/lib/job-chips";
@@ -14,10 +15,14 @@ import {
 } from "@/lib/third-party-sellers";
 
 export async function MarketplaceHome() {
-  const [shelves, specialists] = await Promise.all([
+  const [shelves, specialists, scores] = await Promise.all([
     getAllCategorySnapshots(3),
     Promise.resolve(allGenesisAgents()),
+    scoreAllSpecialists(),
   ]);
+  const receiptFitBySlug = Object.fromEntries(
+    scores.map((s) => [s.slug, s.composite]),
+  );
 
   return (
     <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-12 sm:px-8 sm:py-16">
@@ -122,13 +127,13 @@ export async function MarketplaceHome() {
       </div>
 
       <div className="mt-16">
-        <p className="section-label">Indexed</p>
+        <p className="section-label">Jobs</p>
         <h2 className="mt-2 font-display text-2xl font-bold text-white">
           Shop by job
         </h2>
         <p className="mt-2 max-w-lg text-[14px] text-white/40">
-          Filtered ERC-8004 listings under each job. Hire-ready specialists stay
-          first.
+          Intelligent mode: each shelf is hireable only. Identity-only
+          names never appear here.
         </p>
       </div>
 
@@ -139,6 +144,7 @@ export async function MarketplaceHome() {
             category={s.category}
             agents={s.agents}
             genesis={specialists.filter((g) => g.categoryId === s.category.id)}
+            receiptFitBySlug={receiptFitBySlug}
           />
         ))}
       </div>

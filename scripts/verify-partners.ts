@@ -8,6 +8,7 @@ import { growthLoops } from "../src/lib/growth-loops";
 import {
   catalogLiveStats,
   hireClassForAgent,
+  isHireableListing,
   listingHref,
 } from "../src/lib/hire-class";
 import { filterAgents } from "../src/lib/agent-rank";
@@ -49,7 +50,12 @@ function main() {
     PARTNERS.some((p) => p.id === "featured-a2a" && p.href.includes("265375")),
   );
 
-  check("TermiX has ≥3 tasks", ADVANTAGE_TASKS.length >= 3, String(ADVANTAGE_TASKS.length));
+  check("TermiX has 4 tasks (one per job)", ADVANTAGE_TASKS.length === 4, String(ADVANTAGE_TASKS.length));
+  check(
+    "yield-router maps to yield advantage",
+    advantageHrefForHire({ genesisSlug: "yield-router" }) ===
+      "/advantage#usdt-yield",
+  );
   check(
     "range-keeper maps to LP advantage",
     advantageHrefForHire({ genesisSlug: "range-keeper" }) ===
@@ -95,6 +101,34 @@ function main() {
   const stats = catalogLiveStats([featured, indexed]);
   check("live stats count 1 live", stats.live === 1);
   check("live stats count 1 indexed", stats.indexed === 1);
+  check("featured is hireable", isHireableListing(featured) === true);
+  check("identity-only is not hireable", isHireableListing(indexed) === false);
+  const testStub: Agent = {
+    ...featured,
+    name: "test.agent",
+    token_id: "302610",
+    a2a_endpoint: "https://example.invalid/agent-card.json",
+  };
+  check("test.agent is not hireable", isHireableListing(testStub) === false);
+  const sleepBot: Agent = {
+    ...featured,
+    name: "DeFiBot.agent",
+    description: "Automate grid trading, DCA, and yield compounding across major DEXs while you sleep.",
+    a2a_endpoint: "https://api.8004scan.io/agents/1",
+  };
+  check("generic sleep-bot is not hireable", isHireableListing(sleepBot) === false);
+  const namedTest: Agent = {
+    ...featured,
+    name: "bnb-grid-trader-test.agent",
+    token_id: "292939",
+    a2a_endpoint: "https://api.8004scan.io/agents/2",
+  };
+  check(
+    "bnb-grid-trader-test.agent is not hireable",
+    isHireableListing(namedTest) === false,
+  );
+  check("split hireable count", stats.hireable === 1);
+  check("split identity count", stats.identity === 1);
 
   check(
     "featured token stays 265375",

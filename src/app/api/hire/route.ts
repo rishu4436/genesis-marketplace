@@ -3,6 +3,7 @@ import { createJobWithLiveNegotiate } from "@/lib/hire-engine";
 import type { CategoryId } from "@/lib/categories";
 import type { HireIntent } from "@/lib/hire";
 import { getGenesisAgent } from "@/lib/genesis-agents";
+import { BSC_MAINNET_CHAIN_ID } from "@/lib/pins";
 import { saveJob } from "@/lib/job-store";
 import { attachJob } from "@/lib/accounts";
 import { currentAccount } from "@/lib/session";
@@ -57,9 +58,10 @@ export async function POST(req: Request) {
       : undefined;
 
     let job = await createJobWithLiveNegotiate({
-      chainId: Number(body.chainId || g?.chainId || 56),
+      chainId: BSC_MAINNET_CHAIN_ID,
       tokenId: String(
-        body.tokenId || g?.tokenId || `genesis:${body.genesisSlug}`,
+        (g?.tokenId && g.chainId === 56 ? g.tokenId : null) ||
+          (body.genesisSlug ? `genesis:${body.genesisSlug}` : body.tokenId),
       ),
       agentName: body.agentName || g?.name || "Agent",
       genesisSlug: body.genesisSlug,

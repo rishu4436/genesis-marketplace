@@ -135,16 +135,29 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
   commerce += Math.min(protocols, 5) * 7;
   commerce = clamp01(commerce);
 
-  // Fitness: stretch 8004scan's ~0–50 total_score toward 0–100
-  const fitness = clamp01(
-    (total > 0
-      ? Math.min(total, 55) * 1.7
-      : hasListing
-        ? 22
-        : 8) +
-      (health > 0 ? Math.min(health, 100) * 0.1 : 0) +
-      (agent.description && agent.description.length > 100 ? 6 : 0),
+  const flagged = agent as Agent & {
+    genesis_verified?: boolean;
+    genesis_fit?: number;
+  };
+  const genesis = Boolean(
+    flagged.genesis_verified || agent.id?.startsWith("genesis:"),
   );
+
+  // Fitness: stretch 8004scan's ~0–50 total_score toward 0–100.
+  // Genesis specialists use receipt composite when provided — not a flat 86.
+  const fitness = genesis
+    ? clamp01(
+        typeof flagged.genesis_fit === "number" ? flagged.genesis_fit : 70,
+      )
+    : clamp01(
+        (total > 0
+          ? Math.min(total, 55) * 1.7
+          : hasListing
+            ? 22
+            : 8) +
+          (health > 0 ? Math.min(health, 100) * 0.1 : 0) +
+          (agent.description && agent.description.length > 100 ? 6 : 0),
+      );
 
   const values: Record<
     ScoreAxisId,
@@ -174,7 +187,11 @@ export function computeAxes(agent: Agent): ScoreAxis[] {
     },
     fitness: {
       value: fitness,
-      source: `partner total ${total || "—"} · health ${health || "—"}`,
+      source: genesis
+        ? typeof flagged.genesis_fit === "number"
+          ? `receipt composite ${flagged.genesis_fit}`
+          : "By Genesis specialist — receipt score pending"
+        : `partner total ${total || "—"} · health ${health || "—"}`,
     },
   };
 

@@ -1,6 +1,6 @@
 import type { CategoryId } from "./categories";
 import type { Agent } from "./types";
-import { getPin } from "./pins";
+import { BSC_MAINNET_CHAIN_ID, getPin } from "./pins";
 
 /**
  * Marketplace specialists operated by Genesis — one per job category so hire
@@ -41,8 +41,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
       "Fee APR vs IL snapshot",
       "Gas-aware reset plan",
     ],
-    protocols: ["ERC-8183", "x402", "Web"],
-    x402: true,
+    protocols: ["ERC-8183", "Web"],
+    x402: false,
     pcsRelated: true,
     basePriceUsd: 8,
     etaMinutes: 2,
@@ -50,7 +50,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     accent: "from-amber-400 to-orange-500",
     icon: "◎",
     studioPrompt:
-      "Create a BNB Agent Studio seller named RangeKeeper on bsc-testnet that sells PancakeSwap V3 LP rebalance plans. On fulfill, analyze range health, propose new bands, fee APR vs IL notes. No fund custody. ERC-8183 commerce + x402 for LLM. min/max price around $5–$20.",
+      "Create a BNB Agent Studio seller named RangeKeeper on bsc-mainnet that sells PancakeSwap V3 LP rebalance plans. On fulfill, analyze range health, propose new bands, fee APR vs IL notes. No fund custody. ERC-8183 commerce + x402 for LLM. min/max price around $5–$20.",
   },
   {
     slug: "gridwright",
@@ -65,8 +65,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
       "24h fill simulation",
       "Pair volatility bands",
     ],
-    protocols: ["ERC-8183", "x402", "Web"],
-    x402: true,
+    protocols: ["ERC-8183", "Web"],
+    x402: false,
     pcsRelated: true,
     basePriceUsd: 10,
     etaMinutes: 3,
@@ -74,7 +74,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     accent: "from-sky-400 to-blue-600",
     icon: "▦",
     studioPrompt:
-      "Create a BNB Agent Studio seller named Gridwright on bsc-testnet that sells grid trading layouts for BSC pairs. On fulfill, return N-level grid, spacing, pause DD rules, and 24h fill simulation. No custody. ERC-8183 + x402.",
+      "Create a BNB Agent Studio seller named Gridwright on bsc-mainnet that sells grid trading layouts for BSC pairs. On fulfill, return N-level grid, spacing, pause DD rules, and 24h fill simulation. No custody. ERC-8183 + x402.",
   },
   {
     slug: "yield-router",
@@ -89,8 +89,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
       "Gas-budget reallocation",
       "PCS farm awareness",
     ],
-    protocols: ["ERC-8183", "x402", "Web"],
-    x402: true,
+    protocols: ["ERC-8183", "Web"],
+    x402: false,
     pcsRelated: true,
     basePriceUsd: 7,
     etaMinutes: 2,
@@ -98,7 +98,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     accent: "from-emerald-400 to-teal-600",
     icon: "▲",
     studioPrompt:
-      "Create a BNB Agent Studio seller named YieldRouter on bsc-testnet that sells yield reallocation briefs for BSC (including PancakeSwap farms). Rank venues by risk-adjusted APR, propose splits under gas budget. No custody. ERC-8183 + x402.",
+      "Create a BNB Agent Studio seller named YieldRouter on bsc-mainnet that sells yield reallocation briefs for BSC (including PancakeSwap farms). Rank venues by risk-adjusted APR, propose splits under gas budget. No custody. ERC-8183 + x402.",
   },
   {
     slug: "health-sentinel",
@@ -113,8 +113,8 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
       "Repay vs collateral options",
       "Alert threshold plan",
     ],
-    protocols: ["ERC-8183", "x402", "Web"],
-    x402: true,
+    protocols: ["ERC-8183", "Web"],
+    x402: false,
     pcsRelated: false,
     basePriceUsd: 6,
     etaMinutes: 2,
@@ -122,7 +122,7 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     accent: "from-rose-400 to-red-600",
     icon: "✚",
     studioPrompt:
-      "Create a BNB Agent Studio seller named HealthSentinel on bsc-testnet that sells lending health-factor protection plans (Venus/Aave-style on BSC). Simulate shocks, alert thresholds, repay vs collateral options. No custody. ERC-8183 + x402.",
+      "Create a BNB Agent Studio seller named HealthSentinel on bsc-mainnet that sells lending health-factor protection plans (Venus/Aave-style on BSC). Simulate shocks, alert thresholds, repay vs collateral options. No custody. ERC-8183 + x402.",
   },
 ];
 
@@ -146,8 +146,8 @@ export function getGenesisAgent(slug: string): GenesisAgent | undefined {
 
   return {
     ...base,
-    chainId: pin.chainId || base.chainId || 56,
-    tokenId: pin.tokenId || base.tokenId,
+    chainId: BSC_MAINNET_CHAIN_ID,
+    tokenId: pin.tokenId || undefined,
     serviceUrl,
   };
 }
@@ -166,25 +166,33 @@ export function isGenesisSlug(slug: string): boolean {
   return GENESIS_AGENTS.some((a) => a.slug === slug);
 }
 
-export function genesisToAgentCard(g: GenesisAgent): Agent & {
+export function genesisToAgentCard(
+  g: GenesisAgent,
+  opts?: { receiptFit?: number },
+): Agent & {
   genesis_slug: string;
   genesis_verified: true;
+  genesis_fit?: number;
 } {
-  const chainId = g.chainId ?? 56;
+  const chainId = BSC_MAINNET_CHAIN_ID;
+  const pin = getPin(g.slug);
   return {
     id: `genesis:${g.slug}`,
     agent_id: g.tokenId ? `${chainId}:${g.tokenId}` : `genesis:${g.slug}`,
     token_id: g.tokenId || g.slug,
     chain_id: chainId,
+    owner_address: pin.walletAddress || undefined,
     name: g.name,
     description: g.description,
     image_url: null,
     is_verified: true,
     supported_protocols: g.protocols,
     x402_supported: g.x402,
+    health_score: 100,
     created_at: "2026-08-05T00:00:00Z",
     genesis_slug: g.slug,
     genesis_verified: true,
+    genesis_fit: opts?.receiptFit,
   };
 }
 

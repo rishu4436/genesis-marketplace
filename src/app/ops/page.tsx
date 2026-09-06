@@ -53,7 +53,7 @@ export default function OpsPage() {
               key={a.slug}
               className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-200"
             >
-              {a.name} · #{a.tokenId}
+              {a.name} · expired testnet #{a.tokenId}
             </span>
           ))}
           {LOCAL_APEX_AGENTS.map((a) => (

@@ -15,7 +15,7 @@ runtime = "agentcore"
 protocol = "A2A"
 
 [network]
-default = "bsc-testnet"
+default = "bsc-mainnet"
 
 [deploy]
 # Deploy destination (orthogonal to [stack].runtime). 'platform' deploys
@@ -36,8 +36,8 @@ packaging = "zip"
 kind = "evm-local"
 signer = "local"
 keystore_dir = "../../.studio/wallets"
-# address = "0x..."   # filled by `bag wallet new`
-platform_exposed_addresses = ["0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133"]
+address = "0xee011fC24c9037908a819352b4485573483849f1"
+platform_exposed_addresses = ["0xee011fC24c9037908a819352b4485573483849f1"]
 
 [llm]
 provider = "pieverse-llm"
@@ -69,7 +69,7 @@ check_interval_seconds = 60
 # Read by the Agent: it quotes the FIXED `price`, CLAMPS it to [min,max],
 # freezes a short-TTL offer, and EIP-191 signs it — pricing is rule-based, the
 # LLM never prices.
-currency = "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"   # $U token address — prefilled from [network].default
+currency = "0xcE24439F2D9C6a2289F741120FE202248B666666"   # mainnet payment token from commerce.paymentToken()
 price = "100000000000000000"                    # wei — list ~0.08 U (~$8 class job)
 min_price = "10000000000000000"                # wei — clamp floor 0.01 U
 max_price = "400000000000000000"               # wei — clamp ceiling 0.25 U

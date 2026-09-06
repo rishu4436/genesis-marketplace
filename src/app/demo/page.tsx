@@ -80,8 +80,8 @@ export default function DemoPage() {
             listings), specialists, scores, TermiX, demo path.
           </li>
           <li>
-            <span className="text-amber-200">Optional / blocked:</span> on-chain
-            ERC-8183 escrow — testnet policy whitelist (see{" "}
+            <span className="text-amber-200">Optional:</span> on-chain
+            ERC-8183 escrow on BSC mainnet — soft hire does not lock (see{" "}
             <Link href="/fund" className="text-amber-300 hover:underline">
               /fund
             </Link>

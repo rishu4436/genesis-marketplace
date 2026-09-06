@@ -5,17 +5,21 @@ import type { GenesisAgent } from "@/lib/genesis-agents";
 import { AgentCard } from "@/components/AgentCard";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
+import { isHireableListing } from "@/lib/hire-class";
 
 export function CategoryPreview({
   category,
   agents,
   genesis,
+  receiptFitBySlug,
 }: {
   category: Category;
   agents: Agent[];
   genesis?: GenesisAgent[];
+  receiptFitBySlug?: Record<string, number>;
 }) {
   const g = genesis?.[0];
+  const hireable = agents.filter(isHireableListing);
 
   return (
     <section className="panel p-4 sm:p-5">
@@ -37,8 +41,13 @@ export function CategoryPreview({
         </Link>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {g && <GenesisAgentCard agent={g} />}
-        {agents.slice(0, g ? 3 : 4).map((a) => (
+        {g && (
+          <GenesisAgentCard
+            agent={g}
+            receiptFit={receiptFitBySlug?.[g.slug]}
+          />
+        )}
+        {hireable.slice(0, g ? 3 : 4).map((a) => (
           <AgentCard
             key={a.id || a.agent_id}
             agent={a}
@@ -46,7 +55,7 @@ export function CategoryPreview({
           />
         ))}
       </div>
-      {!g && agents.length === 0 && (
+      {!g && hireable.length === 0 && (
         <p className="mt-4 text-xs text-white/40">
           No agents loaded for this shelf yet.
         </p>

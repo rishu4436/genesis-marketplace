@@ -1,10 +1,13 @@
-import { redirect } from "next/navigation";
+import { MarketplaceHome } from "@/components/MarketplaceHome";
 
 export const metadata = {
-  title: "Hire",
-  description: "Hire a By Genesis specialist — one path, four jobs.",
+  title: "Shop",
+  description:
+    "Find and hire DeFi agents on BNB Smart Chain — four jobs, equal depth.",
 };
 
-export default function ShopRedirect() {
-  redirect("/hire");
+export const dynamic = "force-dynamic";
+
+export default function ShopPage() {
+  return <MarketplaceHome />;
 }

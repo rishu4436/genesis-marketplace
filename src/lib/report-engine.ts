@@ -165,9 +165,18 @@ export async function buildFullReport(
         },
       ];
 
+  const cat = job.categoryId;
+  const onchainLead =
+    cat === "grid-trading"
+      ? "Grid context: live BNB/USDT tick below. You still place orders.\n\n"
+      : cat === "yield-optimisation"
+        ? "Yield context: Venus USDT supply APR is on-chain (not a promise). Pair it with the specialist venue ranking.\n\n"
+        : cat === "health-factor"
+          ? "Health context: Venus rates below are live. Shock HF with specialist math, not an invented oracle.\n\n"
+          : "Rebalance context: PCS V3 slot0 ticks are live when RPC answers.\n\n";
   const onchainSection = {
     heading: "On-chain market (BSC)",
-    body: onchainBlock,
+    body: onchainLead + onchainBlock,
   };
 
   const sourcesBlock = {

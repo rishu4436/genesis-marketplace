@@ -177,10 +177,12 @@ export async function checkAgentHealth(
 
   const checks: HealthChecks = {
     identity: {
-      ok: identity.erc8004 && Boolean(identity.controller),
+      ok: identity.chainId === 56 && Boolean(identity.controller),
       detail: identity.erc8004
-        ? `ERC-8004 #${identity.tokenId} · ${identity.controller?.slice(0, 8) ?? "no controller"}…`
-        : "No ERC-8004 token pinned",
+        ? `ERC-8004 #${identity.tokenId} · BSC mainnet · ${identity.controller?.slice(0, 8) ?? "no controller"}…`
+        : identity.controller
+          ? `BSC mainnet · ${identity.controller.slice(0, 8)}… · ERC-8004 pending`
+          : "No mainnet controller pinned",
     },
     runtime: {
       ok: runtimeOk,

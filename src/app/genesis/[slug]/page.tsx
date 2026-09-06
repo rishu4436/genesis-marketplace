@@ -24,7 +24,7 @@ import { SellerIdentityPanel } from "@/components/SellerIdentityPanel";
 import { AdmissionPanel } from "@/components/AdmissionPanel";
 import { ReceiptScorePanel } from "@/components/ReceiptScorePanel";
 import { admitSeller } from "@/lib/admission";
-import { scoreSeller } from "@/lib/receipt-score";
+import { scoreAllSpecialists } from "@/lib/receipt-score";
 import { defaultTaskForCategory } from "@/lib/hire";
 import { checkAgentHealth } from "@/lib/agent-health";
 import {
@@ -62,13 +62,24 @@ export default async function GenesisAgentPage({ params }: Props) {
   const others = allGenesisAgents().filter((a) => a.slug !== agent.slug);
   const pin = getPin(agent.slug);
 
-  const card = genesisToAgentCard(agent);
+  const defaultTask = defaultTaskForCategory(agent.categoryId);
+  const fit = taskFitForGenesis(agent, defaultTask);
+  const health = await checkAgentHealth(agent);
+  const admission = admitSeller(agent);
+  const allScores = await scoreAllSpecialists();
+  const receiptScore = allScores.find((s) => s.slug === agent.slug) ?? null;
+  const fitBySlug = Object.fromEntries(
+    allScores.map((s) => [s.slug, s.composite]),
+  );
+  const card = genesisToAgentCard(agent, {
+    receiptFit: receiptScore?.composite,
+  });
   const axes = computeAxes(card).map((ax) => {
     if (ax.id === "commerce") {
       return {
         ...ax,
-        value: Math.min(100, ax.value + 25),
-        source: "marketplace specialist · hire-ready",
+        value: Math.min(100, ax.value + 15),
+        source: "marketplace specialist · hire-ready · no x402 ping yet",
       };
     }
     if (ax.id === "trust") {
@@ -78,14 +89,16 @@ export default async function GenesisAgentPage({ params }: Props) {
         source: "operated by Genesis",
       };
     }
+    if (ax.id === "fitness" && receiptScore) {
+      return {
+        ...ax,
+        value: receiptScore.composite,
+        source: `receipt composite · n=${receiptScore.sampleSize}`,
+      };
+    }
     return ax;
   });
   const composite = compositeFromAxes(axes);
-  const defaultTask = defaultTaskForCategory(agent.categoryId);
-  const fit = taskFitForGenesis(agent, defaultTask);
-  const health = await checkAgentHealth(agent);
-  const admission = admitSeller(agent);
-  const receiptScore = await scoreSeller(agent.slug);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -134,7 +147,7 @@ export default async function GenesisAgentPage({ params }: Props) {
                 <span className="rounded-full bg-[#F0B90B] px-2.5 py-0.5 text-[11px] font-bold text-black">
                   {BRAND.byBadge}
                 </span>
-                <AgentLiveBadge slug={agent.slug} />
+                <AgentLiveBadge slug={agent.slug} initial={health} />
                 {pin.tokenId && (
                   <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/60">
                     Token #{pin.tokenId}
@@ -222,9 +235,9 @@ export default async function GenesisAgentPage({ params }: Props) {
             <TrustPassport
               registered={health.checks.identity.ok}
               registrationDetail={
-                health.checks.identity.ok
-                  ? `ERC-8004 #${health.tokenId} · ${health.version} · ${health.label}.`
-                  : "Specialist configured in marketplace — hire returns a structured plan."
+                health.identity.erc8004
+                  ? `ERC-8004 #${health.identity.tokenId} · BSC mainnet · ${health.version} · ${health.label}.`
+                  : `BSC mainnet · controller bound · ERC-8004 token pending · ${health.version}.`
               }
               features={[
                 {
@@ -275,7 +288,11 @@ export default async function GenesisAgentPage({ params }: Props) {
               </h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 {others.map((a) => (
-                  <GenesisAgentCard key={a.slug} agent={a} />
+                  <GenesisAgentCard
+                    key={a.slug}
+                    agent={a}
+                    receiptFit={fitBySlug[a.slug]}
+                  />
                 ))}
               </div>
             </section>

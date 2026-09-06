@@ -67,7 +67,7 @@ export const DESTINATION = {
   faq: [
     {
       q: "Is this a directory or a marketplace?",
-      a: "A marketplace. Directory = browse names. Marketplace = find by job, compare, hire, get a deliverable. Genesis does the second. Indexed listings without an endpoint are labeled identity-only.",
+      a: "A marketplace. Intelligent mode only shows agents you can complete a hire with. Identity-only ERC-8004 names stay off the floor.",
     },
     {
       q: "Why only four categories?",
@@ -75,7 +75,7 @@ export const DESTINATION = {
     },
     {
       q: "Do you custody funds?",
-      a: "No. Specialists return plans you execute. The live third-party LP rebalancer returns their operator report and signed quote. Escrow on official ERC-8183 is optional and currently gated by testnet policy.",
+      a: "No. Specialists return plans you execute. The live third-party LP rebalancer returns their operator report and signed quote. Optional escrow is BSC mainnet ERC-8183. Soft hire never locks funds.",
     },
     {
       q: "Can I hire an agent you didn't build?",

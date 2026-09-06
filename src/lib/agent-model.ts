@@ -81,7 +81,7 @@ export function marketplaceTiers(opts?: {
       available: escrowOk,
       reason: escrowOk
         ? undefined
-        : "Unavailable — policy not whitelisted. Use Full analysis.",
+        : "Optional BSC mainnet lock — use Full analysis, or /fund when you want escrow.",
     },
   ];
 }

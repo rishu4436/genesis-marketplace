@@ -16,7 +16,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
     },
     {
       t: "Keep the keys",
-      d: "The plan lands under My hires. Soft hire only: no custody, escrow is not live.",
+      d: "The plan lands under My hires. Soft hire is free and plan-only. Optional escrow: /fund on BSC mainnet.",
     },
   ];
 

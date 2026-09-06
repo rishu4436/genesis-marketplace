@@ -17,9 +17,10 @@ export default function FundPage() {
         On-chain fund &amp; settle
       </h1>
       <p className="mt-2 text-sm text-white/55">
-        Full ERC-8183 path: create job → set budget → fund (escrow U) → notify
-        seller → wait SUBMITTED → fetch deliverable → settle (after 24h dispute
-        window for approve).
+        Optional BSC mainnet ERC-8183 path (not required for a plan). Soft
+        hire on specialist pages is free. This page is only if you want an
+        on-chain lock: create job → set budget → fund (escrow U) → notify
+        seller → wait SUBMITTED → fetch → settle (24h dispute window).
       </p>
 
       <section className="mt-8 rounded-2xl border border-amber-400/25 bg-amber-400/5 p-5">
@@ -29,8 +30,9 @@ export default function FundPage() {
         <p className="mt-2 text-xs text-white/60">
           Buyer project: <code className="text-amber-200/90">studio/RangeKeeper</code>{" "}
           wallet (used by <code className="text-amber-200/90">bag erc8183 buy</code>
-          ). Need a little <strong className="text-white">tBNB</strong> (for U
-          approve) and <strong className="text-white">$U</strong> (payment token).
+          ). Need a little <strong className="text-white">BNB on BSC mainnet</strong>{" "}
+          (gas) and <strong className="text-white">$U</strong> (payment token
+          0xcE24…6666).
         </p>
         <div className="mt-3 break-all rounded-xl border border-white/10 bg-black/30 px-3 py-2 font-mono text-xs text-amber-100">
           {f.buyer}
@@ -53,9 +55,9 @@ export default function FundPage() {
           ))}
         </ul>
         <p className="mt-3 text-[11px] text-white/45">
-          Recommended: ≥ 0.05 tBNB and ≥ 0.5 U on the buyer. On testnet many
-          ERC-8183 writes are MegaFuel-sponsored; first{" "}
-          <code className="text-white/60">approve</code> still needs gas.
+          Recommended: ≥ 0.007 BNB and some U on the buyer. First{" "}
+          <code className="text-white/60">approve</code> needs gas. Do not
+          send tBNB or Ethereum-chain BNB.
         </p>
       </section>
 

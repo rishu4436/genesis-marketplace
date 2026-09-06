@@ -9,9 +9,15 @@ import {
   computeAxes,
 } from "@/lib/marketplace-score";
 
-export function GenesisAgentCard({ agent }: { agent: GenesisAgent }) {
+export function GenesisAgentCard({
+  agent,
+  receiptFit,
+}: {
+  agent: GenesisAgent;
+  receiptFit?: number;
+}) {
   const cat = getCategory(agent.categoryId);
-  const card = genesisToAgentCard(agent);
+  const card = genesisToAgentCard(agent, { receiptFit });
   // Same boosts as dashboard specialists so cards match scored specialists
   let axes = computeAxes(card).map((ax) => {
     if (ax.id === "commerce") {

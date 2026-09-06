@@ -50,8 +50,8 @@ export function SellerIdentityPanel({ health }: { health: AgentHealth }) {
           <dt className="text-white/35">ERC-8004</dt>
           <dd className="mt-0.5 font-mono">
             {identity.erc8004
-              ? `chain ${identity.chainId} · #${identity.tokenId}`
-              : "unpinned"}
+              ? `BSC · #${identity.tokenId}`
+              : "BSC mainnet · ERC-8004 pending"}
           </dd>
         </div>
         <div>

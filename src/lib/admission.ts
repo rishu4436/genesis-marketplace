@@ -156,10 +156,12 @@ export function admitSeller(agent: GenesisAgent): AdmissionReport {
   const checks: AdmissionCheck[] = [
     {
       id: "identity",
-      ok: identity.erc8004 && Boolean(identity.controller),
+      ok: identity.chainId === 56 && Boolean(identity.controller),
       detail: identity.erc8004
         ? `ERC-8004 #${identity.tokenId} · ${identity.version}`
-        : "No ERC-8004 pin",
+        : identity.controller
+          ? `BSC mainnet · ${identity.controller.slice(0, 10)}… · ERC-8004 pending`
+          : "No mainnet controller",
     },
     {
       id: "mandate",

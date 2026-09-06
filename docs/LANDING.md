@@ -1,9 +1,10 @@
 # Genesis landing
 
-Homepage (`/`) is the **archived cinematic landing** again.
+Homepage (`/`) is the cinematic landing.
 
 - Live home: `LandingPageCinematic`
-- Later desk experiment still at `src/components/landing/LandingPage.tsx`
+- Job-first hire floor: `/shop` (`MarketplaceHome`)
+- Desk experiment still at `src/components/landing/LandingPage.tsx`
 
 ## Run
 
@@ -14,17 +15,20 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Archived cinematic landing: `/classic`
+Hire floor: `/shop` · Hire: `/hire`
 
 ## Structure
 
-1. Hero — “Hire the agent. Keep the keys.” + live floor
-2. Specialists — one operator per job
-3. How hire works — three steps
-4. CTA
+1. Hero — “The agent marketplace for the Smart Money Era”
+2. Problem — fragmented discovery / no hire path / hiring is engineering
+3. Solution — Genesis as the front door
+4. Four categories + By Genesis specialists
+5. How it works
+6. CTA
 
 ## Files
 
-- `src/components/landing/LandingPage.tsx`
-- `src/components/landing/LandingBackground.tsx`
+- `src/components/landing/archive/LandingPageCinematic.tsx`
+- `src/components/landing/archive/LandingBackgroundCinematic.tsx`
 - `src/app/page.tsx`
+- `src/app/shop/page.tsx`

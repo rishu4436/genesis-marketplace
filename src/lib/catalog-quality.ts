@@ -13,7 +13,8 @@ export type CatalogDropReason =
   | "ensoul-social"
   | "collectible-nft"
   | "prompt-dump"
-  | "off-job";
+  | "off-job"
+  | "test-stub";
 
 const TICKER_NAME =
   /^(8004ai|402ai|uuuai\d*|agentsai|onehaai|biuai)\b/i;
@@ -69,6 +70,9 @@ export function catalogDropReason(agent: Agent): CatalogDropReason | null {
   if (/^agentscan agent$/i.test(name)) return "ticker-spam";
 
   if (TICKER_NAME.test(name)) return "ticker-spam";
+  if (/^test\.agent$/i.test(name) || /^test\./i.test(name) || /test\.agent/i.test(name)) {
+    return "test-stub";
+  }
   if (isNameStutter(name, desc)) return "name-stutter";
 
   if (ENSOUL.test(name) || ENSOUL.test(desc) || /^@[\w.]+/.test(name)) {

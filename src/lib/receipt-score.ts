@@ -16,6 +16,8 @@ import {
 } from "./genesis-agents";
 import { identityFromGenesis } from "./seller-identity";
 import { MARKETPLACE_MANDATE_ID } from "./job-spec";
+import { holdoutForCategory } from "./holdout-book";
+import { needleHits } from "./admission";
 
 export const RECEIPT_SCORE_SUITE = "receipt-score-v1";
 export const SCORE_PRIOR_N = 4;
@@ -98,6 +100,74 @@ export function jobsForSeller(jobs: HireJob[], slug: string): HireJob[] {
   );
 }
 
+function jobTimeMs(job: HireJob): number {
+  const stamps = [
+    job.updatedAt,
+    job.createdAt,
+    job.receipt?.timestamps?.deliveredAt,
+    job.receipt?.timestamps?.sealedAt,
+  ];
+  let max = 0;
+  for (const s of stamps) {
+    const t = s ? Date.parse(s) : NaN;
+    if (Number.isFinite(t) && t > max) max = t;
+  }
+  return max;
+}
+
+function jobBlob(job: HireJob): string {
+  const d = job.deliverable;
+  if (!d) return "";
+  return [
+    d.title,
+    d.summary,
+    ...d.sections.map((s) => `${s.heading} ${s.body}`),
+    ...(d.metrics || []).map((m) => `${m.label} ${m.value}`),
+  ].join("\n");
+}
+
+/** Per-seller evidence so four specialists do not share one stamp score. */
+export function mandateEvidence(
+  agent: GenesisAgent,
+  jobs: HireJob[],
+): { value: number; source: string } {
+  const hold = holdoutForCategory(agent.categoryId);
+  const delivered = jobs.filter((j) => j.status === "delivered");
+  const blob = delivered.map(jobBlob).join("\n");
+  const hits = needleHits(blob, hold.needles);
+  const rate = hold.needles.length ? hits.length / hold.needles.length : 0;
+  const sections = new Set(
+    delivered.flatMap((j) => j.deliverable?.sections.map((s) => s.heading) || []),
+  ).size;
+  const metrics = delivered.reduce(
+    (n, j) => n + (j.deliverable?.metrics?.length || 0),
+    0,
+  );
+  const onchain = /slot0|eth_call|tick -?\d+|supply apr/i.test(blob);
+  const categoryBar: Record<string, number> = {
+    rebalancing: onchain ? 18 : 11,
+    "grid-trading": /spacing|drawdown|level/i.test(blob) ? 14 : 7,
+    "yield-optimisation": /venus|\bapr\b|split/i.test(blob) ? 9 : 4,
+    "health-factor":
+      /\bhf\b|health factor|collateral/i.test(blob) ? 16 : 8,
+  };
+  const extra = categoryBar[agent.categoryId] ?? 0;
+  const skillHits = agent.skills.filter((s) =>
+    blob.toLowerCase().includes(s.split(/\s+/)[0]!.toLowerCase()),
+  ).length;
+  const raw =
+    rate * 34 +
+    Math.min(sections, 10) * 1.4 +
+    Math.min(metrics, 8) * 0.9 +
+    extra +
+    skillHits * 2.2;
+  const value = Math.round(Math.max(20, Math.min(96, raw)) * 10) / 10;
+  return {
+    value,
+    source: `${hits.length}/${hold.needles.length} mandate needles · ${sections} sections${onchain ? " · on-chain reads" : ""}`,
+  };
+}
+
 function mandateHolds(job: HireJob): boolean {
   const m = job.receipt?.mandate || job.spec?.mandate;
   if (!m) return false;
@@ -130,11 +200,11 @@ function freshnessValue(jobs: HireJob[], currentVersion: string): ReceiptAxis {
       absent: true,
     };
   }
-  const latest = delivered.reduce((a, b) =>
-    new Date(a.updatedAt).getTime() >= new Date(b.updatedAt).getTime() ? a : b,
-  );
-  const ageDays =
-    (Date.now() - new Date(latest.updatedAt).getTime()) / 86_400_000;
+  const latestMs = delivered.reduce((max, j) => {
+    const t = jobTimeMs(j);
+    return t > max ? t : max;
+  }, 0);
+  const ageDays = latestMs > 0 ? (Date.now() - latestMs) / 86_400_000 : 999;
   const recency =
     ageDays <= 2 ? 95 : ageDays <= 7 ? 82 : ageDays <= SCORE_HALF_LIFE_DAYS ? 62 : ageDays <= 45 ? 38 : 16;
   const onVer =
@@ -181,10 +251,10 @@ export function scoreSellerFromJobs(
         job.decision?.state !== "disputed",
       weight: job.decision?.state === "accepted" ? weight + 0.5 : weight,
     }));
-  if (admission.checks.find((c) => c.id === "holdout")?.ok) {
-    schemaItems.push({ ok: true, weight: 2 });
-  }
-  const correctness = weightedShrink(schemaItems);
+  const schemaScore = weightedShrink(schemaItems);
+  const evidence = mandateEvidence(agent, mine);
+  const correctness =
+    Math.round((schemaScore * 0.2 + evidence.value * 0.8) * 10) / 10;
 
   const safetyItems = weighted.map(({ job, weight }) => ({
     ok:
@@ -221,9 +291,7 @@ export function scoreSellerFromJobs(
       label: "Correctness",
       short: "Corr",
       value: correctness,
-      source: admission.checks.find((c) => c.id === "holdout")?.ok
-        ? "schema + holdout needles"
-        : "schema on receipts (holdout weak)",
+      source: evidence.source,
     },
     {
       id: "safety",

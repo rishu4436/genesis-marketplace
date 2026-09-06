@@ -116,6 +116,14 @@ function main() {
   );
   check("old version is faded, not equal", faded === 0.25);
 
+  const composites = agents.map((a) => scoreSellerFromJobs(a, jobs).composite);
+  const unique = new Set(composites.map((c) => c.toFixed(1)));
+  check(
+    "specialist composites are not a shared stamp",
+    unique.size === agents.length,
+    composites.join(", "),
+  );
+
   const card = genesisToAgentCard(rk);
   const catalog = rankScore(card);
   const receipt = scoreSellerFromJobs(rk, jobs).composite;

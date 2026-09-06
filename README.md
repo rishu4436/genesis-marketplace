@@ -26,7 +26,7 @@ Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, g
 | **Hire-ready (By Genesis)** | Sellers we operate + pin |
 | **Indexed** | ERC-8004 identity from partner catalog — buy still works |
 | **Instant plan** | Task → deliverable · **no payment / no escrow** |
-| **On-chain escrow** | Optional `/fund` · blocked until testnet policy whitelist |
+| **On-chain escrow** | Optional `/fund` · BSC mainnet ERC-8183 (policy whitelisted) |
 
 Agents return a **structured plan/report**. They do not move buyer funds.
 
@@ -50,7 +50,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Path | Purpose |
 |------|---------|
-| `/` | Marketplace home + 4 category shelves |
+| `/` | Cinematic landing |
+| `/shop` | Job-first hire floor + 4 category shelves |
 | `/browse` | Search, sort, filters (x402 / verified / ratings) |
 | `/categories` | Four first-class categories |
 | `/categories/[id]` | Category shelf (multi-strategy fetch + rank) |
@@ -89,35 +90,35 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 | # | Priority | Status |
 |---|----------|--------|
-| 1 | Studio agents + pins | **3 live** on BNB free platform (max 3) + Gridwright local APEX |
-| 2 | Live hire negotiate | Platform A2A + local APEX fallback |
+| 1 | Studio agents + pins | **BSC mainnet** · hire on marketplace APEX. ERC-8004 register needs ~0.002 BNB/wallet |
+| 2 | Live hire negotiate | Marketplace APEX (`/api/apex/*`) |
 | 3 | TermiX report | `/termix` workbench + copy / **download .md** |
-| 4 | Buyer funding | **0.1 tBNB + 10 $U** on RangeKeeper buyer |
-| 5 | On-chain ERC-8183 fund | **Blocked** — testnet `PolicyNotWhitelisted` (job **#445** create+budget done). Resume: `scripts/resume-job-445.ps1` |
-| 6 | Public URL | Deferred to end |
+| 4 | Buyer funding | Mainnet BNB + payment token `0xcE24…6666` for optional 8183 |
+| 5 | On-chain ERC-8183 fund | **Mainnet** — policy whitelisted. Testnet job **#445** abandoned. |
+| 6 | Public URL | https://genesis-marketplace-one.vercel.app |
 
-### Next (while whitelist blocked)
+### Next
 
-1. Soft-hire via `/hire` or `/genesis/*` + TermiX “Run all with agent” + download report  
-2. When policy is whitelisted: `scripts/resume-job-445.ps1` → notify_funded → settle after 24h
+1. Fund the four seller wallets with ~0.002 BNB each → `bag erc8004 register --network bsc-mainnet`
+2. AWS login → `bag deploy agent` (Studio CLI has AgentCore only, not Azure)
+3. Soft-hire via `/hire` still works without escrow
 
-### Live Studio sellers (free platform trial)
+### Live Studio sellers (BSC mainnet)
 
-| Agent | Category | ERC-8004 | Host |
-|-------|----------|----------|------|
-| RangeKeeper | Rebalancing | 1773 | BNB platform |
-| YieldRouter | Yield | 1774 | BNB platform |
-| HealthSentinel | Health factor | 1775 | BNB platform |
-| Gridwright | Grid | 1841 | Marketplace APEX (ERC-8004 live) |
-
-Trial expires ~**2026-08-08T15:28Z**. Redeploy while active: `scripts/redeploy-platform-agents.ps1`.
+| Agent | Category | Host |
+|-------|----------|------|
+| RangeKeeper | Rebalancing | Marketplace APEX |
+| YieldRouter | Yield | Marketplace APEX |
+| HealthSentinel | Health factor | Marketplace APEX |
+| Gridwright | Grid | Marketplace APEX |
 
 ### Judge paths
 
 | Path | URL |
 |------|-----|
 | **90s judge script** | **`/judge`** |
-| Job-first home | `/` |
+| Cinematic landing | `/` |
+| Job-first shop | `/shop` |
 | Buy specialists | `/hire` |
 | Advantage report | `/advantage` |
 | Seeded proof jobs | `/jobs/job_msigjtrw_99syy1` (etc.) |

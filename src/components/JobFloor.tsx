@@ -2,16 +2,21 @@ import Link from "next/link";
 import { CategoryPreview } from "@/components/CategoryPreview";
 import { getAllCategorySnapshots } from "@/lib/category-agents";
 import { allGenesisAgents } from "@/lib/genesis-agents";
+import { scoreAllSpecialists } from "@/lib/receipt-score";
 
 export async function JobFloor({
   perShelf = 3,
 }: {
   perShelf?: number;
 }) {
-  const [shelves, specialists] = await Promise.all([
+  const [shelves, specialists, scores] = await Promise.all([
     getAllCategorySnapshots(perShelf),
     Promise.resolve(allGenesisAgents()),
+    scoreAllSpecialists(),
   ]);
+  const receiptFitBySlug = Object.fromEntries(
+    scores.map((s) => [s.slug, s.composite]),
+  );
 
   return (
     <div className="space-y-5">
@@ -22,8 +27,8 @@ export async function JobFloor({
             Four jobs. Hire from here.
           </h2>
           <p className="body-sm mt-1 max-w-xl">
-            Same depth on every shelf — specialist first, then hireable
-            catalog. This is the marketplace, not the raw 8004scan dump.
+            Same depth on every shelf — specialist first, then live hireable
+            listings. Identity-only names never appear on these shelves.
           </p>
         </div>
         <Link href="/categories" className="text-sm font-semibold text-amber-300">
@@ -36,6 +41,7 @@ export async function JobFloor({
           category={s.category}
           agents={s.agents}
           genesis={specialists.filter((g) => g.categoryId === s.category.id)}
+          receiptFitBySlug={receiptFitBySlug}
         />
       ))}
     </div>

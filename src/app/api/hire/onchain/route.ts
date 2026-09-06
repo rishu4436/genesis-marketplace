@@ -92,7 +92,7 @@ export async function POST(req: Request) {
           success: false,
           error: result.buy.error,
           data: result,
-          hint: "Fund buyer wallet with tBNB + $U. See /fund",
+          hint: "Fund buyer wallet with BSC mainnet BNB + $U. See /fund",
         },
         { status: 400 },
       );

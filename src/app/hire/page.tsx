@@ -14,11 +14,11 @@ import { catalogFilterStats } from "@/lib/catalog-quality";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
 import {
   catalogLiveStats,
-  hireClassForAgent,
-  isDefiJobAgent,
   isGenesisListing,
+  isHireableListing,
   sortForDestination,
 } from "@/lib/hire-class";
+import { CatalogModeNav } from "@/components/CatalogModeNav";
 import {
   compareByReadiness,
   compositeFromAxes,
@@ -39,14 +39,13 @@ type Props = {
     verified?: string;
     ratings?: string;
     live?: string;
-    index?: string;
   }>;
 };
 
 export const metadata = {
   title: "Hire an agent",
   description:
-    "Hire a By Genesis specialist or a hireable 8004scan listing — structured plan, you keep the keys.",
+    "Hire a By Genesis specialist or a live third-party agent. Identity-only 8004scan names are listed separately.",
 };
 
 function buildHireHref(
@@ -61,7 +60,6 @@ function buildHireHref(
   if (next.verified === "1") p.set("verified", "1");
   if (next.ratings === "1") p.set("ratings", "1");
   if (next.live === "1") p.set("live", "1");
-  if (next.index === "1") p.set("index", "1");
   if (next.page && next.page !== "1") p.set("page", next.page);
   const s = p.toString();
   return s ? `/hire?${s}` : "/hire";
@@ -91,7 +89,6 @@ export default async function HirePage({ searchParams }: Props) {
     verified: sp.verified,
     ratings: sp.ratings === "1" ? "1" : undefined,
     live: sp.live === "1" ? "1" : undefined,
-    index: sp.index === "1" ? "1" : undefined,
   };
 
   const pool = await fetchHireablePool({
@@ -109,27 +106,13 @@ export default async function HirePage({ searchParams }: Props) {
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
     live: filters.live === "1",
   };
-  let catalog = filterAgents(quality.kept, strictFilters).filter(
+  const catalogPool = quality.kept.filter(
     (a) =>
       !isFeaturedThirdParty(a.chain_id, a.token_id) && !isGenesisListing(a),
   );
-  const jobFloor = catalog.filter(
-    (a) => hireClassForAgent(a) === "live" || isDefiJobAgent(a),
+  let catalog = filterAgents(catalogPool, strictFilters).filter(
+    isHireableListing,
   );
-  const fullIndex = filters.index === "1";
-  if (!fullIndex) catalog = jobFloor;
-  let relaxed = false;
-  if (catalog.length === 0 && quality.kept.length > 0 && fullIndex) {
-    catalog = filterAgents(quality.kept, {
-      x402: false,
-      verified: false,
-      hasRatings: false,
-    }).filter(
-      (a) =>
-        !isFeaturedThirdParty(a.chain_id, a.token_id) && !isGenesisListing(a),
-    );
-    relaxed = catalog.length > 0;
-  }
 
   if (sortMode === "score") {
     catalog = [...catalog].sort(compareByReadiness);
@@ -139,7 +122,7 @@ export default async function HirePage({ searchParams }: Props) {
     catalog = sortAgents(catalog, { mode: sortMode });
   }
 
-  const liveStats = catalogLiveStats(catalog);
+  const liveStats = catalogLiveStats(catalogPool);
   const totalFiltered = catalog.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
   const safePage = Math.min(Math.max(1, page), totalPages);
@@ -174,10 +157,12 @@ export default async function HirePage({ searchParams }: Props) {
       <p className="section-label">Hire</p>
       <h1 className="display-section mt-3 text-white">Hire an agent</h1>
       <p className="lead mt-4 max-w-xl">
-        Four jobs we operate, then hireable listings from the BSC index.
-        Featured is labeled — it is not organic rank. Soft hire: you keep the
-        keys.
+        Intelligent mode: only agents you can actually hire appear.
+        Identity-only 8004scan names stay off this floor.
       </p>
+      <div className="mt-6">
+        <CatalogModeNav active="hireable" />
+      </div>
       <SoftHireNote className="mt-6 max-w-xl" />
       <div className="mt-6">
         <PartnerStatusStrip compact />
@@ -276,19 +261,17 @@ export default async function HirePage({ searchParams }: Props) {
 
       <div className="mt-14 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="section-label">8004scan</p>
+          <p className="section-label">Live third-party</p>
           <h2 className="mt-2 font-display text-xl font-bold text-white">
-            More hireable agents
+            Other hireable listings
           </h2>
           <p className="mt-1 max-w-xl text-[13px] text-white/45">
-            {fullIndex
-              ? "Full ERC-8004 index (memes filtered)."
-              : "DeFi jobs only. Meme and off-job rows stay off this floor."}{" "}
-            {liveStats.live} live A2A · {catalog.length} shown.
+            Endpoints we can negotiate. Intelligent mode hid{" "}
+            {liveStats.identity} identity-only names.
           </p>
         </div>
         <Link href="/browse" className="text-sm font-semibold text-amber-300">
-          Full index →
+          Browse hireable →
         </Link>
       </div>
 
@@ -311,9 +294,6 @@ export default async function HirePage({ searchParams }: Props) {
           <input type="hidden" name="ratings" value="1" />
         )}
         {filters.live === "1" && <input type="hidden" name="live" value="1" />}
-        {filters.index === "1" && (
-          <input type="hidden" name="index" value="1" />
-        )}
         <button type="submit" className="btn-primary !rounded-xl !py-3">
           Search
         </button>
@@ -339,7 +319,7 @@ export default async function HirePage({ searchParams }: Props) {
       </div>
 
       <div className="mt-6">
-        <FilterBar basePath="/hire" filters={filters} />
+        <FilterBar basePath="/hire" filters={filters} surface="hire" />
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-white/45">
@@ -347,11 +327,6 @@ export default async function HirePage({ searchParams }: Props) {
           {pool.error && pageAgents.length === 0
             ? "Index is slow — specialists above still hire"
             : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
-          {relaxed && (
-            <span className="ml-1 text-amber-200/70">
-              · no exact filter match — showing closest listings
-            </span>
-          )}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
               · sorted by hire readiness · this page {pageMax.toFixed(0)}–
@@ -393,8 +368,8 @@ export default async function HirePage({ searchParams }: Props) {
         !pool.error && (
           <div className="mt-10">
             <EmptyState
-              title="No catalog matches"
-              body="Specialists above stay hireable. Try a broader search or clear filters."
+              title="No other live endpoints"
+              body="Specialists above still hire. Intelligent mode hid identity-only names."
               actionHref="/hire"
               actionLabel="Clear catalog filters"
             />

@@ -71,8 +71,8 @@ export function identityFromGenesis(
   origin?: string,
 ): SellerIdentity {
   const pin = getPin(agent.slug);
-  const tokenId = pin.tokenId || agent.tokenId || null;
-  const chainId = pin.chainId || agent.chainId || 56;
+  const tokenId = pin.tokenId || null;
+  const chainId = 56;
   const controller = pin.walletAddress?.trim() || null;
   const version = sellerIdentityVersion({
     genesisSlug: agent.slug,
