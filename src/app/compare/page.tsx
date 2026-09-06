@@ -18,7 +18,7 @@ import {
   getGenesisAgentsByCategory,
 } from "@/lib/genesis-agents";
 import {
-  FEATURED_SELLERS,
+  LIVE_SELLERS,
   featuredAsAgent,
   getFeaturedThirdParty,
   thirdPartyHref,
@@ -229,7 +229,7 @@ export default async function ComparePage({ searchParams }: Props) {
             {g.name}
           </Link>
         ))}
-        {FEATURED_SELLERS.map((s) => (
+        {LIVE_SELLERS.map((s) => (
           <Link
             key={s.slug}
             href={thirdPartyHref(s)}

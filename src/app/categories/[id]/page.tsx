@@ -51,10 +51,11 @@ export default async function CategoryDetailPage({
   const fitBySlug = Object.fromEntries(
     scores.map((s) => [s.slug, s.composite]),
   );
-  const { hireable, error } = await getAgentsForCategory(id as CategoryId, {
-    page,
-    pageSize,
-  });
+  const { hireable, identity, identityTotal, hasMore, error } =
+    await getAgentsForCategory(id as CategoryId, {
+      page,
+      pageSize,
+    });
 
   const browseAllHref = `/browse?q=${encodeURIComponent(cat.searchQueries[0])}`;
   const browseOpenHref = "/browse";
@@ -93,7 +94,7 @@ export default async function CategoryDetailPage({
             href={browseOpenHref}
             className="text-xs font-semibold text-amber-300 hover:text-amber-200"
           >
-            Browse hireable →
+            Browse catalog →
           </Link>
         </div>
       </div>
@@ -122,7 +123,9 @@ export default async function CategoryDetailPage({
             .
           </li>
           <li>
-            Identity-only 8004scan names are filtered out of this shelf.
+            Unhireable identities stay on this shelf — marked{" "}
+            <span className="font-semibold text-rose-200">Unhireable</span>
+            {" "}so you never mistake them for a live hire.
           </li>
         </ul>
       </div>
@@ -130,13 +133,11 @@ export default async function CategoryDetailPage({
       {/* Explain density */}
       <div className="panel mt-8 px-4 py-3.5 sm:px-5">
         <p className="text-sm text-white/60">
-          <span className="font-semibold text-white/80">
-            Intelligent mode
-          </span>
+          <span className="font-semibold text-white/80">This shelf</span>
           {" — "}
-          {hireable.length} hireable listing
-          {hireable.length === 1 ? "" : "s"} on this job. Identity-only names
-          are hidden.
+          {hireable.length} hireable
+          {hireable.length === 1 ? "" : ""} · {identityTotal} unhireable
+          identit{identityTotal === 1 ? "y" : "ies"} listed and marked.
         </p>
       </div>
 
@@ -177,13 +178,54 @@ export default async function CategoryDetailPage({
         </div>
       )}
 
-      {hireable.length === 0 && (
+      {identity.length > 0 && (
+        <div className="mt-12">
+          <h2 className="card-title text-xl text-white">
+            Unhireable on this job
+          </h2>
+          <p className="body-sm mt-1">
+            On-chain identities with no live hire we can complete ·{" "}
+            {identityTotal} listed
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {identity.map((a) => (
+              <AgentCard
+                key={a.id || a.agent_id}
+                agent={a}
+                categoryId={cat.id}
+              />
+            ))}
+          </div>
+          {(page > 1 || hasMore) && (
+            <div className="mt-6 flex justify-center gap-3">
+              {page > 1 && (
+                <Link
+                  href={`/categories/${cat.id}?page=${page - 1}`}
+                  className="btn-secondary !py-2 !text-sm"
+                >
+                  ← Previous
+                </Link>
+              )}
+              {hasMore && (
+                <Link
+                  href={`/categories/${cat.id}?page=${page + 1}`}
+                  className="btn-primary !py-2 !text-sm"
+                >
+                  More unhireable →
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {hireable.length === 0 && identity.length === 0 && (
         <div className="mt-8">
           <EmptyState
-            title="No other live listings on this job"
+            title="No other listings on this job"
             body={
               error ||
-              `The ${BRAND.byBadge} specialist above is still hireable. Intelligent mode hid identity-only names.`
+              `The ${BRAND.byBadge} specialist above is still hireable.`
             }
             actionHref="/hire"
             actionLabel="Open hire floor"
@@ -201,12 +243,12 @@ export default async function CategoryDetailPage({
             — ranked matches for {cat.shortName}, not the entire chain.
           </li>
           <li>
-            BSC has a large ERC-8004 index; we only list hireable identities.
-            Use{" "}
+            BSC has a large ERC-8004 index. Hireable A2A is listed first;
+            the rest is marked Unhireable. Use{" "}
             <Link href="/browse" className="text-amber-300 hover:underline">
-              Browse hireable
+              Browse
             </Link>{" "}
-            for the same filter across jobs.
+            to see both across jobs.
           </li>
           <li>
             Only some agents accept hire; {BRAND.byBadge} specialists are always

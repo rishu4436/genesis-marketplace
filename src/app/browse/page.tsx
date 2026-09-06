@@ -15,6 +15,7 @@ import { catalogFilterStats } from "@/lib/catalog-quality";
 import {
   isGenesisListing,
   isHireableListing,
+  splitHireable,
   sortForDestination,
 } from "@/lib/hire-class";
 import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
@@ -95,7 +96,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     sortMode,
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
-    live: !showIndex,
+    live: filters.live === "1",
   });
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
@@ -105,9 +106,9 @@ export default async function BrowsePage({ searchParams }: Props) {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
-    live: !showIndex,
+    live: filters.live === "1",
   });
-  if (!showIndex) {
+  if (!showIndex && filters.live === "1") {
     agents = agents.filter(isHireableListing);
   }
   let relaxed = false;
@@ -119,13 +120,18 @@ export default async function BrowsePage({ searchParams }: Props) {
   // CRITICAL: sort the FULL list, then slice — never sort one API page alone
   agents = agents.filter((a) => !isGenesisListing(a));
 
-  if (sortMode === "score") {
-    agents = [...agents].sort(compareByReadiness);
-  } else if (sortMode === "rank") {
-    agents = sortForDestination(agents);
+  const sortGroup = (list: typeof agents) => {
+    if (sortMode === "score") return [...list].sort(compareByReadiness);
+    if (sortMode === "rank") return sortForDestination(list);
+    return sortAgents(list, { mode: sortMode });
+  };
+  if (showIndex) {
+    agents = sortGroup(agents);
   } else {
-    agents = sortAgents(agents, { mode: sortMode });
+    const split = splitHireable(agents);
+    agents = [...sortGroup(split.hireable), ...sortGroup(split.identity)];
   }
+  const liveSplit = splitHireable(agents);
 
   const totalFiltered = agents.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -161,12 +167,12 @@ export default async function BrowsePage({ searchParams }: Props) {
       <div className="max-w-2xl">
         <p className="section-label">Browse</p>
         <h1 className="display-section mt-3 text-white">
-          {showIndex ? "Raw identity index" : "Hireable agents"}
+          {showIndex ? "Raw identity index" : "Catalog"}
         </h1>
         <p className="lead mt-3">
           {showIndex
-            ? "ERC-8004 names including identity-only rows. Intelligent mode is off."
-            : "Intelligent mode is on: only agents you can actually hire appear — per category, no identity dump."}
+            ? "ERC-8004 names including identity-only rows. Unhireable is marked on each card."
+            : "Hireable A2A first. Unhireable identities stay listed and are marked Unhireable."}
         </p>
       </div>
 
@@ -234,7 +240,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         <span>
           {pool.error && pageAgents.length === 0
             ? "—"
-            : `${q ? "Search" : showIndex ? "Raw index" : "Hireable"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+            : `${q ? "Search" : showIndex ? "Raw index" : "Catalog"} · ${liveSplit.hireable.length} hireable · ${liveSplit.identity.length} unhireable · page ${safePage}/${totalPages}`}
           {relaxed && (
             <span className="ml-1 text-amber-200/70">
               · no exact filter match — showing closest listings
@@ -265,7 +271,7 @@ export default async function BrowsePage({ searchParams }: Props) {
               href="/browse?index=1"
               className="text-white/35 hover:text-white/60"
             >
-              Raw identity index
+              Raw index
             </Link>
           )}
           <Link href="/compare" className="text-amber-300 hover:text-amber-200">

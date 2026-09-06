@@ -7,6 +7,8 @@
 import type { Agent } from "./types";
 import { listAgentsSafe, searchAgentsSafe, dedupeAgents } from "./scan";
 import { kvCmd } from "./kv";
+import { fetchBrainFindCatalog, overlayA2a } from "./brain-find";
+import { featuredAsAgent, LIVE_SELLERS } from "./third-party-sellers";
 
 const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v1";
 
@@ -129,9 +131,13 @@ export async function fetchHireablePool(opts: {
     jobs.push(searchAgentsSafe({ q, limit: 80, chainId: 56 }));
   }
 
-  const results = await Promise.all(jobs);
+  const [results, brain] = await Promise.all([
+    Promise.all(jobs),
+    fetchBrainFindCatalog(),
+  ]);
   const { error, apiTotal } = collect(results, collected);
-  const agents = dedupeAgents(collected);
+  const pinned = LIVE_SELLERS.map((s) => featuredAsAgent(s));
+  const agents = overlayA2a(dedupeAgents([...pinned, ...collected]), brain);
 
   if (agents.length) {
     await kvCmd(

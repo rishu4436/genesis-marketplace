@@ -22,7 +22,7 @@ export function CatalogModeNav({
         href="/browse"
         className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${pill(active === "browse")}`}
       >
-        Browse hireable
+        Browse
       </Link>
       <Link
         href="/browse?index=1"
@@ -32,8 +32,8 @@ export function CatalogModeNav({
       </Link>
       <p className="text-[11px] text-white/40">
         {active === "index"
-          ? "Directory of identities — not all are hireable."
-          : "Intelligent mode on — only agents you can hire."}
+          ? "Raw index — unhireable rows are marked Unhireable."
+          : "Hireable first. Unhireable identities are listed and marked."}
       </p>
     </div>
   );

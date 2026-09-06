@@ -79,6 +79,9 @@ export function FilterBar({
         {chip(filters.ratings === "1", "Has ratings", {
           ratings: filters.ratings === "1" ? undefined : "1",
         })}
+        {chip(filters.live === "1", "Hireable only", {
+          live: filters.live === "1" ? undefined : "1",
+        })}
         {surface === "browse" && filters.index === "1"
           ? chip(true, "Raw index", { index: undefined })
           : null}

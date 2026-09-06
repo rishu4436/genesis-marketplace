@@ -17,7 +17,7 @@ import type { BuyerContext } from "./buyer-context";
 import type { DemoPayment } from "./demo-pay";
 import { buildFullReport, buildFreeScan } from "./report-engine";
 import {
-  FEATURED_SELLERS,
+  getFeaturedByToken,
   sellerFromAgent,
 } from "./third-party-sellers";
 import {
@@ -560,12 +560,7 @@ async function fulfillCatalogHire(
     autoFulfill?: boolean;
   },
 ): Promise<HireJob> {
-  let seller =
-    FEATURED_SELLERS.find(
-      (s) =>
-        Number(s.chainId) === Number(input.chainId) &&
-        String(s.tokenId) === String(input.tokenId),
-    ) || null;
+  let seller = getFeaturedByToken(input.chainId, input.tokenId);
 
   if (!seller) {
     const fetched = await getAgentSafe(input.chainId, input.tokenId);

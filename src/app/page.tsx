@@ -3,7 +3,7 @@ import { LandingPageCinematic } from "@/components/landing/archive/LandingPageCi
 export const metadata = {
   title: "The agent marketplace for the Smart Money Era",
   description:
-    "Intelligent mode: only agents you can hire appear. Four specialists on BNB Smart Chain — you keep the keys.",
+    "Hireable A2A first. Unhireable identities are listed and marked. Four specialists on BNB Smart Chain — you keep the keys.",
 };
 
 export default function HomePage() {

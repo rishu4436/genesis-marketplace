@@ -35,6 +35,10 @@ import {
   isFeaturedThirdParty,
   resolveCatalogAgent,
 } from "@/lib/third-party-sellers";
+import {
+  hireClassForAgent,
+  isHireableListing,
+} from "@/lib/hire-class";
 import { bscscanNftUrl } from "@/lib/proof-jobs";
 
 export const revalidate = 90;
@@ -117,7 +121,7 @@ export default async function AgentDetailPage({ params }: Props) {
                   ? " and pulls their operator report."
                   : " and returns their signed quote plus their public measured sample."}
               </>
-            ) : agent.a2a_endpoint ? (
+            ) : isHireableListing(agent) ? (
               <>
                 <span className="font-semibold text-sky-300">
                   Live third-party
@@ -127,23 +131,23 @@ export default async function AgentDetailPage({ params }: Props) {
               </>
             ) : (
               <>
-                <span className="font-semibold text-white/70">
-                  Indexed identity
+                <span className="font-semibold uppercase tracking-wide text-rose-200">
+                  Unhireable
                 </span>
                 {" — "}
-                no live hire we can complete. We will not impersonate them.
-                Hire a By Genesis specialist instead.
+                on-chain identity only. No live hire we can complete. We
+                will not impersonate them. Hire a By Genesis specialist
+                instead.
               </>
             )}
           </div>
-          {isFeaturedThirdParty(agent.chain_id, agent.token_id) ||
-          agent.a2a_endpoint ? (
+          {isHireableListing(agent) ? (
             <HireWizard
               chainId={agent.chain_id}
               tokenId={String(agent.token_id)}
               agentName={agent.name || `Agent #${agent.token_id}`}
               categoryId={categoryId}
-              hireReady={isFeaturedThirdParty(agent.chain_id, agent.token_id)}
+              hireReady={isHireableListing(agent)}
               priceUsd={
                 isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0
               }
@@ -151,11 +155,13 @@ export default async function AgentDetailPage({ params }: Props) {
               x402={Boolean(agent.x402_supported)}
             />
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm font-semibold text-white">No live hire</p>
+            <div className="rounded-2xl border border-rose-500/25 bg-rose-500/[0.06] p-4">
+              <p className="text-sm font-semibold uppercase tracking-wide text-rose-200">
+                Unhireable
+              </p>
               <p className="mt-1 text-[12px] leading-relaxed text-white/50">
-                This row is on-chain identity only. Open a specialist for a
-                plan you can run.
+                This row is on-chain identity only. No live hire we can
+                complete. Open a specialist for a plan you can run.
               </p>
               <Link href="/hire" className="btn-solid mt-3 inline-flex !text-sm">
                 Hire a specialist
@@ -202,6 +208,11 @@ export default async function AgentDetailPage({ params }: Props) {
                     Verified
                   </span>
                 )}
+                {hireClassForAgent(agent) === "indexed" && (
+                  <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-rose-200">
+                    Unhireable
+                  </span>
+                )}
               </div>
               <p className="mt-2 text-sm text-white/50">
                 Chain {agent.chain_id}
@@ -224,17 +235,23 @@ export default async function AgentDetailPage({ params }: Props) {
                 {agent.description ||
                   "No description provided on-chain. Identity is still verifiable via ERC-8004."}
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <a
-                  href="#buy"
-                  className="btn-primary !px-4 !py-2 !text-sm lg:hidden"
-                >
-                  Buy · $10
-                </a>
-                <span className="text-xs text-white/40">
-                  One brief → structured deliverable
-                </span>
-              </div>
+              {isHireableListing(agent) ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a
+                    href="#buy"
+                    className="btn-primary !px-4 !py-2 !text-sm lg:hidden"
+                  >
+                    Hire
+                  </a>
+                  <span className="text-xs text-white/40">
+                    One brief → their quote or a structured plan
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-rose-200">
+                  Unhireable · identity only
+                </p>
+              )}
             </div>
           </div>
 

@@ -17,6 +17,7 @@ import {
   isGenesisListing,
   isHireableListing,
   sortForDestination,
+  splitHireable,
 } from "@/lib/hire-class";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import {
@@ -45,7 +46,7 @@ type Props = {
 export const metadata = {
   title: "Hire an agent",
   description:
-    "Hire a By Genesis specialist or a live third-party agent. Identity-only 8004scan names are listed separately.",
+    "Hire a By Genesis specialist or a live third-party agent. Unhireable identities stay listed and are marked.",
 };
 
 function buildHireHref(
@@ -110,24 +111,27 @@ export default async function HirePage({ searchParams }: Props) {
     (a) =>
       !isFeaturedThirdParty(a.chain_id, a.token_id) && !isGenesisListing(a),
   );
-  let catalog = filterAgents(catalogPool, strictFilters).filter(
-    isHireableListing,
-  );
-
-  if (sortMode === "score") {
-    catalog = [...catalog].sort(compareByReadiness);
-  } else if (sortMode === "rank") {
-    catalog = sortForDestination(catalog);
-  } else {
-    catalog = sortAgents(catalog, { mode: sortMode });
+  let catalog = filterAgents(catalogPool, strictFilters);
+  if (filters.live === "1") {
+    catalog = catalog.filter(isHireableListing);
   }
 
+  const sortGroup = (list: typeof catalog) => {
+    if (sortMode === "score") return [...list].sort(compareByReadiness);
+    if (sortMode === "rank") return sortForDestination(list);
+    return sortAgents(list, { mode: sortMode });
+  };
+  const split = splitHireable(catalog);
+  const hireableSorted = sortGroup(split.hireable);
+  const identitySorted = sortGroup(split.identity);
+
   const liveStats = catalogLiveStats(catalogPool);
-  const totalFiltered = catalog.length;
+  const totalFiltered = hireableSorted.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
   const safePage = Math.min(Math.max(1, page), totalPages);
   const start = (safePage - 1) * pageSize;
-  const pageAgents = catalog.slice(start, start + pageSize);
+  const pageAgents = hireableSorted.slice(start, start + pageSize);
+  const identityPage = identitySorted.slice(0, pageSize);
   const hasPrev = safePage > 1;
   const hasNext = safePage < totalPages;
 
@@ -157,8 +161,8 @@ export default async function HirePage({ searchParams }: Props) {
       <p className="section-label">Hire</p>
       <h1 className="display-section mt-3 text-white">Hire an agent</h1>
       <p className="lead mt-4 max-w-xl">
-        Intelligent mode: only agents you can actually hire appear.
-        Identity-only 8004scan names stay off this floor.
+        Hireable A2A first. Unhireable identities stay listed below and
+        are marked Unhireable.
       </p>
       <div className="mt-6">
         <CatalogModeNav active="hireable" />
@@ -268,12 +272,12 @@ export default async function HirePage({ searchParams }: Props) {
             Other hireable listings
           </h2>
           <p className="mt-1 max-w-xl text-[13px] text-white/45">
-            Endpoints we can negotiate. Intelligent mode hid{" "}
-            {liveStats.identity} identity-only names.
+            Endpoints we can negotiate. {liveStats.identity} unhireable
+            identities are listed below, marked Unhireable.
           </p>
         </div>
         <Link href="/browse" className="text-sm font-semibold text-amber-300">
-          Browse hireable →
+          Browse catalog →
         </Link>
       </div>
 
@@ -328,7 +332,7 @@ export default async function HirePage({ searchParams }: Props) {
         <span>
           {pool.error && pageAgents.length === 0
             ? "Index is slow — specialists above still hire"
-            : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} loaded · page ${safePage}/${totalPages}`}
+            : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} hireable · ${identitySorted.length} unhireable · page ${safePage}/${totalPages}`}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
               · sorted by hire readiness · this page {pageMax.toFixed(0)}–
@@ -371,7 +375,7 @@ export default async function HirePage({ searchParams }: Props) {
           <div className="mt-10">
             <EmptyState
               title="No other live endpoints"
-              body="Specialists above still hire. Intelligent mode hid identity-only names."
+              body="Specialists above still hire. Unhireable identities are listed below."
               actionHref="/hire"
               actionLabel="Clear catalog filters"
             />
@@ -404,6 +408,36 @@ export default async function HirePage({ searchParams }: Props) {
               className="btn-primary !py-2 !text-sm"
             >
               Next →
+            </Link>
+          )}
+        </div>
+      )}
+
+      {safePage === 1 && identityPage.length > 0 && (
+        <div className="mt-14">
+          <p className="section-label">Unhireable</p>
+          <h2 className="mt-2 font-display text-xl font-bold text-white">
+            Indexed identities — not for hire
+          </h2>
+          <p className="mt-1 max-w-xl text-[13px] text-white/45">
+            On-chain ERC-8004 names with no live endpoint we can complete.
+            Marked Unhireable so they never look like a Buy.
+          </p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {identityPage.map((a) => (
+              <AgentCard
+                key={a.id || a.agent_id}
+                agent={a}
+                ctaLabel="Hire"
+              />
+            ))}
+          </div>
+          {identitySorted.length > identityPage.length && (
+            <Link
+              href="/browse"
+              className="mt-4 inline-block text-sm font-semibold text-amber-300"
+            >
+              Browse all unhireable →
             </Link>
           )}
         </div>

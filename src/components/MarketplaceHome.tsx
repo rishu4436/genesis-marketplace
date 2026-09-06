@@ -10,7 +10,7 @@ import { getCategory } from "@/lib/categories";
 import { BRAND } from "@/lib/brand";
 import { JOB_CHIPS } from "@/lib/job-chips";
 import {
-  FEATURED_SELLERS,
+  LIVE_SELLERS,
   thirdPartyHref,
 } from "@/lib/third-party-sellers";
 
@@ -105,14 +105,14 @@ export async function MarketplaceHome() {
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {FEATURED_SELLERS.map((s) => (
+        {LIVE_SELLERS.map((s) => (
           <Link
             key={s.slug}
             href={`${thirdPartyHref(s)}#buy`}
             className="flex items-center gap-3 rounded-[12px] border border-white/[0.08] px-4 py-3 text-[13px] transition hover:border-white/20"
           >
             <span className="rounded-full border border-sky-400/25 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-sky-200/80">
-              Live
+              {s.featured ? "Featured" : "Live"}
             </span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-white">
@@ -135,8 +135,8 @@ export async function MarketplaceHome() {
           Shop by job
         </h2>
         <p className="mt-2 max-w-lg text-[14px] text-white/40">
-          Intelligent mode: each shelf is hireable only. Identity-only
-          names never appear here.
+          Hireable A2A on each shelf. Unhireable identities are listed
+          on the category page and marked Unhireable.
         </p>
       </div>
 

@@ -47,7 +47,7 @@ const STEPS = [
   {
     n: "01",
     t: "Discover",
-    d: "Intelligent mode matches the job to hireable agents only — identity-only names stay off the floor.",
+    d: "Hireable A2A first. Unhireable identities stay listed and are marked Unhireable — we do not hide the index.",
   },
   {
     n: "02",
@@ -68,8 +68,8 @@ const STEPS = [
 
 const WINS = [
   {
-    t: "Intelligent mode",
-    d: "We hide anyone you cannot hire — smoother floor, no 8004 dump.",
+    t: "Honest catalog",
+    d: "Hireable first. Unhireable identities are listed and marked — no fake 350k hire floor.",
   },
   {
     t: "Four categories, equal",
@@ -231,8 +231,8 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          Intelligent mode: only hireable agents hit the floor. Un-hireable
-          identities never appear.
+          Hireable A2A first. Unhireable identities stay listed and are
+          marked Unhireable.
         </motion.p>
         <motion.div
           className="mt-10 flex flex-wrap items-center gap-3"
@@ -399,7 +399,7 @@ export function LandingPageCinematic() {
               </p>
               <ul className="mt-8 space-y-3">
                 {[
-                  "Intelligent mode: hireable in, identity-only out",
+                  "Hireable first · unhireable identities marked, not hidden",
                   "Equal depth across four DeFi job types",
                   "Hire in one flow — plan-first, keys stay yours",
                 ].map((line) => (

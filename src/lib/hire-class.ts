@@ -5,7 +5,7 @@
 
 import type { Agent } from "./types";
 import { CATEGORIES } from "./categories";
-import { isFeaturedThirdParty } from "./third-party-sellers";
+import { isPinnedLiveSeller } from "./third-party-sellers";
 import { allGenesisAgents } from "./genesis-agents";
 
 export type HireClass = "genesis" | "live" | "indexed";
@@ -54,17 +54,25 @@ export function isDirectoryLeak(agent: Agent): boolean {
   return false;
 }
 
-function hasPublicA2a(agent: Agent): boolean {
-  const u = (agent.a2a_endpoint || "").trim();
+/** Endpoints we cannot complete a hire against (IAM, object storage, stubs). */
+const UNHIREABLE_A2A =
+  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com/i;
+
+export function isPublicHireableUrl(url: string): boolean {
+  const u = url.trim();
   if (!/^https:\/\//i.test(u)) return false;
-  if (/localhost|127\.0\.0\.1|\.example\./i.test(u)) return false;
+  if (UNHIREABLE_A2A.test(u)) return false;
   return u.length >= 24;
+}
+
+function hasPublicA2a(agent: Agent): boolean {
+  return isPublicHireableUrl(agent.a2a_endpoint || "");
 }
 
 export function hireClassForAgent(agent: Agent): HireClass {
   if (isGenesisListing(agent)) return "genesis";
   if (isDirectoryLeak(agent)) return "indexed";
-  if (isFeaturedThirdParty(agent.chain_id, agent.token_id)) return "live";
+  if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return "live";
   if (hasPublicA2a(agent)) return "live";
   return "indexed";
 }
@@ -72,7 +80,7 @@ export function hireClassForAgent(agent: Agent): HireClass {
 export function hireClassLabel(c: HireClass): string {
   if (c === "genesis") return "By Genesis";
   if (c === "live") return "Live third-party";
-  return "Indexed identity";
+  return "Unhireable";
 }
 
 export function hireClassHint(c: HireClass): string {
@@ -142,6 +150,14 @@ export function destinationRank(agent: Agent): number {
 
 export function sortForDestination(agents: Agent[]): Agent[] {
   return [...agents].sort((a, b) => destinationRank(b) - destinationRank(a));
+}
+
+export function sortHireableFirst<T extends Agent>(agents: T[]): T[] {
+  const { hireable, identity } = splitHireable(agents);
+  return [
+    ...(sortForDestination(hireable) as T[]),
+    ...(sortForDestination(identity) as T[]),
+  ];
 }
 
 export function catalogLiveStats(agents: Agent[]): {

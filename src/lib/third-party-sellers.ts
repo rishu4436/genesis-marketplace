@@ -125,6 +125,95 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
   },
 ];
 
+/**
+ * Extra live A2A we probed (Brain /find + negotiate 200).
+ * Hireable, not a labeled featured slot.
+ */
+export const EXTRA_LIVE_SELLERS: ThirdPartySeller[] = [
+  {
+    slug: "chainhelix-rebalancer",
+    name: "ChainHelix — Portfolio Rebalancer",
+    chainId: 56,
+    tokenId: "269223",
+    categoryId: "rebalancing",
+    tagline: "ERC-8183 A2A rebalancer · negotiate + notify_funded",
+    description:
+      "ERC-8183 seller (rebalancer-agent). Quotes a rebalance over A2A. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://agents.chainhelix.io/rebalancer/.well-known/agent-card.json",
+    rpcUrl: "https://agents.chainhelix.io/rebalancer/",
+    skillId: "rebalancing",
+    ownerAddress: "",
+  },
+  {
+    slug: "chainhelix-grid",
+    name: "ChainHelix — Grid Trader",
+    chainId: 56,
+    tokenId: "269224",
+    categoryId: "grid-trading",
+    tagline: "ERC-8183 A2A grid seller · negotiate + notify_funded",
+    description:
+      "ERC-8183 seller (gridtrader-agent). Quotes a grid job over A2A. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://agents.chainhelix.io/gridtrader/.well-known/agent-card.json",
+    rpcUrl: "https://agents.chainhelix.io/gridtrader/",
+    skillId: "grid",
+    ownerAddress: "",
+  },
+  {
+    slug: "chainhelix-health",
+    name: "ChainHelix — Health Factor Monitor",
+    chainId: 56,
+    tokenId: "269228",
+    categoryId: "health-factor",
+    tagline: "ERC-8183 A2A health-factor seller · negotiate + notify_funded",
+    description:
+      "ERC-8183 seller (healthmon-agent). Quotes a health-factor job over A2A. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://agents.chainhelix.io/healthmon/.well-known/agent-card.json",
+    rpcUrl: "https://agents.chainhelix.io/healthmon/",
+    skillId: "health",
+    ownerAddress: "",
+  },
+  {
+    slug: "bnb-yield-optimizer",
+    name: "BNB Yield Optimizer",
+    chainId: 56,
+    tokenId: "265876",
+    categoryId: "yield-optimisation",
+    tagline: "Live Venus/PCS yield scanner · A2A + operator API",
+    description:
+      "Scans BSC lending and liquidity protocols and reports risk-adjusted yield. Sells over A2A + operator REST. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://bnb-yield.172-104-171-139.nip.io/.well-known/agent-card.json",
+    rpcUrl: "https://bnb-yield.172-104-171-139.nip.io/a2a",
+    restBase: "https://bnb-yield.172-104-171-139.nip.io",
+    skillId: "negotiate",
+    ownerAddress: "0xa09991fc5D8637bb4245737C3ebF26E24D653962",
+  },
+  {
+    slug: "bnb-lending-guardian",
+    name: "BNB Lending Guardian",
+    chainId: 56,
+    tokenId: "266933",
+    categoryId: "health-factor",
+    tagline: "Live Venus liquidation guardian · A2A + operator API",
+    description:
+      "Monitors Venus lending positions and reports liquidation risk. Sells over A2A + operator REST. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://bnb-guardian.172-104-171-139.nip.io/.well-known/agent-card.json",
+    rpcUrl: "https://bnb-guardian.172-104-171-139.nip.io/a2a",
+    restBase: "https://bnb-guardian.172-104-171-139.nip.io",
+    skillId: "negotiate",
+    ownerAddress: "0xa09991fc5D8637bb4245737C3ebF26E24D653962",
+  },
+];
+
+export const LIVE_SELLERS: ThirdPartySeller[] = [
+  ...FEATURED_SELLERS,
+  ...EXTRA_LIVE_SELLERS,
+];
+
 /** Backward-compat: featured rebalancing outsider used by partner probes. */
 export const FEATURED_THIRD_PARTY: ThirdPartySeller = FEATURED_SELLERS[0]!;
 
@@ -134,6 +223,16 @@ export function isFeaturedThirdParty(
 ): boolean {
   const t = String(tokenId);
   return FEATURED_SELLERS.some(
+    (s) => Number(chainId) === s.chainId && String(s.tokenId) === t,
+  );
+}
+
+export function isPinnedLiveSeller(
+  chainId: number,
+  tokenId: string | number,
+): boolean {
+  const t = String(tokenId);
+  return LIVE_SELLERS.some(
     (s) => Number(chainId) === s.chainId && String(s.tokenId) === t,
   );
 }
@@ -152,13 +251,20 @@ export function getFeaturedSellers(
   return FEATURED_SELLERS.filter((s) => s.categoryId === categoryId);
 }
 
+export function getLiveSellers(
+  categoryId?: CategoryId | null,
+): ThirdPartySeller[] {
+  if (!categoryId) return [...LIVE_SELLERS];
+  return LIVE_SELLERS.filter((s) => s.categoryId === categoryId);
+}
+
 export function getFeaturedByToken(
   chainId: number,
   tokenId: string | number,
 ): ThirdPartySeller | null {
   const t = String(tokenId);
   return (
-    FEATURED_SELLERS.find(
+    LIVE_SELLERS.find(
       (s) => Number(s.chainId) === Number(chainId) && String(s.tokenId) === t,
     ) ?? null
   );
@@ -217,7 +323,7 @@ export function sellerRpcUrl(s: ThirdPartySeller): string {
 }
 
 export function sellerFromAgent(agent: Agent): ThirdPartySeller | null {
-  const featured = FEATURED_SELLERS.find(
+  const featured = LIVE_SELLERS.find(
     (s) =>
       Number(s.chainId) === Number(agent.chain_id) &&
       String(s.tokenId) === String(agent.token_id),

@@ -12,7 +12,15 @@ import {
   listingHref,
 } from "../src/lib/hire-class";
 import { filterAgents } from "../src/lib/agent-rank";
-import { FEATURED_THIRD_PARTY, featuredAsAgent } from "../src/lib/third-party-sellers";
+import {
+  EXTRA_LIVE_SELLERS,
+  FEATURED_THIRD_PARTY,
+  LIVE_SELLERS,
+  featuredAsAgent,
+  isPinnedLiveSeller,
+} from "../src/lib/third-party-sellers";
+import { hireClassLabel, isPublicHireableUrl } from "../src/lib/hire-class";
+import { brainHitToAgent } from "../src/lib/brain-find";
 import type { Agent } from "../src/lib/types";
 import { catalogDropReason } from "../src/lib/catalog-quality";
 import { classifyHealth, type HealthChecks } from "../src/lib/agent-health-model";
@@ -103,6 +111,85 @@ function main() {
   check("live stats count 1 indexed", stats.indexed === 1);
   check("featured is hireable", isHireableListing(featured) === true);
   check("identity-only is not hireable", isHireableListing(indexed) === false);
+  check(
+    "indexed class label is Unhireable",
+    hireClassLabel("indexed") === "Unhireable",
+  );
+  check(
+    "bedrock AgentCore URL is not hireable",
+    isPublicHireableUrl(
+      "https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn:aws:bedrock-agentcore:us-east-1:1:runtime/x/invocations",
+    ) === false,
+  );
+  check(
+    "s3 card URL is not a hireable RPC",
+    isPublicHireableUrl(
+      "https://rangereset-deliverables-899042279537.s3.us-east-1.amazonaws.com/.well-known/agent-card.json",
+    ) === false,
+  );
+  check(
+    "IAM execute-api is not hireable",
+    isPublicHireableUrl(
+      "https://gvwyso8occ.execute-api.us-east-1.amazonaws.com/a2a",
+    ) === false,
+  );
+  check("five extra live pins", EXTRA_LIVE_SELLERS.length === 5);
+  check("eleven live third-party pins", LIVE_SELLERS.length === 11);
+  const helix = brainHitToAgent(
+    {
+      id: 269223,
+      name: "Portfolio Rebalancer",
+      speaks: ["a2a"],
+      endpoints: [
+        "https://agents.chainhelix.io/rebalancer/.well-known/agent-card.json",
+      ],
+    },
+    "rebalancing",
+  );
+  check("brain find helix is hireable", Boolean(helix && isHireableListing(helix)));
+  const sentinels = brainHitToAgent(
+    {
+      id: 325413,
+      name: "Sentinels LP Rebalancer",
+      speaks: [],
+      endpoints: [
+        "https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn:aws:bedrock-agentcore:us-east-1:1:runtime/x/invocations/.well-known/agent-card.json",
+      ],
+    },
+    "rebalancing",
+  );
+  check(
+    "brain find sentinels is unhireable",
+    Boolean(sentinels && isHireableListing(sentinels) === false),
+  );
+  const rangeReset = brainHitToAgent(
+    {
+      id: 324818,
+      name: "RangeReset",
+      speaks: ["a2a"],
+      endpoints: [
+        "https://rangereset-deliverables-899042279537.s3.us-east-1.amazonaws.com/.well-known/agent-card.json",
+        "https://bedrock-agentcore.us-east-1.amazonaws.com/runtimes/arn:aws:bedrock-agentcore:us-east-1:1:runtime/rangereset/invocations",
+      ],
+    },
+    "rebalancing",
+  );
+  check(
+    "brain find RangeReset (bedrock) is unhireable",
+    Boolean(rangeReset && isHireableListing(rangeReset) === false),
+  );
+  check(
+    "chainhelix rebalancer is pinned live",
+    isPinnedLiveSeller(56, "269223") === true,
+  );
+  check(
+    "yield optimizer pin is hireable",
+    isHireableListing(featuredAsAgent(EXTRA_LIVE_SELLERS[3])) === true,
+  );
+  check(
+    "extra live is not the featured LP slot",
+    EXTRA_LIVE_SELLERS.every((s) => s.tokenId !== FEATURED_THIRD_PARTY.tokenId),
+  );
   const testStub: Agent = {
     ...featured,
     name: "test.agent",

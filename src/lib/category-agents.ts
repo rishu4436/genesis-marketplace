@@ -9,7 +9,8 @@ import { rankScore } from "./agent-rank";
 import { compareByScore } from "./agent-score";
 import { filterHireableCatalog } from "./catalog-quality";
 import { isHireableListing, splitHireable } from "./hire-class";
-import { featuredAsAgent, getFeaturedSellers } from "./third-party-sellers";
+import { featuredAsAgent, getLiveSellers } from "./third-party-sellers";
+import { fetchBrainFindForCategory, overlayA2a } from "./brain-find";
 import type { Agent } from "./types";
 
 function textMatch(agent: Agent, keywords: string[]): number {
@@ -72,7 +73,7 @@ export async function getAgentsForCategory(
   const kw1 = cat.keywords[0];
   const kw2 = cat.keywords[1] || cat.keywords[0];
 
-  const [semantic, listKw1, listKw2, top] = await Promise.all([
+  const [semantic, listKw1, listKw2, top, brain] = await Promise.all([
     searchAgentsSafe({ q: primaryQ, limit: 40, chainId: BSC_CHAIN_ID }),
     kw1
       ? listAgentsSafe({
@@ -101,6 +102,7 @@ export async function getAgentsForCategory(
       sortBy: "total_score",
       sortOrder: "desc",
     }),
+    fetchBrainFindForCategory(categoryId),
   ]);
 
   for (const r of [semantic, listKw1, listKw2, top]) {
@@ -121,10 +123,10 @@ export async function getAgentsForCategory(
   const without = pool
     .filter((a) => textMatch(a, cat.keywords) === 0)
     .sort(compareByScore);
-  let ranked = dedupeAgents([...withHits, ...without]);
-  const featured = getFeaturedSellers(categoryId).map((s) => featuredAsAgent(s));
-  if (featured.length) {
-    ranked = dedupeAgents([...featured, ...ranked]);
+  let ranked = overlayA2a(dedupeAgents([...withHits, ...without]), brain);
+  const pinned = getLiveSellers(categoryId).map((s) => featuredAsAgent(s));
+  if (pinned.length) {
+    ranked = overlayA2a(dedupeAgents([...pinned, ...ranked]), []);
   }
 
   const totalMatched = ranked.length;
@@ -132,7 +134,7 @@ export async function getAgentsForCategory(
   const start = (page - 1) * pageSize;
   const identity = identityAll.slice(start, start + pageSize);
   const hasMore = start + pageSize < identityAll.length;
-  const agents = hireable.slice(0, pageSize);
+  const agents = hireable.slice(0, Math.max(pageSize, 48));
 
   const source =
     withHits.length >= 4

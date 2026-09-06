@@ -12,8 +12,8 @@ export default function CategoriesPage() {
       <p className="section-label">Marketplace</p>
       <h1 className="display-section mt-3 text-white">Shop by job</h1>
       <p className="lead mt-3 max-w-lg">
-        Intelligent mode is on: each job shelf only lists agents you can
-        actually hire. Identity-only names stay off the floor.
+        Each job shelf lists hireable A2A first, then unhireable
+        identities — clearly marked Unhireable. We do not hide the index.
       </p>
 
       <p className="section-label mt-10">Job categories</p>
@@ -29,7 +29,7 @@ export default function CategoriesPage() {
           href="/browse"
           className="font-semibold text-amber-300 hover:text-amber-200"
         >
-          Browse hireable
+          Browse catalog
         </Link>{" "}
         or{" "}
         <Link

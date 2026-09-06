@@ -107,6 +107,27 @@ export default async function JudgePage() {
             className="text-amber-300 hover:underline"
           >
             Brain PCS tier #310460
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/269223?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            ChainHelix rebalance #269223
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/265876?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Yield optimizer #265876
+          </Link>
+          {" · "}
+          <Link
+            href="/agents/56/266933?buy=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            Lending guardian #266933
           </Link>{" "}
           — not By Genesis
         </li>

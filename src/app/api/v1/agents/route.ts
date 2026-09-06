@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { allGenesisAgents } from "@/lib/genesis-agents";
 import { checkAllAgentHealth } from "@/lib/agent-health";
 import { listClaims } from "@/lib/seller-claims";
-import { FEATURED_SELLERS } from "@/lib/third-party-sellers";
+import { LIVE_SELLERS } from "@/lib/third-party-sellers";
 import { admitAllSpecialists } from "@/lib/admission";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
 
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
       : null,
   }));
 
-  const liveThird = FEATURED_SELLERS.map((s) => ({
+  const liveThird = LIVE_SELLERS.map((s) => ({
     type: "live_third_party" as const,
     hireClass: "live" as const,
     slug: s.slug,
@@ -84,6 +84,7 @@ export async function GET(req: Request) {
     hireApi: `${origin}/api/hire`,
     a2a: s.a2aCardUrl || null,
     rest: s.restBase,
+    featured: Boolean(s.featured),
     note: "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
   }));
 

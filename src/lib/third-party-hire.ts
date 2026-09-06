@@ -80,18 +80,26 @@ function asRecord(v: unknown): Record<string, unknown> | null {
     : null;
 }
 
+function unwrapParts(parts: unknown): Record<string, unknown> | null {
+  if (!Array.isArray(parts) || !parts[0]) return null;
+  const p0 = asRecord(parts[0]);
+  const data = asRecord(p0?.data);
+  if (!data) return null;
+  const response = asRecord(data.response);
+  return { ...data, ...(response || {}) };
+}
+
 /** Brain returns a flat quote; LP rebalancer nests it in A2A parts. */
 function unwrapA2a(raw: unknown): Record<string, unknown> {
   const root = asRecord(raw);
   const result = asRecord(root?.result) || {};
-  const parts = result.parts;
-  if (Array.isArray(parts) && parts[0]) {
-    const p0 = asRecord(parts[0]);
-    const data = asRecord(p0?.data);
-    if (data) {
-      const response = asRecord(data.response);
-      return { ...data, ...(response || {}) };
-    }
+  const fromParts = unwrapParts(result.parts);
+  if (fromParts) return fromParts;
+  const artifacts = result.artifacts;
+  if (Array.isArray(artifacts) && artifacts[0]) {
+    const a0 = asRecord(artifacts[0]);
+    const fromArt = unwrapParts(a0?.parts);
+    if (fromArt) return fromArt;
   }
   return result;
 }

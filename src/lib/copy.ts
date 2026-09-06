@@ -11,7 +11,7 @@ export const SOFT_HIRE_SHORT =
   "Soft hire · plan only · you keep the keys · optional mainnet escrow on /fund";
 
 export const INTELLIGENCE_LINE =
-  "Intelligent mode: only agents you can actually hire appear. Identity-only 8004scan names stay off the floor.";
+  "Hireable agents first. Unhireable ERC-8004 identities stay listed and are marked Unhireable — we do not hide the index.";
 
 export const INTELLIGENCE_SHORT =
-  "Intelligent mode on — only agents you can hire.";
+  "Hireable first · unhireable identities are marked, not hidden.";

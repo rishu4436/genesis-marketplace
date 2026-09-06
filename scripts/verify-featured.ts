@@ -9,7 +9,10 @@ import { decorateRankSurface } from "../src/lib/rank-surface";
 import { rankGenesisForJob } from "../src/lib/job-rank";
 import { JOB_CHIPS } from "../src/lib/job-chips";
 import { allGenesisAgents } from "../src/lib/genesis-agents";
-import { FEATURED_THIRD_PARTY } from "../src/lib/third-party-sellers";
+import {
+  EXTRA_LIVE_SELLERS,
+  FEATURED_THIRD_PARTY,
+} from "../src/lib/third-party-sellers";
 
 type Check = { name: string; ok: boolean; detail?: string };
 const checks: Check[] = [];
@@ -83,6 +86,12 @@ function main() {
     loops.some((l) => l.id === "share-receipt" && l.href.includes("/jobs/")),
   );
 
+  check(
+    "extra live pins are not labeled featured slots",
+    EXTRA_LIVE_SELLERS.filter((s) => s.categoryId === "rebalancing").every(
+      (s) => !rebal.some((f) => f.slug === s.slug),
+    ),
+  );
   check("four specialists still exist", allGenesisAgents().length === 4);
   check(
     "featured slug is not a genesis specialist",

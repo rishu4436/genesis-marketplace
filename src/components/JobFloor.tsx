@@ -27,8 +27,9 @@ export async function JobFloor({
             Four jobs. Hire from here.
           </h2>
           <p className="body-sm mt-1 max-w-xl">
-            Same depth on every shelf — specialist first, then live hireable
-            listings. Identity-only names never appear on these shelves.
+            Same depth on every shelf — specialist first, then live
+            hireable listings. Unhireable identities are listed on each
+            category page and marked.
           </p>
         </div>
         <Link href="/categories" className="text-sm font-semibold text-amber-300">

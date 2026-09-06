@@ -46,7 +46,13 @@ export function AgentCard({
   const actionHref = canHire ? `${href}#buy` : href;
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-amber-400/35 hover:bg-white/[0.06]">
+    <div
+      className={`group flex flex-col rounded-2xl border p-4 transition-colors ${
+        canHire
+          ? "border-white/10 bg-white/[0.03] hover:border-amber-400/35 hover:bg-white/[0.06]"
+          : "border-rose-500/20 bg-rose-500/[0.04] hover:border-rose-400/35"
+      }`}
+    >
       <div className="flex items-start gap-3">
         <Link href={href} className="shrink-0">
           <AgentAvatar
@@ -91,8 +97,8 @@ export function AgentCard({
                 {hireClassLabel("live")}
               </span>
             ) : (
-              <span className="text-[10px] text-white/35">
-                {hireClassLabel("indexed")}
+              <span className="rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-200">
+                Unhireable
               </span>
             )}
           </div>
