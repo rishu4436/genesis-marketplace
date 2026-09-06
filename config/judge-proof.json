@@ -1,0 +1,13 @@
+{
+  "escrow": {
+    "label": "ERC-8183 escrow proof (separate from soft-hire jobs)",
+    "network": "bsc-mainnet",
+    "chainId": 56,
+    "marketplaceJobId": null,
+    "onchainJobId": null,
+    "fundTx": null,
+    "settleTx": null,
+    "disputeTx": null,
+    "note": "No mainnet escrow fund is recorded yet. Do not invent hashes. Soft-hire receipts on /judge are not escrow proof."
+  }
+}

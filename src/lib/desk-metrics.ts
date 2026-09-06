@@ -41,7 +41,11 @@ export async function deskWeek(): Promise<DeskWeek> {
   ).length;
   const paid = recent.filter(isPaidEscrow);
   const payers = new Set(
-    paid.map((j) => (j.payment?.walletAddress || "").toLowerCase()).filter(Boolean),
+    paid
+      .map((j) =>
+        (j.escrow?.buyer || j.payment?.walletAddress || "").toLowerCase(),
+      )
+      .filter(Boolean),
   );
   const week: DeskWeek = {
     windowDays: 7,

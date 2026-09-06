@@ -4,6 +4,7 @@ import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 import { DeskStrip } from "@/components/DeskStrip";
 import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
 import { allGenesisAgents } from "@/lib/genesis-agents";
+import { escrowJudgeProof, escrowProofExplorer } from "@/lib/judge-proof";
 
 export const metadata = {
   title: "Judge path",
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function JudgePage() {
   const proof = await readLiveProof();
   const specialists = allGenesisAgents();
+  const escrowProof = escrowJudgeProof();
 
   return (
     <div className="mx-auto max-w-lg px-5 py-12 sm:px-8">
@@ -170,6 +172,62 @@ export default async function JudgePage() {
           — 8004scan, Altana, TermiX, PancakeSwap, live A2A probes
         </li>
       </ol>
+
+      <div className="mt-8 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
+          {escrowProof.label}
+        </p>
+        {escrowProof.fundTx ? (
+          <>
+            <p className="mt-1 text-sm text-white">
+              Mainnet ERC-8183 fund
+              {escrowProof.onchainJobId
+                ? ` · on-chain job ${escrowProof.onchainJobId}`
+                : ""}
+              {escrowProof.marketplaceJobId
+                ? ` · receipt ${escrowProof.marketplaceJobId}`
+                : ""}
+            </p>
+            <a
+              href={escrowProofExplorer(escrowProof.fundTx) || "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-block text-xs font-semibold text-amber-300 hover:underline"
+            >
+              Fund tx on BscScan ↗
+            </a>
+            {escrowProof.settleTx && (
+              <a
+                href={escrowProofExplorer(escrowProof.settleTx) || "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+              >
+                Settle tx ↗
+              </a>
+            )}
+            {escrowProof.marketplaceJobId && (
+              <Link
+                href={`/jobs/${encodeURIComponent(escrowProof.marketplaceJobId)}`}
+                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+              >
+                Open receipt
+              </Link>
+            )}
+          </>
+        ) : (
+          <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+            {escrowProof.note} Start from{" "}
+            <Link
+              href="/genesis/range-keeper?escrow=1#buy"
+              className="text-amber-300 hover:underline"
+            >
+              RangeKeeper · Hire with escrow
+            </Link>
+            . Soft-hire jobs above are not this proof.
+          </p>
+        )}
+      </div>
 
       {proof ? (
         <div className="mt-8 rounded-xl border border-violet-400/25 bg-violet-500/10 p-4">

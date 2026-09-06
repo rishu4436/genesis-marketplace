@@ -11,7 +11,7 @@ export const ESCROW_STANCE = {
   reason: "BscMainnet",
   path: "/fund",
   network: "bsc-mainnet" as const,
-  note: "Plan delivers without escrow. Optional on-chain lock is BSC mainnet ERC-8183.",
+  note: "Plan delivers without escrow. Optional on-chain lock is BSC mainnet ERC-8183 from the agent page.",
 };
 
 export type EscrowStance = typeof ESCROW_STANCE;

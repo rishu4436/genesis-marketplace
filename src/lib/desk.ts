@@ -34,7 +34,7 @@ export const DESK_RAILS: Record<
     name: "Escrow hire",
     short: "L2",
     meaning:
-      "Optional BSC mainnet ERC-8183 lock on /fund. Evaluator + refund on expiry. Not the default path.",
+      "Optional BSC mainnet ERC-8183 lock from the agent page. Evaluator + refund on expiry. Not the default path.",
   },
 };
 

@@ -44,6 +44,31 @@ export type HireStatus =
   | "delivered"
   | "failed";
 
+export type EscrowRecord = {
+  protocol: "ERC-8183";
+  chainId: 56;
+  onchainJobId: string;
+  token: `0x${string}`;
+  tokenSymbol: "U";
+  amountWei: string;
+  amountU: string;
+  buyer: `0x${string}`;
+  /** Seller identity / escrow counterparty — never a tip address. */
+  provider: `0x${string}`;
+  commerce: `0x${string}`;
+  router: `0x${string}`;
+  policy: `0x${string}`;
+  createTx?: `0x${string}`;
+  fundTx?: `0x${string}`;
+  approveTx?: `0x${string}`;
+  settleTx?: `0x${string}`;
+  disputeTx?: `0x${string}`;
+  chainStatus?: string;
+  submittedAt?: number;
+  disputeWindowSeconds?: number;
+  expiredAt?: number;
+};
+
 export type HireQuote = {
   priceUsd: number;
   currency: string;
@@ -91,6 +116,8 @@ export type HireJob = {
   buyerContext?: BuyerContext | null;
   quote?: HireQuote;
   payment?: DemoPayment;
+  /** On-chain ERC-8183 lock. Absent on soft hire. */
+  escrow?: EscrowRecord;
   deliverable?: HireDeliverable;
   timeline: { at: string; status: HireStatus; detail: string }[];
   serviceUrl?: string;
@@ -754,11 +781,11 @@ export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
       g,
       next.buyerContext ?? null,
     );
-    if (next.tier === "escrow") {
+    if (next.tier === "escrow" && !next.escrow?.fundTx) {
       deliverable.sections = [
         {
           heading: "On-chain escrow path",
-          body: "This job was fulfilled under the Escrow tier analysis. To lock U on-chain when policy allows: open /fund, create/fund ERC-8183 job, then settle after 24h. Soft deliverable is available now so you are never blocked. Escrow is not required for this plan.",
+          body: "This analysis is the plan. Optional ERC-8183 lock starts from the agent page (Hire with escrow) — not a transfer to the seller address.",
         },
         ...deliverable.sections,
       ];
@@ -771,11 +798,11 @@ export async function fulfillJobAsync(job: HireJob): Promise<HireJob> {
   const deliverable =
     ran.value || buildExpertDeliverable(next, g);
 
-  if (next.tier === "escrow" && !ran.value) {
+  if (next.tier === "escrow" && !next.escrow?.fundTx && !ran.value) {
     deliverable.sections = [
       {
         heading: "On-chain escrow path",
-        body: "Escrow is optional on BSC mainnet ERC-8183. Soft deliverable is available now so you are never blocked.",
+        body: "Escrow is optional BSC mainnet ERC-8183 from the agent page. Soft deliverable is available now so you are never blocked.",
       },
       ...deliverable.sections,
     ];

@@ -12,7 +12,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
     },
     {
       t: "Compare, then hire",
-      d: "Receipt score and hire rail before Buy. L0 returns a plan. L2 is optional mainnet ERC-8183 on /fund.",
+      d: "Receipt score and hire rail before Buy. L0 returns a plan. L2 is optional mainnet ERC-8183 from the agent page.",
     },
     {
       t: "Prove and rank",
@@ -61,7 +61,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs text-white/55">
           <span className="font-semibold text-white/80">L2 Escrow</span> = optional
-          BSC mainnet ERC-8183. Default path never waits on a lock.
+          BSC mainnet ERC-8183 from the agent page. Default path never waits on a lock.
         </div>
       </div>
     </section>

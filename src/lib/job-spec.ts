@@ -100,6 +100,10 @@ export type JobReceipt = {
     required: false;
     available: boolean;
     reason: string;
+    protocol?: string;
+    onchainJobId?: string;
+    fundTx?: string;
+    chainId?: number;
   };
 };
 

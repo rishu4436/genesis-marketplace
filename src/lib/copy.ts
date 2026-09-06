@@ -5,10 +5,19 @@
  */
 
 export const SOFT_HIRE_LINE =
-  "L0 Plan-only: free structured plan, you keep the keys. L2 Escrow is optional BSC mainnet ERC-8183 on /fund.";
+  "Plan only · you keep the keys · no custody. L2 Escrow is optional BSC mainnet ERC-8183 from the agent page.";
 
 export const SOFT_HIRE_SHORT =
-  "L0 plan-only · you keep the keys · L2 optional mainnet escrow on /fund";
+  "Plan only · you keep the keys · no custody";
+
+export const ESCROW_LINE =
+  "On-chain lock · settle after deliverable · dispute window";
+
+export const ESCROW_CTA =
+  "Funds lock in ERC-8183 escrow until you approve. The agent never receives a direct transfer.";
+
+export const NEVER_PAY_SELLER =
+  "Do not send funds to seller addresses to hire.";
 
 export const INTELLIGENCE_LINE =
   "Hireable agents first. Unhireable ERC-8004 identities stay listed and are marked Unhireable — we do not hide the index.";

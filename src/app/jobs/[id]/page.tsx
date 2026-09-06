@@ -5,6 +5,9 @@ import { JobReceiptPanel } from "@/components/JobReceiptPanel";
 import { JobSessionPanel } from "@/components/JobSessionPanel";
 import { JobDecisionPanel } from "@/components/JobDecisionPanel";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
+import { JobEscrowPanel } from "@/components/JobEscrowPanel";
+import { ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
+import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +47,21 @@ export default async function JobPage({ params }: Props) {
   const href = job.genesisSlug
     ? `/genesis/${job.genesisSlug}`
     : `/agents/${job.chainId}/${job.tokenId}`;
+  const payloadOk = Boolean(
+    job.deliverable?.title?.trim() &&
+      job.deliverable?.summary?.trim() &&
+      (job.deliverable.sections?.length || 0) > 0,
+  );
+  const delivered = job.status === "delivered" && payloadOk;
+  const canUpgrade =
+    !job.escrow &&
+    Boolean(
+      resolveEscrowProvider({
+        genesisSlug: job.genesisSlug,
+        chainId: job.chainId,
+        tokenId: String(job.tokenId),
+      }),
+    );
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
@@ -57,12 +75,16 @@ export default async function JobPage({ params }: Props) {
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${
-            job.status === "delivered"
+            delivered
               ? "bg-emerald-400/15 text-emerald-300"
               : "bg-amber-400/15 text-amber-200"
           }`}
         >
-          {job.status === "delivered" ? "Delivered" : job.status}
+          {delivered
+            ? "Delivered"
+            : job.escrow && job.status === "delivered"
+              ? "Working"
+              : job.status}
         </span>
         <span className="font-mono text-[11px] text-white/30">{job.id}</span>
         {job.claimCode && (
@@ -88,8 +110,22 @@ export default async function JobPage({ params }: Props) {
         {job.task}
       </p>
       <p className="mt-3 text-[12px] leading-relaxed text-white/40">
-        Plan only. You keep the keys. Soft hire is free — optional on-chain lock is BSC mainnet ERC-8183.
+        {job.escrow ? ESCROW_LINE : SOFT_HIRE_SHORT}
       </p>
+
+      {job.escrow && <JobEscrowPanel job={job} />}
+      {canUpgrade && (
+        <p className="mt-4 text-[12px] text-white/50">
+          <Link
+            href={`${href}?task=${encodeURIComponent(job.task)}&escrow=1#buy`}
+            className="text-amber-300 hover:underline"
+          >
+            Upgrade this job to escrow
+          </Link>
+          {" — "}
+          same brief, lock $U in ERC-8183. Not a transfer to the seller.
+        </p>
+      )}
 
       <JobReceiptPanel job={job} />
       <JobSessionPanel job={job} />

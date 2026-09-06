@@ -1,7 +1,11 @@
 /**
  * Wallet connect + personal_sign for account login.
- * Not a checkout path — hire is L0 plan-only.
+ * Also used by ERC-8183 escrow checkout (approve/fund/settle) —
+ * never a direct transfer to a seller address.
  */
+
+export const BSC_MAINNET = 56;
+export const BSC_HEX = "0x38";
 
 export type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -80,4 +84,97 @@ export async function signLoginMessage(
   })) as string;
   if (!sig) throw new Error("Wallet did not return a signature");
   return sig;
+}
+
+export async function getChainId(eth: EthProvider): Promise<number> {
+  const hex = (await eth.request({ method: "eth_chainId" })) as string;
+  return Number.parseInt(hex, 16);
+}
+
+export async function switchToBsc(eth: EthProvider): Promise<void> {
+  try {
+    await eth.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BSC_HEX }],
+    });
+  } catch (e) {
+    const err = e as { code?: number };
+    if (err.code !== 4902) throw e;
+    await eth.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId: BSC_HEX,
+          chainName: "BNB Smart Chain",
+          nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+          rpcUrls: ["https://bsc-dataseed.binance.org"],
+          blockExplorerUrls: ["https://bscscan.com"],
+        },
+      ],
+    });
+  }
+}
+
+export function isUserRejected(e: unknown): boolean {
+  const err = e as { code?: number; message?: string };
+  return (
+    err?.code === 4001 ||
+    /user rejected|denied|rejected the request/i.test(err?.message || "")
+  );
+}
+
+export async function walletCall(
+  eth: EthProvider,
+  to: string,
+  data: string,
+): Promise<string> {
+  const result = (await eth.request({
+    method: "eth_call",
+    params: [{ to, data }, "latest"],
+  })) as string;
+  return result;
+}
+
+export async function sendContractTx(
+  eth: EthProvider,
+  opts: { from: string; to: string; data: string },
+): Promise<`0x${string}`> {
+  const hash = (await eth.request({
+    method: "eth_sendTransaction",
+    params: [
+      {
+        from: opts.from,
+        to: opts.to,
+        data: opts.data,
+        chainId: BSC_HEX,
+      },
+    ],
+  })) as string;
+  if (!hash) throw new Error("Wallet did not return a transaction hash");
+  return hash as `0x${string}`;
+}
+
+export async function waitForReceipt(
+  eth: EthProvider,
+  hash: string,
+  timeoutMs = 90_000,
+): Promise<{ status: "0x1" | "0x0"; logs: { topics?: string[]; data?: string }[] }> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const rec = (await eth.request({
+      method: "eth_getTransactionReceipt",
+      params: [hash],
+    })) as {
+      status?: string;
+      logs?: { topics?: string[]; data?: string }[];
+    } | null;
+    if (rec?.status) {
+      return {
+        status: rec.status === "0x1" ? "0x1" : "0x0",
+        logs: rec.logs || [],
+      };
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  throw new Error("Timed out waiting for the transaction receipt");
 }

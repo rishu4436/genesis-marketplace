@@ -12,7 +12,7 @@ export function SoftHireNote({
     return (
       <p className={`text-[12px] leading-relaxed text-white/40 ${className}`}>
         {tone === "ops"
-          ? "Soft hire · plan only · you keep the keys · optional mainnet escrow on /fund"
+          ? "Soft hire · plan only · you keep the keys · optional mainnet escrow from the agent page"
           : "Plan only. You keep the keys. Soft hire is free — the agent does not move funds."}
       </p>
     );
@@ -32,8 +32,8 @@ export function SoftHireNote({
         <>
           L0 Plan-only: free structured plan, you keep the keys, the agent
           does not move funds. L2 Escrow is optional BSC mainnet ERC-8183
-          on /fund — not part of soft hire. Create an account so the plan
-          follows you.
+          from the agent page — not part of soft hire. Create an account so
+          the plan follows you.
         </>
       )}
     </div>

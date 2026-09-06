@@ -187,11 +187,11 @@ export function OnchainHirePanel() {
       )}
 
       <p className="text-[10px] text-white/40">
-        If buy fails with insufficient funds / balance, complete faucets above
-        first. Soft hire without chain:{" "}
-        <Link href="/genesis/yield-router" className="text-amber-300">
-          /genesis/yield-router
-        </Link>
+        Operator CLI path. Buyers should use{" "}
+        <Link href="/genesis/range-keeper?escrow=1#buy" className="text-amber-300">
+          Hire with escrow
+        </Link>{" "}
+        on the agent page — do not send funds to seller addresses.
       </p>
     </div>
   );

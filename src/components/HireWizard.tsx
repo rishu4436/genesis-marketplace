@@ -16,7 +16,9 @@ import type { BuyerContext } from "@/lib/buyer-context";
 import { SignInForm } from "@/components/SignInForm";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
-import { SOFT_HIRE_SHORT } from "@/lib/copy";
+import { ESCROW_CTA, ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
+import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
+import { EscrowWizard } from "@/components/EscrowWizard";
 
 type Props = {
   chainId: number;
@@ -82,7 +84,18 @@ export function HireWizard({
   const [sharePath, setSharePath] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [escrowOpen, setEscrowOpen] = useState(false);
   const autobuyStarted = useRef(false);
+  const escrowProvider = useMemo(
+    () =>
+      resolveEscrowProvider({
+        genesisSlug,
+        chainId,
+        tokenId,
+      }),
+    [genesisSlug, chainId, tokenId],
+  );
+  const escrowOk = ESCROW_STANCE.available && Boolean(escrowProvider);
 
   const canBuy = useMemo(() => task.trim().length > 8, [task]);
   const displayPrice = priceUsd > 0 ? priceUsd : 10;
@@ -96,11 +109,7 @@ export function HireWizard({
       return;
     }
     setError(null);
-    if (rail === "escrow") {
-      window.location.href = "/fund";
-      return;
-    }
-    // Soft hire: deliver the plan immediately. Escrow is a separate /fund path.
+    // Soft hire is the default. Escrow is a separate in-app wizard.
     void buyAgent(brief);
   }
 
@@ -130,7 +139,7 @@ export function HireWizard({
           risk: buyerCtx?.risk === "conservative" ? "low" : buyerCtx?.risk === "aggressive" ? "high" : "medium",
           notes: `tier:${rail}`,
           autoFulfill: true,
-          tier: rail === "escrow" ? "escrow" : "full",
+          tier: rail === "free" ? "free" : "full",
           buyerContext: rail === "free" ? null : buyerCtx,
         }),
       });
@@ -179,6 +188,9 @@ export function HireWizard({
       else {
         const saved = localStorage.getItem(briefKey);
         if (saved && saved.trim().length > 8) setTask(saved);
+      }
+      if (sp.get("escrow") === "1") {
+        setEscrowOpen(true);
       }
       if (sp.get("buy") === "1" && !autobuyStarted.current) {
         autobuyStarted.current = true;
@@ -396,7 +408,26 @@ export function HireWizard({
           >
             Hire again
           </button>
+          {escrowOk && !job.escrow && (
+            <button
+              type="button"
+              onClick={() => setEscrowOpen(true)}
+              className="rounded-full border border-amber-400/30 px-3 py-2 text-xs font-medium text-amber-100 hover:border-amber-400/60"
+            >
+              Upgrade this job to escrow
+            </button>
+          )}
         </div>
+        <EscrowWizard
+          open={escrowOpen}
+          onClose={() => setEscrowOpen(false)}
+          chainId={chainId}
+          tokenId={tokenId}
+          agentName={agentName}
+          categoryId={categoryId}
+          genesisSlug={genesisSlug}
+          task={job.task || task}
+        />
       </div>
     );
   }
@@ -474,11 +505,26 @@ export function HireWizard({
             : "Starting…"
           : rail === "free"
             ? "Run free scan"
-            : `Hire · $${displayPrice}`}
+            : "Get plan"}
       </button>
       <p className="mt-2 text-center text-[10px] text-white/40">
         {SOFT_HIRE_SHORT}
       </p>
+      {escrowOk && (
+        <>
+          <button
+            type="button"
+            disabled={!canBuy || loading}
+            onClick={() => setEscrowOpen(true)}
+            className="btn-secondary mt-2 w-full disabled:opacity-40"
+          >
+            Hire with escrow (on-chain)
+          </button>
+          <p className="mt-2 text-center text-[10px] leading-relaxed text-white/45">
+            {ESCROW_CTA}
+          </p>
+        </>
+      )}
 
       <div className="mt-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
@@ -486,7 +532,7 @@ export function HireWizard({
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {modes
-            .filter((m) => m.available)
+            .filter((m) => m.available && m.rail !== "escrow")
             .map((m) => {
               const active = rail === m.rail;
               return (
@@ -496,10 +542,6 @@ export function HireWizard({
                   disabled={loading}
                   title={m.description}
                   onClick={() => {
-                    if (m.rail === "escrow") {
-                      window.location.href = "/fund";
-                      return;
-                    }
                     setRail(m.rail);
                   }}
                   className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
@@ -516,10 +558,9 @@ export function HireWizard({
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
           {modes.find((m) => m.rail === rail)?.description}
         </p>
-        {modes.some((m) => m.rail === "escrow" && !m.available) && (
+        {escrowOk && (
           <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
-            Optional on-chain lock is BSC mainnet ERC-8183 — not part of
-            soft hire.{" "}
+            {ESCROW_LINE}. Advanced notes on{" "}
             <Link href="/fund" className="text-amber-300/80 hover:underline">
               /fund
             </Link>
@@ -610,6 +651,17 @@ export function HireWizard({
         You get a result page + claim code. Save it to an account, then hire
         again anytime with the same brief.
       </p>
+
+      <EscrowWizard
+        open={escrowOpen}
+        onClose={() => setEscrowOpen(false)}
+        chainId={chainId}
+        tokenId={tokenId}
+        agentName={agentName}
+        categoryId={categoryId}
+        genesisSlug={genesisSlug}
+        task={task}
+      />
     </div>
   );
 }

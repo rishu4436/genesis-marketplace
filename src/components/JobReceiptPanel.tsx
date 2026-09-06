@@ -39,7 +39,9 @@ export function JobReceiptPanel({ job }: { job: HireJob }) {
                 : "Incomplete"}
         </span>
         <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/45">
-          Plan only · no custody
+          {job.escrow?.fundTx
+            ? "On-chain lock · settle after deliverable"
+            : "Plan only · no custody"}
         </span>
       </div>
 

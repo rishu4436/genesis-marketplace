@@ -176,6 +176,10 @@ export function buildReceipt(
       required: false,
       available: ESCROW_STANCE.available,
       reason: ESCROW_STANCE.reason,
+      protocol: job.escrow?.protocol,
+      onchainJobId: job.escrow?.onchainJobId,
+      fundTx: job.escrow?.fundTx,
+      chainId: job.escrow?.chainId,
     },
   };
 }

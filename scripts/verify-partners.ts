@@ -38,6 +38,9 @@ import type { Agent } from "../src/lib/types";
 import { catalogDropReason } from "../src/lib/catalog-quality";
 import { classifyHealth, type HealthChecks } from "../src/lib/agent-health-model";
 import { marketplaceTiers } from "../src/lib/agent-model";
+import { ERC8183_MAINNET, resolveEscrowProvider } from "../src/lib/erc8183-escrow";
+import { NEVER_PAY_SELLER } from "../src/lib/copy";
+import { escrowJudgeProof } from "../src/lib/judge-proof";
 import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
 
 type Check = { name: string; ok: boolean; detail?: string };
@@ -334,6 +337,24 @@ function main() {
     marketplaceTiers({ escrowAvailable: false }).filter((t) => t.available).every(
       (t) => t.id !== "escrow",
     ),
+  );
+  check(
+    "RangeKeeper has an ERC-8183 provider identity",
+    Boolean(resolveEscrowProvider({ genesisSlug: "range-keeper" })?.address),
+  );
+  check(
+    "mainnet commerce is the published ERC-8183 kernel",
+    ERC8183_MAINNET.commerce.toLowerCase() ===
+      "0xea4daa3100a767e86fded867729ae7446476eba6",
+  );
+  check(
+    "copy forbids sending funds to seller addresses",
+    NEVER_PAY_SELLER.toLowerCase().includes("seller"),
+  );
+  const jp = escrowJudgeProof();
+  check(
+    "judge escrow proof does not invent a fund tx",
+    !jp.fundTx || /^0x[a-fA-F0-9]{64}$/.test(jp.fundTx),
   );
 
   const failed = checks.filter((c) => !c.ok);

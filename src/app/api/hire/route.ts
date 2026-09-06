@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         {
           success: false,
           error:
-            "Hire is L0 plan-only. Card and wallet checkout are not offered. Optional on-chain lock is /fund (ERC-8183).",
+            "Hire is L0 plan-only. Card and wallet checkout are not offered. Optional on-chain lock is Hire with escrow on the agent page (ERC-8183).",
         },
         { status: 400 },
       );

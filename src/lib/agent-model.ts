@@ -70,18 +70,18 @@ export function marketplaceTiers(opts?: {
       id: "escrow",
       label: "L2 Escrow hire",
       short: "L2",
-      costLabel: "0.21+ U on /fund",
+      costLabel: "0.08+ U lock from the agent page",
       settlement: "Optional ERC-8183 fund → deliver → 24h settle",
       speed: "minutes + 24h settle",
       includes: [
         "Same full analysis payload",
-        "On-chain job id path via /fund",
+        "On-chain job id on the same /jobs receipt",
         "Trustless escrow when policy allows",
       ],
       available: escrowOk,
       reason: escrowOk
         ? undefined
-        : "Optional BSC mainnet lock — use Full analysis, or /fund when you want escrow.",
+        : "Optional BSC mainnet lock — use Get plan, or Hire with escrow on the agent page.",
     },
   ];
 }
