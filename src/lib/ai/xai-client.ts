@@ -30,7 +30,7 @@ export async function xaiChat(opts: {
 }): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   const client = getXaiClient();
   if (!client) {
-    return { ok: false, error: "XAI_API_KEY not configured" };
+    return { ok: false, error: "AI advisor not configured" };
   }
   try {
     const res = await client.chat.completions.create({

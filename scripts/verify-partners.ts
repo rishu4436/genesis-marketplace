@@ -14,7 +14,11 @@ import {
   isPublicHireableUrl,
   listingHref,
 } from "../src/lib/hire-class";
-import { filterAgents } from "../src/lib/agent-rank";
+import {
+  agentMatchesQuery,
+  filterAgents,
+  queryMatchScore,
+} from "../src/lib/agent-rank";
 import {
   EXTRA_LIVE_SELLERS,
   FEATURED_THIRD_PARTY,
@@ -141,6 +145,35 @@ function main() {
       name: "toly.me",
       description: "gm",
     }) === "vanity-handle",
+  );
+  const yieldPin = featuredAsAgent(
+    EXTRA_LIVE_SELLERS.find((s) => s.slug === "bnb-yield-optimizer")!,
+  );
+  check("q=yield matches yield optimizer", agentMatchesQuery(yieldPin, "yield"));
+  check(
+    "q=zzzxxyyq matches nothing on yield pin",
+    agentMatchesQuery(yieldPin, "zzzxxyyq") === false,
+  );
+  check(
+    "garbage query filters the catalog to empty",
+    filterAgents([featured, yieldPin, indexed], { q: "zzzxxyyq" }).length === 0,
+  );
+  check(
+    "yield query does not keep the LP pin",
+    filterAgents([featured, yieldPin], { q: "yield" }).every(
+      (a) => String(a.token_id) !== "265375",
+    ),
+  );
+  check(
+    "yield query ranks the yield pin above zero",
+    queryMatchScore(yieldPin, "yield") > queryMatchScore(featured, "yield"),
+  );
+  const helixPin = EXTRA_LIVE_SELLERS.find(
+    (s) => s.slug === "chainhelix-rebalancer",
+  )!;
+  check(
+    "chainhelix pin is quote-only (no rest/sample)",
+    !helixPin.restBase && !helixPin.exampleUrl,
   );
   check(
     "bedrock AgentCore URL is not hireable",

@@ -548,6 +548,6 @@ export async function runThirdPartyHire(
       report,
       sample,
     }),
-    live: quote.accepted || report.ok || sample.ok,
+    live: report.ok || sample.ok,
   };
 }

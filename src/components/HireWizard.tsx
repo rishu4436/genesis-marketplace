@@ -236,16 +236,37 @@ export function HireWizard({
     const d = job.deliverable;
     const paid = job.quote?.priceUsd ?? displayPrice;
     const path = sharePath || `/jobs/${encodeURIComponent(job.id)}`;
+    const complete =
+      job.status === "delivered" &&
+      (Boolean(job.genesisSlug) || job.quote?.live === true);
     return (
       <div id="buy" className="space-y-3 scroll-mt-28">
-        <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 p-5 shadow-lg shadow-emerald-900/10">
+        <div
+          className={`rounded-2xl border p-5 shadow-lg ${
+            complete
+              ? "border-emerald-400/30 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 shadow-emerald-900/10"
+              : "border-amber-400/30 bg-gradient-to-b from-amber-500/10 to-amber-500/5 shadow-amber-900/10"
+          }`}
+        >
           <div className="flex items-center justify-between gap-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Ready
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${
+                complete
+                  ? "bg-emerald-400/15 text-emerald-300"
+                  : "bg-amber-400/15 text-amber-200"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  complete ? "bg-emerald-400" : "bg-amber-300"
+                }`}
+              />
+              {complete ? "Ready" : "Quoted"}
             </div>
             <span className="text-[11px] font-medium text-white/40">
-              Delivered · this is your receipt
+              {complete
+                ? "Delivered · this is your receipt"
+                : "Quote only · no live payload"}
             </span>
           </div>
           <h3 className="mt-3 text-lg font-semibold tracking-tight text-white">

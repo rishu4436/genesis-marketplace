@@ -1,6 +1,6 @@
 import type { Agent } from "./types";
 import type { CategoryId } from "./categories";
-import { CATEGORIES } from "./categories";
+import { CATEGORIES, matchCategory } from "./categories";
 import { compareByScore } from "./agent-score";
 import { destinationRank, hireClassForAgent } from "./hire-class";
 import { toHundredPointScale } from "./feedback-score";
@@ -73,6 +73,43 @@ export function sortAgents(
   return copy;
 }
 
+export function agentMatchesQuery(agent: Agent, q: string): boolean {
+  return queryMatchScore(agent, q) > 0;
+}
+
+/** Higher = closer match. 0 = no match (do not list). */
+export function queryMatchScore(agent: Agent, q: string): number {
+  const raw = q.trim().toLowerCase();
+  if (!raw) return 1;
+  const name = (agent.name || "").toLowerCase();
+  const desc = (agent.description || "").toLowerCase();
+  const token = String(agent.token_id || "");
+  const hay = `${name} ${desc} ${token} ${(agent.supported_protocols || []).join(" ")}`.toLowerCase();
+  if (raw.length < 3) {
+    if (name.startsWith(raw) || token === raw) return 40;
+    return 0;
+  }
+  let s = 0;
+  if (name === raw) s += 120;
+  if (name.includes(raw)) s += 80;
+  if (token === raw) s += 90;
+  if (hay.includes(raw)) s += 40;
+  const tokens = raw.split(/[^a-z0-9]+/i).filter((t) => t.length >= 2);
+  if (tokens.length > 1 && tokens.every((t) => hay.includes(t))) s += 30;
+  if (s === 0 && raw.length >= 3) {
+    const cat = CATEGORIES.find((c) =>
+      c.keywords.some(
+        (k) => k.toLowerCase() === raw || raw.includes(k.toLowerCase()),
+      ),
+    );
+    if (cat) {
+      const id = matchCategory(agent.name || "", agent.description || "");
+      if (id === cat.id) s += 25;
+    }
+  }
+  return s;
+}
+
 export function filterAgents(
   agents: Agent[],
   filters: {
@@ -89,13 +126,8 @@ export function filterAgents(
   if (filters.live) out = out.filter((a) => hireClassForAgent(a) === "live");
   if (filters.hasRatings) out = out.filter((a) => (a.total_feedbacks ?? 0) > 0);
   if (filters.q?.trim()) {
-    const q = filters.q.trim().toLowerCase();
-    out = out.filter(
-      (a) =>
-        a.name?.toLowerCase().includes(q) ||
-        a.description?.toLowerCase().includes(q) ||
-        String(a.token_id).includes(q),
-    );
+    const q = filters.q.trim();
+    out = out.filter((a) => agentMatchesQuery(a, q));
   }
   return out;
 }

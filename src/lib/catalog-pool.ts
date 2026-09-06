@@ -9,6 +9,7 @@ import { listAgentsSafe, searchAgentsSafe, dedupeAgents } from "./scan";
 import { kvCmd } from "./kv";
 import { fetchBrainFindCatalog, overlayA2a } from "./brain-find";
 import { featuredAsAgent, LIVE_SELLERS } from "./third-party-sellers";
+import { agentMatchesQuery } from "./agent-rank";
 
 const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v1";
 
@@ -49,23 +50,28 @@ export async function fetchHireablePool(opts: {
   const collected: Agent[] = [];
   const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
   const jobs: Promise<SafeList>[] = [];
+  const searching = Boolean(opts.q?.trim());
 
-  // Fewer pages by default so /hire does not wait out a dead index.
-  const scorePages = opts.live ? 4 : 3;
-  for (let page = 1; page <= scorePages; page++) {
-    jobs.push(
-      listAgentsSafe({
-        chainId: 56,
-        page,
-        limit: 100,
-        sortBy: apiSort as "total_score" | "created_at",
-        sortOrder: "desc",
-      }),
-    );
-  }
-
-  if (opts.q) {
-    jobs.push(searchAgentsSafe({ q: opts.q, limit: 80, chainId: 56 }));
+  // Unfiltered top pages only when there is no search — a query must
+  // not be padded with the same 300-agent dump as the empty catalog.
+  if (!searching) {
+    const scorePages = opts.live ? 4 : 3;
+    for (let page = 1; page <= scorePages; page++) {
+      jobs.push(
+        listAgentsSafe({
+          chainId: 56,
+          page,
+          limit: 100,
+          sortBy: apiSort as "total_score" | "created_at",
+          sortOrder: "desc",
+        }),
+      );
+    }
+    for (const seed of JOB_SEEDS) {
+      jobs.push(searchAgentsSafe({ q: seed, limit: 40, chainId: 56 }));
+    }
+  } else {
+    jobs.push(searchAgentsSafe({ q: opts.q!, limit: 80, chainId: 56 }));
     jobs.push(
       listAgentsSafe({
         chainId: 56,
@@ -86,25 +92,22 @@ export async function fetchHireablePool(opts: {
         sortOrder: "desc",
       }),
     );
-  } else {
-    for (const seed of JOB_SEEDS) {
-      jobs.push(searchAgentsSafe({ q: seed, limit: 40, chainId: 56 }));
-    }
   }
 
-  // Always pull A2A rows so live third-party is not buried under identity-only.
-  const a2aPages = opts.live ? 2 : 1;
-  for (let page = 1; page <= a2aPages; page++) {
-    jobs.push(
-      listAgentsSafe({
-        chainId: 56,
-        protocol: "A2A",
-        limit: 100,
-        page,
-        sortBy: "total_score",
-        sortOrder: "desc",
-      }),
-    );
+  if (!searching) {
+    const a2aPages = opts.live ? 2 : 1;
+    for (let page = 1; page <= a2aPages; page++) {
+      jobs.push(
+        listAgentsSafe({
+          chainId: 56,
+          protocol: "A2A",
+          limit: 100,
+          page,
+          sortBy: "total_score",
+          sortOrder: "desc",
+        }),
+      );
+    }
   }
 
   if (opts.live) {
@@ -137,9 +140,12 @@ export async function fetchHireablePool(opts: {
   ]);
   const { error, apiTotal } = collect(results, collected);
   const pinned = LIVE_SELLERS.map((s) => featuredAsAgent(s));
-  const agents = overlayA2a(dedupeAgents([...pinned, ...collected]), brain);
+  let agents = overlayA2a(dedupeAgents([...pinned, ...collected]), brain);
+  if (searching) {
+    agents = agents.filter((a) => agentMatchesQuery(a, opts.q!));
+  }
 
-  if (agents.length) {
+  if (!searching && agents.length) {
     await kvCmd(
       "SET",
       CATALOG_CACHE_KEY,
@@ -148,6 +154,10 @@ export async function fetchHireablePool(opts: {
       900,
     );
     return { agents, error: null, apiTotal };
+  }
+
+  if (searching) {
+    return { agents, error: agents.length ? null : error, apiTotal };
   }
 
   const cached = await kvCmd<string>("GET", CATALOG_CACHE_KEY);

@@ -93,7 +93,7 @@ export function AiConcierge() {
             <div>
               <p className="text-sm font-semibold text-white">Genesis AI</p>
               <p className="text-[10px] text-white/40">
-                Hire advisor · Grok when key set
+                Hire advisor
               </p>
             </div>
             <button

@@ -55,7 +55,13 @@ export default async function JobPage({ params }: Props) {
       </Link>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${
+            job.status === "delivered"
+              ? "bg-emerald-400/15 text-emerald-300"
+              : "bg-amber-400/15 text-amber-200"
+          }`}
+        >
           {job.status === "delivered" ? "Delivered" : job.status}
         </span>
         <span className="font-mono text-[11px] text-white/30">{job.id}</span>

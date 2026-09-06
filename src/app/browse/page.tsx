@@ -107,6 +107,7 @@ export default async function BrowsePage({ searchParams }: Props) {
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
     live: filters.live === "1",
+    q: q || undefined,
   });
   if (!showIndex && filters.live === "1") {
     agents = agents.filter(isHireableListing);
@@ -302,8 +303,12 @@ export default async function BrowsePage({ searchParams }: Props) {
         !pool.error && (
           <div className="mt-10">
             <EmptyState
-              title="No agents match"
-              body="Try clearing filters or a broader search."
+              title={q ? `No agents match “${q}”` : "No agents match"}
+              body={
+                q
+                  ? "That query is not in names, skills, or job keywords. Try yield, grid, rebalance, or health factor."
+                  : "Try clearing filters or a broader search."
+              }
               actionHref="/browse"
               actionLabel="Clear browse"
             />

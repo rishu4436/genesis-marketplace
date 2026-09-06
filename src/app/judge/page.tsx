@@ -43,6 +43,21 @@ export default async function JudgePage() {
         Then open the receipt → /advantage → /altana revoke. Record that
         as a 60–90s walkthrough for the intake form.
       </p>
+      {process.env.NEXT_PUBLIC_JUDGE_DEMO_URL ? (
+        <a
+          href={process.env.NEXT_PUBLIC_JUDGE_DEMO_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-block text-sm font-semibold text-amber-300 hover:underline"
+        >
+          60–90s judge video ↗
+        </a>
+      ) : (
+        <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-white/45">
+          60–90s walkthrough not uploaded yet. Record Hire RangeKeeper →
+          receipt → Advantage → Altana revoke and pin the link here.
+        </p>
+      )}
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}

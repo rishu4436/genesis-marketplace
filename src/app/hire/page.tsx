@@ -106,6 +106,7 @@ export default async function HirePage({ searchParams }: Props) {
     verified: filters.verified === "1",
     hasRatings: filters.ratings === "1" || sortMode === "ratings",
     live: filters.live === "1",
+    q: q || undefined,
   };
   const catalogPool = quality.kept.filter(
     (a) =>

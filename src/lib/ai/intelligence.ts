@@ -111,12 +111,12 @@ export async function orchestrateHire(opts: {
       "Execute checklist yourself — agent never holds keys",
     ],
     risks: [
-      "Deterministic match only — enable XAI_API_KEY for Grok orchestration",
+      "Rules-based match. Confirm the specialist plan against live venues before you move capital.",
     ],
     nextAction: fallbackPicks[0]
       ? `Buy ${fallbackPicks[0].name} with Full analysis`
       : "Browse categories",
-    fallbackReason: hasXaiKey() ? undefined : "XAI_API_KEY not set",
+    fallbackReason: hasXaiKey() ? undefined : "ai-off",
   };
 
   if (!hasXaiKey() || q.length < 6) return base;
@@ -326,16 +326,15 @@ export async function conciergeChat(opts: {
   if (!hasXaiKey()) {
     return {
       ai: false,
-      answer:
-        fallbackPicks[0]
-          ? `Based on rules matching, start with **${fallbackPicks[0].name}** (${fallbackPicks[0].why}). Set XAI_API_KEY for Grok concierge.`
-          : "Describe a DeFi job (rebalance, grid, yield, health factor). Set XAI_API_KEY for AI concierge.",
+      answer: fallbackPicks[0]
+        ? `Start with **${fallbackPicks[0].name}** — ${fallbackPicks[0].why}. Open Hire for a plan you run yourself.`
+        : "Describe a DeFi job (rebalance, grid, yield, health factor) and I will point you at a specialist.",
       picks: fallbackPicks,
       suggestedTask: opts.message,
       cta: fallbackPicks[0]
         ? { label: `Open ${fallbackPicks[0].name}`, href: fallbackPicks[0].buyHref }
         : { label: "Browse", href: "/hire" },
-      fallbackReason: "XAI_API_KEY not set",
+      fallbackReason: "ai-off",
     };
   }
 
@@ -377,9 +376,12 @@ ctaSlug must be a catalog slug or "hire" or "browse".`;
   if (!res.ok) {
     return {
       ai: false,
-      answer: `AI unavailable (${res.error}). Try /hire specialists.`,
+      answer:
+        fallbackPicks[0]
+          ? `Advisor is offline. Start with **${fallbackPicks[0].name}** from Hire.`
+          : "Advisor is offline. Open Hire and pick a specialist by job.",
       picks: fallbackPicks,
-      fallbackReason: res.error,
+      fallbackReason: "ai-offline",
     };
   }
 

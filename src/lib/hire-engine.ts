@@ -594,31 +594,50 @@ async function fulfillCatalogHire(
       } as HireQuote,
     };
     if (input.autoFulfill !== false) {
-      next = pushTimeline(
-        next,
-        "funded",
-        "Routed to third-party seller (no Genesis custody)",
-      );
-      next = pushTimeline(
-        next,
-        "fulfilling",
-        "Fetching seller quote + live payload…",
-      );
       next = {
-        ...pushTimeline(
-          next,
-          "delivered",
-          result.live
-            ? `Deliverable from ${sellerName}`
-            : `Indexed seller unreachable · identity recorded`,
-        ),
+        ...next,
         deliverable: result.deliverable,
       };
-      next = settleSession(
-        next,
-        "consumed",
-        "third-party plan delivered · session revoked",
-      );
+      if (result.live) {
+        next = pushTimeline(
+          next,
+          "funded",
+          "Routed to third-party seller (no Genesis custody)",
+        );
+        next = pushTimeline(
+          next,
+          "fulfilling",
+          "Fetching seller quote + live payload…",
+        );
+        next = pushTimeline(
+          next,
+          "delivered",
+          `Deliverable from ${sellerName}`,
+        );
+        next = settleSession(
+          next,
+          "consumed",
+          "third-party plan delivered · session revoked",
+        );
+      } else {
+        next = pushTimeline(
+          next,
+          "quoted",
+          result.quote.accepted
+            ? `Quote only · ${sellerName} has no public payload on this rail. Delivery needs their ERC-8183 notify_funded.`
+            : `No live payload from ${sellerName}`,
+        );
+        next = {
+          ...next,
+          quote: {
+            ...next.quote!,
+            live: false,
+            notes: result.quote.accepted
+              ? `Signed quote from ${sellerName} — no plan payload until they deliver on-chain.`
+              : next.quote!.notes,
+          },
+        };
+      }
     }
     return next;
   }
