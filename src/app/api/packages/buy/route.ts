@@ -58,7 +58,11 @@ export async function POST(req: Request) {
       data: {
         packageId: pkg.id,
         packageName: pkg.name,
-        totalUsd: total,
+        listedSkuUsd: total,
+        chargedUsd: 0,
+        settlement: "none",
+        tier: "full",
+        note: "L0 plan-only bundle. Listed $ is a SKU, not a charge.",
         jobs,
         jobIds: jobs.map((j) => j.id),
       },

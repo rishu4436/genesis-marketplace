@@ -4,7 +4,11 @@ import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 import { DeskStrip } from "@/components/DeskStrip";
 import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
 import { allGenesisAgents } from "@/lib/genesis-agents";
-import { escrowJudgeProof, escrowProofExplorer } from "@/lib/judge-proof";
+import {
+  escrowJudgeProof,
+  escrowProofExplorer,
+  judgeDemoVideoUrl,
+} from "@/lib/judge-proof";
 
 export const metadata = {
   title: "Judge path",
@@ -17,6 +21,7 @@ export default async function JudgePage() {
   const proof = await readLiveProof();
   const specialists = allGenesisAgents();
   const escrowProof = escrowJudgeProof();
+  const demoVideo = judgeDemoVideoUrl();
 
   return (
     <div className="mx-auto max-w-lg px-5 py-12 sm:px-8">
@@ -50,9 +55,9 @@ export default async function JudgePage() {
         Then open the receipt → /advantage → /altana revoke. Record that
         as a 60–90s walkthrough for the intake form.
       </p>
-      {process.env.NEXT_PUBLIC_JUDGE_DEMO_URL ? (
+      {demoVideo ? (
         <a
-          href={process.env.NEXT_PUBLIC_JUDGE_DEMO_URL}
+          href={demoVideo}
           target="_blank"
           rel="noreferrer"
           className="mt-3 inline-block text-sm font-semibold text-amber-300 hover:underline"
@@ -61,8 +66,11 @@ export default async function JudgePage() {
         </a>
       ) : (
         <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-white/45">
-          60–90s walkthrough not uploaded yet. Record Hire RangeKeeper →
-          receipt → Advantage → Altana revoke and pin the link here.
+          60–90s walkthrough not uploaded yet. Set{" "}
+          <code className="text-white/60">NEXT_PUBLIC_JUDGE_DEMO_URL</code> or
+          <code className="text-white/60"> config/judge-proof.json demoVideoUrl</code>{" "}
+          after you record Hire RangeKeeper → receipt → Advantage → Altana
+          revoke. Do not invent a link.
         </p>
       )}
       <ol className="mt-8 space-y-3 text-sm text-white/65">
@@ -234,6 +242,11 @@ export default async function JudgePage() {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-200/80">
             Altana · Keystore grant
           </p>
+          {proof.chainId !== 56 && (
+            <p className="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-100">
+              Testnet banner · chain {proof.chainId} — not the mainnet prize path
+            </p>
+          )}
           <p className="mt-1 text-sm text-white">
             {proof.chainId === 56
               ? `${proof.agentName} Keystore grant on BSC mainnet — this is the Altana track proof.`

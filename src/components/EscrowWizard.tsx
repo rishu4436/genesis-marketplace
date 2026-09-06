@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation";
 import { decodeEventLog, formatEther, formatUnits } from "viem";
 import type { CategoryId } from "@/lib/categories";
 import {
+  encodeFund,
+  encodeRegisterJob,
+  encodeSetBudget,
   ERC8183_MAINNET,
   JOB_CREATED_EVENT,
   MIN_BNB_BNB,
 } from "@/lib/erc8183-escrow";
+import type { HireJob } from "@/lib/hire-engine";
 import { ESCROW_CTA, ESCROW_LINE, NEVER_PAY_SELLER } from "@/lib/copy";
 import {
   discoverWallets,
@@ -138,7 +142,12 @@ export function EscrowWizard({
 
   useEffect(() => {
     if (!open) return;
+    setError(null);
     void discoverWallets().then(setWallets);
+    void loadQuote().catch((e) =>
+      setError(e instanceof Error ? e.message : "Could not load escrow quote"),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const enoughBnb = useMemo(() => {
@@ -150,7 +159,7 @@ export function EscrowWizard({
     setLog((prev) => [...prev, line]);
   }
 
-  async function loadQuote(wallet: string) {
+  async function loadQuote(wallet?: string) {
     const res = await fetch("/api/escrow/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -159,7 +168,7 @@ export function EscrowWizard({
         chainId,
         tokenId,
         task: brief,
-        wallet,
+        wallet: wallet || undefined,
       }),
     });
     const json = (await res.json()) as {
@@ -265,36 +274,24 @@ export function EscrowWizard({
       }
       setOnchainJobId(createdId);
 
-      const encode = async (
-        action: "register" | "setBudget" | "fund",
-      ) => {
-        const res = await fetch("/api/escrow/calls", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            onchainJobId: createdId,
-            action,
-            genesisSlug,
-            amountWei: q.budgetWei,
-          }),
-        });
-        const json = (await res.json()) as {
-          success: boolean;
-          error?: string;
-          data?: { call: { to: `0x${string}`; data: `0x${string}` } };
-        };
-        if (!json.success || !json.data) {
-          throw new Error(json.error || `Encode ${action} failed`);
-        }
-        return json.data.call;
-      };
-
-      await send(provider, address, await encode("register"), "Register policy");
-      await send(provider, address, await encode("setBudget"), "Set budget");
+      const jobIdBig = BigInt(createdId);
+      const amount = BigInt(q.budgetWei);
+      await send(
+        provider,
+        address,
+        encodeRegisterJob(jobIdBig),
+        "Register policy",
+      );
+      await send(
+        provider,
+        address,
+        encodeSetBudget(jobIdBig, amount),
+        "Set budget",
+      );
       const funded = await send(
         provider,
         address,
-        await encode("fund"),
+        encodeFund(jobIdBig, amount),
         "Fund escrow",
       );
 
@@ -322,10 +319,25 @@ export function EscrowWizard({
         success: boolean;
         error?: string;
         sharePath?: string;
+        data?: HireJob;
         notify?: { ok?: boolean; error?: string };
       };
       if (!persist.ok || !saved.success || !saved.sharePath) {
         throw new Error(saved.error || "Could not save the escrow receipt");
+      }
+      if (saved.data) {
+        try {
+          const prev = JSON.parse(
+            localStorage.getItem("genesis-hires") || "[]",
+          ) as HireJob[];
+          const next = [
+            saved.data,
+            ...prev.filter((j) => j.id !== saved.data!.id),
+          ].slice(0, 30);
+          localStorage.setItem("genesis-hires", JSON.stringify(next));
+        } catch {
+          /* ignore */
+        }
       }
       if (saved.notify && saved.notify.ok === false) {
         push(`Seller notify: ${saved.notify.error || "timeout"} — receipt still saved.`);
@@ -379,12 +391,41 @@ export function EscrowWizard({
           </p>
         )}
 
+        <ol className="mt-4 flex flex-wrap gap-1">
+          {[
+            { id: "connect", label: "1 Connect" },
+            { id: "approve", label: "2 Approve $U" },
+            { id: "fund", label: "3 Fund escrow" },
+            { id: "notify", label: "4 Notify seller" },
+            { id: "done", label: "5 Receipt" },
+          ].map((s) => (
+            <li
+              key={s.id}
+              className={`rounded-full px-2 py-0.5 text-[9px] ${
+                step === s.id
+                  ? "bg-amber-400 text-black"
+                  : "bg-white/8 text-white/50"
+              }`}
+            >
+              {s.label}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-2 text-[11px] leading-relaxed text-white/45">
+          Approve $U to the ERC-8183 kernel, then fund. The seller address is
+          the escrow counterparty — not a pay-to. After fund you land on{" "}
+          <code className="text-white/60">/jobs/&lt;id&gt;</code> to approve
+          payout or dispute.
+        </p>
+
         {step === "connect" && (
           <div className="mt-4 space-y-2">
-            <p className="text-xs text-white/50">Connect a wallet on BSC mainnet.</p>
+            <p className="text-xs text-white/50">Connect a wallet on BSC mainnet to sign.</p>
             {wallets.length === 0 && (
-              <p className="text-xs text-white/40">
-                No injected wallet found. Install one that supports BNB Smart Chain.
+              <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-relaxed text-white/55">
+                No injected wallet in this browser. Preview below still shows
+                the lock, kernel, and steps. Install MetaMask, Binance Wallet,
+                or another EIP-6963 wallet on chain 56, then reopen.
               </p>
             )}
             {wallets.map((w) => (
@@ -407,7 +448,7 @@ export function EscrowWizard({
           </div>
         )}
 
-        {quote && step !== "connect" && (
+        {quote && (
           <div className="mt-4 space-y-3 text-[12px] text-white/60">
             <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2">
               <p>
@@ -452,7 +493,7 @@ export function EscrowWizard({
               {quote.minBnb} BNB). Dispute window {Math.round(quote.disputeWindowSeconds / 3600)}h
               after submit.
             </p>
-            {!quote.wallet?.enoughU && (
+            {quote.wallet && !quote.wallet.enoughU && (
               <p className="text-xs text-rose-200">Insufficient $U for this lock.</p>
             )}
             {quote.wallet && !enoughBnb && (

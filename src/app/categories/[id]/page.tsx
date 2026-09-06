@@ -141,6 +141,7 @@ export default async function CategoryDetailPage({
         </p>
       </div>
 
+      {page === 1 && (
       <div className="mt-10">
         <h2 className="card-title text-xl text-white">
           {BRAND.specialistsTitle}
@@ -159,6 +160,7 @@ export default async function CategoryDetailPage({
           ))}
         </div>
       </div>
+      )}
 
       {hireable.length > 0 && (
         <div className="mt-12">

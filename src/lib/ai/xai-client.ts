@@ -47,9 +47,12 @@ export async function xaiChat(opts: {
     if (!text) return { ok: false, error: "Empty model response" };
     return { ok: true, text };
   } catch (e) {
+    const raw = e instanceof Error ? e.message : "xAI request failed";
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "xAI request failed",
+      error: raw
+        .replace(/xai-[A-Za-z0-9_-]+/gi, "[redacted]")
+        .replace(/XAI_API_KEY/g, "AI_KEY"),
     };
   }
 }

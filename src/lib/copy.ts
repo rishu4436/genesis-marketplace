@@ -19,6 +19,12 @@ export const ESCROW_CTA =
 export const NEVER_PAY_SELLER =
   "Do not send funds to seller addresses to hire.";
 
+export const CHECKOUT_LEGEND_L0 =
+  "L0 Soft hire — plan only · you keep the keys · no custody";
+
+export const CHECKOUT_LEGEND_L2 =
+  "L2 Escrow — on-chain lock in $U · settle after deliverable";
+
 export const INTELLIGENCE_LINE =
   "Hireable agents first. Unhireable ERC-8004 identities stay listed and are marked Unhireable — we do not hide the index.";
 

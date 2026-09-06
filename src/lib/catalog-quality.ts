@@ -98,6 +98,23 @@ export function catalogDropReason(agent: Agent): CatalogDropReason | null {
   if (PROMPT_DUMP.test(desc)) return "prompt-dump";
   if (OFF_JOB.test(name) || OFF_JOB.test(desc)) return "off-job";
 
+  const a2a = (agent.a2a_endpoint || "").trim();
+  if (
+    a2a &&
+    /8004scan\.io\/api|api\.8004scan/i.test(a2a)
+  ) {
+    return "off-job";
+  }
+  if (
+    desc.length < 40 &&
+    !agent.is_verified &&
+    !/\b(pancake|venus|yield|grid|lp|rebalance|liquidity|health factor|apr)\b/i.test(
+      `${name} ${desc}`,
+    )
+  ) {
+    return "empty";
+  }
+
   return null;
 }
 

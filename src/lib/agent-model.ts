@@ -54,7 +54,7 @@ export function marketplaceTiers(opts?: {
       id: "full",
       label: "L0 Plan-only",
       short: "L0",
-      costLabel: "Free / listed $ (soft settle)",
+      costLabel: "SKU $ · L0 no charge",
       settlement: "Plan-only · you keep the keys · no on-chain lock",
       speed: "~2–5s",
       includes: [

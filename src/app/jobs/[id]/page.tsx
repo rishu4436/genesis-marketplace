@@ -8,6 +8,7 @@ import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { JobEscrowPanel } from "@/components/JobEscrowPanel";
 import { ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
 import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
+import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +48,8 @@ export default async function JobPage({ params }: Props) {
   const href = job.genesisSlug
     ? `/genesis/${job.genesisSlug}`
     : `/agents/${job.chainId}/${job.tokenId}`;
-  const payloadOk = Boolean(
-    job.deliverable?.title?.trim() &&
-      job.deliverable?.summary?.trim() &&
-      (job.deliverable.sections?.length || 0) > 0,
-  );
-  const delivered = job.status === "delivered" && payloadOk;
+  const delivered = hasLivePayload(job) && job.status === "delivered";
+  const outcome = jobOutcome(job);
   const canUpgrade =
     !job.escrow &&
     Boolean(
@@ -80,11 +77,7 @@ export default async function JobPage({ params }: Props) {
               : "bg-amber-400/15 text-amber-200"
           }`}
         >
-          {delivered
-            ? "Delivered"
-            : job.escrow && job.status === "delivered"
-              ? "Working"
-              : job.status}
+          {outcome.label}
         </span>
         <span className="font-mono text-[11px] text-white/30">{job.id}</span>
         {job.claimCode && (
@@ -99,7 +92,12 @@ export default async function JobPage({ params }: Props) {
       </h1>
       <p className="mt-2 text-sm text-white/50">
         {job.agentName}
-        {job.quote ? ` · listed $${job.quote.priceUsd}` : ""} ·{" "}
+        {job.escrow
+          ? ` · ${job.escrow.amountU} ${job.escrow.tokenSymbol} locked`
+          : job.quote
+            ? ` · SKU $${job.quote.priceUsd} · L0 no charge`
+            : ""}{" "}
+        ·{" "}
         <Link href={href} className="text-amber-300 hover:underline">
           Open agent
         </Link>
@@ -129,7 +127,30 @@ export default async function JobPage({ params }: Props) {
 
       <JobReceiptPanel job={job} />
       <JobSessionPanel job={job} />
-      <JobDecisionPanel job={job} />
+      {delivered ? (
+        <JobDecisionPanel job={job} />
+      ) : (
+        <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
+            {outcome.label}
+          </p>
+          <p className="mt-1 text-[12px] text-white/55">{outcome.hint}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`${href}${job.task ? `?task=${encodeURIComponent(job.task)}` : ""}#buy`}
+              className="rounded-full bg-amber-400 px-3 py-1.5 text-xs font-semibold text-black"
+            >
+              Retry hire
+            </Link>
+            <Link
+              href="/dashboard"
+              className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-white/70"
+            >
+              Dismiss
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8">
         <HirePartnerFollowup

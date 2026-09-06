@@ -227,7 +227,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         ))}
       </div>
 
-      {!q && (
+      {!q && safePage === 1 && (
         <div className="mt-10">
           <JobFloor perShelf={3} />
         </div>

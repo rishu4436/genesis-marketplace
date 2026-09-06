@@ -61,7 +61,7 @@ export function discoverWallets(): Promise<DiscoveredWallet[]> {
         }
       }
       resolve([...found.values()].sort((a, b) => a.name.localeCompare(b.name)));
-    }, 120);
+    }, 400);
   });
 }
 

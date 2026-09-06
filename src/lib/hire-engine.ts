@@ -695,8 +695,8 @@ async function fulfillCatalogHire(
     next = {
       ...pushTimeline(
         next,
-        "delivered",
-        "No third-party session — did not impersonate this agent",
+        "quoted",
+        "Identity only · no live payload — not Delivered",
       ),
       deliverable,
     };

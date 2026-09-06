@@ -17,6 +17,7 @@ import { SignInForm } from "@/components/SignInForm";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
 import { ESCROW_CTA, ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
+import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
 import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
 import { EscrowWizard } from "@/components/EscrowWizard";
 
@@ -238,9 +239,8 @@ export function HireWizard({
     const d = job.deliverable;
     const paid = job.quote?.priceUsd ?? displayPrice;
     const path = sharePath || `/jobs/${encodeURIComponent(job.id)}`;
-    const complete =
-      job.status === "delivered" &&
-      (Boolean(job.genesisSlug) || job.quote?.live === true);
+    const complete = hasLivePayload(job) && job.status === "delivered";
+    const outcome = jobOutcome(job);
     return (
       <div id="buy" className="space-y-3 scroll-mt-28">
         <div
@@ -263,12 +263,10 @@ export function HireWizard({
                   complete ? "bg-emerald-400" : "bg-amber-300"
                 }`}
               />
-              {complete ? "Ready" : "Quoted"}
+              {outcome.label}
             </div>
             <span className="text-[11px] font-medium text-white/40">
-              {complete
-                ? "Delivered · this is your receipt"
-                : "Quote only · no live payload"}
+              {outcome.hint}
             </span>
           </div>
           <h3 className="mt-3 text-lg font-semibold tracking-tight text-white">
@@ -316,8 +314,10 @@ export function HireWizard({
 
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-black/25 px-2 py-2">
-              <div className="text-[10px] text-white/40">Listed</div>
-              <div className="text-sm font-semibold text-white">${paid}</div>
+              <div className="text-[10px] text-white/40">SKU · L0</div>
+              <div className="text-sm font-semibold text-white">
+                ${paid} · no charge
+              </div>
             </div>
             <div className="rounded-lg bg-black/25 px-2 py-2">
               <div className="text-[10px] text-white/40">ETA</div>
@@ -377,9 +377,9 @@ export function HireWizard({
         />
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Link href={path} className="btn-primary !px-4 !py-2 !text-xs">
+          <a href={path} className="btn-primary !px-4 !py-2 !text-xs">
             Open result page
-          </Link>
+          </a>
           <Link href="/dashboard" className="btn-secondary !px-4 !py-2 !text-xs">
             My hires
           </Link>
@@ -447,8 +447,11 @@ export function HireWizard({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-xl font-bold tabular-nums tracking-tight text-white">
-            ${displayPrice}
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            L0 · no charge
+          </div>
+          <div className="text-lg font-bold tabular-nums tracking-tight text-white">
+            SKU ${displayPrice}
           </div>
           <div className="text-[10px] font-medium text-white/40">
             ~{displayEta} min
@@ -510,6 +513,20 @@ export function HireWizard({
       <p className="mt-2 text-center text-[10px] text-white/40">
         {SOFT_HIRE_SHORT}
       </p>
+      <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-[10px] leading-relaxed text-white/50 sm:grid-cols-2">
+        <p>
+          <span className="font-semibold text-white/75">L0 Soft hire</span>
+          {" — "}
+          plan only · you keep the keys · no custody. Listed $ is a SKU, not a
+          charge.
+        </p>
+        <p>
+          <span className="font-semibold text-white/75">L2 Escrow</span>
+          {" — "}
+          on-chain lock in $U · settle after deliverable · never a transfer to
+          the seller.
+        </p>
+      </div>
       {escrowOk && (
         <>
           <button

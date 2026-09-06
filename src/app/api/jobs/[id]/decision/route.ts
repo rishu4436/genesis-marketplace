@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getJob, saveJob } from "@/lib/job-store";
+import { sealJob } from "@/lib/job-receipt";
 import {
   applyDecision,
   incidentFromDispute,
@@ -65,7 +66,7 @@ export async function POST(req: Request, ctx: Ctx) {
     );
   }
 
-  const saved = await saveJob(next.job);
+  const saved = await saveJob(sealJob(next.job, { resign: true }));
   if (saved.decision?.state === "disputed") {
     const inc = incidentFromDispute(saved);
     if (inc) await saveIncident(inc);

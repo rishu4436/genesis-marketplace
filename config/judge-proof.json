@@ -1,4 +1,11 @@
 {
+  "demoVideoUrl": null,
+  "softHireJobs": [
+    "job_mtphh1fs_hvnpd7",
+    "job_mtphh262_191700",
+    "job_mtphh2ss_6dken9",
+    "job_mtphh38g_l69uoy"
+  ],
   "escrow": {
     "label": "ERC-8183 escrow proof (separate from soft-hire jobs)",
     "network": "bsc-mainnet",

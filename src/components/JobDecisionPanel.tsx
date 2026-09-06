@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { HireJob } from "@/lib/hire-engine";
 import type { JobDecision } from "@/lib/job-decision";
+import { hasLivePayload } from "@/lib/job-outcome";
 
 export function JobDecisionPanel({ job }: { job: HireJob }) {
+  const receiptState = job.receipt?.acceptance?.state;
   const [decision, setDecision] = useState<JobDecision | null>(
     job.decision ?? null,
   );
@@ -12,8 +14,29 @@ export function JobDecisionPanel({ job }: { job: HireJob }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (job.status !== "delivered" || !job.deliverable) return null;
+  useEffect(() => {
+    let stop = false;
+    void fetch(`/api/jobs/${encodeURIComponent(job.id)}/decision`)
+      .then((r) => r.json())
+      .then((j: { decision?: JobDecision | null }) => {
+        if (!stop && j.decision) setDecision(j.decision);
+      })
+      .catch(() => {
+        /* keep local */
+      });
+    return () => {
+      stop = true;
+    };
+  }, [job.id]);
+
+  if (!hasLivePayload(job) || job.status !== "delivered") return null;
   if (job.purpose === "holdout") return null;
+
+  const recorded =
+    decision?.state ||
+    (receiptState === "accepted" || receiptState === "disputed"
+      ? receiptState
+      : null);
 
   async function send(action: "accept" | "dispute") {
     setBusy(true);
@@ -59,12 +82,12 @@ export function JobDecisionPanel({ job }: { job: HireJob }) {
         About the plan only. No payout. Escrow is not required.
       </p>
 
-      {decision ? (
+      {recorded ? (
         <p className="mt-3 text-sm text-white/70">
-          {decision.state === "accepted" ? "Accepted" : "Disputed"}
-          {decision.reason ? ` — ${decision.reason}` : ""}
+          {recorded === "accepted" ? "Accepted" : "Disputed"}
+          {decision?.reason ? ` — ${decision.reason}` : ""}
           <span className="mt-1 block text-[11px] text-white/35">
-            Cools rank if disputed. Specialist stays hireable.
+            Recorded on this receipt. Accept / Dispute is closed.
           </span>
         </p>
       ) : (

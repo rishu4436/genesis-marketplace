@@ -40,7 +40,8 @@ import { classifyHealth, type HealthChecks } from "../src/lib/agent-health-model
 import { marketplaceTiers } from "../src/lib/agent-model";
 import { ERC8183_MAINNET, resolveEscrowProvider } from "../src/lib/erc8183-escrow";
 import { NEVER_PAY_SELLER } from "../src/lib/copy";
-import { escrowJudgeProof } from "../src/lib/judge-proof";
+import { escrowJudgeProof, judgeDemoVideoUrl } from "../src/lib/judge-proof";
+import { hasLivePayload, jobOutcome } from "../src/lib/job-outcome";
 import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
 
 type Check = { name: string; ok: boolean; detail?: string };
@@ -355,6 +356,50 @@ function main() {
   check(
     "judge escrow proof does not invent a fund tx",
     !jp.fundTx || /^0x[a-fA-F0-9]{64}$/.test(jp.fundTx),
+  );
+  const demo = judgeDemoVideoUrl();
+  check(
+    "judge demo video is https or unset",
+    demo === null || demo.startsWith("https://"),
+  );
+  check(
+    "8004scan API is not a hireable RPC",
+    isPublicHireableUrl("https://8004scan.io/api/v1/public/agents/1") === false,
+  );
+  check(
+    "identity writeup is not a live payload",
+    hasLivePayload({
+      quote: { live: false },
+      deliverable: {
+        title: "Indexed identity",
+        summary: "No live hire",
+        sections: [{}],
+      },
+    }) === false,
+  );
+  check(
+    "genesis plan is a live payload",
+    hasLivePayload({
+      genesisSlug: "range-keeper",
+      deliverable: {
+        title: "Plan",
+        summary: "Do this",
+        sections: [{}],
+      },
+    }) === true,
+  );
+  const qOnly = jobOutcome({
+    status: "delivered",
+    quote: { live: false },
+    deliverable: {
+      title: "Quote",
+      summary: "Live payload unavailable",
+      sections: [{}],
+    },
+  });
+  check(
+    "quote-only badge is not Ready",
+    qOnly.kind === "quoted" && qOnly.label.includes("Quote only"),
   );
 
   const failed = checks.filter((c) => !c.ok);

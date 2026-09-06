@@ -8,8 +8,19 @@ import { GenesisMark } from "@/components/brand/GenesisMark";
 import { AuthNav } from "@/components/AuthNav";
 
 const PRIMARY = [
+  { href: "/judge", label: "Judge" },
   { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
+];
+
+const MOBILE = [
+  { href: "/hire", label: "Hire" },
+  { href: "/judge", label: "Judge" },
+  { href: "/compare", label: "Compare" },
+  { href: "/dashboard", label: "My hires" },
+  { href: "/browse", label: "Browse" },
+  { href: "/packages", label: "Packages" },
+  { href: "/partners", label: "Partners" },
 ];
 
 function navActive(pathname: string, href: string) {
@@ -49,7 +60,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-50 overflow-x-hidden transition-colors duration-200 ${
+      className={`sticky top-0 z-50 transition-colors duration-200 ${
         scrolled || !isHome
           ? "border-b border-white/[0.06] bg-[#05060a]/90"
           : "border-b border-transparent bg-transparent"
@@ -90,6 +101,9 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <Link href="/hire" className="btn-solid !h-9 !px-3 !text-[0.75rem]">
+            Hire
+          </Link>
           <AuthNav compact />
           <button
             type="button"
@@ -120,10 +134,10 @@ export function Header() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-white/[0.06] bg-[#05060a] md:hidden"
+            className="border-t border-white/[0.06] bg-[#05060a] md:hidden"
           >
             <nav className="mx-auto flex max-w-[1160px] flex-col px-5 py-3 sm:px-8">
-              {PRIMARY.map((item) => (
+              {MOBILE.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -136,14 +150,8 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              <Link href="/partners" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
-                Partners
-              </Link>
               <Link href="/login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
                 Create account
-              </Link>
-              <Link href="/hire" className="btn-solid mt-2 w-full">
-                Hire
               </Link>
             </nav>
           </motion.div>

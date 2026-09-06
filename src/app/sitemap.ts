@@ -14,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/packages",
     "/profile",
     "/dashboard",
-    "/login",
     "/advantage",
     "/judge",
     "/termix",

@@ -56,7 +56,7 @@ export function isDirectoryLeak(agent: Agent): boolean {
 
 /** Endpoints we cannot complete a hire against (IAM, object storage, stubs). */
 const UNHIREABLE_A2A =
-  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com/i;
+  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com|8004scan\.io\/api|agentscan|toly\.me/i;
 
 export function isPublicHireableUrl(url: string): boolean {
   const u = url.trim();

@@ -161,10 +161,10 @@ export default async function GenesisAgentPage({ params }: Props) {
               <p className="body mt-3 max-w-2xl">{agent.description}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <a href="#buy" className="btn-solid !px-4 !text-sm">
-                  Hire · ${agent.basePriceUsd}
+                  Get plan
                 </a>
                 <span className="text-xs text-white/45">
-                  ~{agent.etaMinutes}m · plan only · you keep the keys
+                  ~{agent.etaMinutes}m · SKU ${agent.basePriceUsd} · L0 no charge
                 </span>
               </div>
             </div>

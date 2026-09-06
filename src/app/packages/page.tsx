@@ -4,7 +4,7 @@ import { PackageBuyButton } from "@/components/PackageBuyButton";
 
 export const metadata = {
   title: "Job packages",
-  description: "Multi-agent bundles — one buy, several deliverables.",
+  description: "Multi-agent L0 bundles — several plans, no payment.",
 };
 
 export default function PackagesPage() {
@@ -13,8 +13,9 @@ export default function PackagesPage() {
       <p className="section-label">Multi-agent</p>
       <h1 className="display-section mt-3 text-white">Job packages</h1>
       <p className="lead mt-4 max-w-2xl">
-        One checkout, several specialists. Each agent returns its own plan —
-        linked briefs for real DeFi ops desks.
+        One L0 run, several specialists. Each agent returns its own plan.
+        Listed $ is a SKU, not a charge — same as Get plan. No wallet, no
+        escrow unless you open Hire with escrow on a specialist.
       </p>
 
       <div className="mt-10 space-y-5">
@@ -37,12 +38,15 @@ export default function PackagesPage() {
                     </p>
                   </div>
                   <div className="text-right">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                      L0 · no charge
+                    </div>
                     <div className="text-2xl font-bold tabular-nums text-white">
-                      ${total}
+                      SKU ${total}
                     </div>
                     <div className="text-[11px] text-white/40">
                       <span className="line-through">${subtotal}</span>
-                      {" · "}−${bundleDiscount} bundle · ~{etaMax}m
+                      {" · "}−${bundleDiscount} listed bundle · ~{etaMax}m
                     </div>
                   </div>
                 </div>
@@ -65,8 +69,8 @@ export default function PackagesPage() {
                           {pkg.tasks[a.slug]}
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-amber-200">
-                        ${a.basePriceUsd}
+                      <span className="text-xs font-semibold text-white/45">
+                        SKU ${a.basePriceUsd}
                       </span>
                     </li>
                   ))}
@@ -84,7 +88,7 @@ export default function PackagesPage() {
       <p className="body-sm mt-8">
         Prefer a single agent?{" "}
         <Link href="/hire" className="text-amber-300 hover:underline">
-          Buy specialists
+          Get a plan
         </Link>
         .
       </p>

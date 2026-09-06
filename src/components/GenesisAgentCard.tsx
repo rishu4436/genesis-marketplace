@@ -80,6 +80,20 @@ export function GenesisAgentCard({
           <p className="mt-0.5 text-[11px] font-medium text-white/45">
             {sku?.job || cat?.shortName} · L0 · ~{agent.etaMinutes}m
           </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span
+              className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold tabular-nums text-emerald-200"
+              title="Receipt score from sealed hires — primary"
+            >
+              Receipt {receiptFit != null ? Math.round(receiptFit) : "—"}
+            </span>
+            <span
+              className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35"
+              title="8004scan index label — not a low score"
+            >
+              Index unrated
+            </span>
+          </div>
           <div className="mt-1">
             <TrustBadges badges={badges} />
           </div>

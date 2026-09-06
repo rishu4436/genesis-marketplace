@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { HireJob, HireStatus } from "@/lib/hire-engine";
+import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
 import { BRAND } from "@/lib/brand";
 import { HireAccountBar } from "@/components/HireAccountBar";
 import { RecoverHireBox } from "@/components/RecoverHireBox";
@@ -25,10 +26,13 @@ function statusStyle(status: HireStatus | string) {
 }
 
 /** User-facing label — hide internal negotiate jargon */
-function statusLabel(status: HireStatus | string) {
-  switch (status) {
+function statusLabel(job: HireJob) {
+  const out = jobOutcome(job);
+  if (out.kind === "quoted" && !hasLivePayload(job)) return out.label;
+  if (out.kind === "funded" || out.kind === "working") return out.label;
+  switch (job.status as HireStatus | string) {
     case "delivered":
-      return "Delivered";
+      return hasLivePayload(job) ? "Delivered" : out.label;
     case "failed":
       return "Failed";
     case "funded":
@@ -36,9 +40,9 @@ function statusLabel(status: HireStatus | string) {
       return "In progress";
     case "quoted":
     case "negotiating":
-      return "Purchasing";
+      return "Quoted";
     default:
-      return status;
+      return job.status;
   }
 }
 
@@ -74,8 +78,10 @@ export function HireDashboard() {
 
   async function loadServerFirst() {
     const local = loadLocal();
+    const ac = new AbortController();
+    const t = window.setTimeout(() => ac.abort(), 6000);
     try {
-      const r = await fetch("/api/profile/hires");
+      const r = await fetch("/api/profile/hires", { signal: ac.signal });
       const j = (await r.json()) as { data?: HireJob[]; signedIn?: boolean };
       if (r.ok && Array.isArray(j.data)) {
         const map = new Map<string, HireJob>();
@@ -89,7 +95,9 @@ export function HireDashboard() {
         return;
       }
     } catch {
-      /* guest */
+      /* guest or timeout — show local, never spin forever */
+    } finally {
+      window.clearTimeout(t);
     }
     setSignedIn(false);
     setJobs(local);
@@ -114,7 +122,7 @@ export function HireDashboard() {
     setOpenId(null);
   }
 
-  if (!ready || jobs.length === 0) {
+  if (jobs.length === 0) {
     return (
       <div className="panel-strong relative overflow-hidden px-6 py-16 text-center sm:px-10">
         <div
@@ -129,21 +137,19 @@ export function HireDashboard() {
             ∅
           </div>
           <h2 className="card-title mt-6 text-xl">
-            {!ready
-              ? "Your plans live here"
-              : signedIn
-                ? "No hires on this account yet"
-                : "Sign in to see hires on this account"}
+            {signedIn
+              ? "No hires on this account yet"
+              : "No plans on this device"}
           </h2>
           <p className="body mx-auto mt-3 max-w-sm">
-            {!ready
-              ? "Checking this browser. If you are not signed in, recover a claim code or hire a specialist — no account required for a plan."
-              : signedIn
-                ? "Hire a specialist. The plan is saved to this account."
-                : "This page is empty until you sign in or paste a claim code. Guest hires still work from Hire — they just do not follow the browser until you recover them."}
+            {signedIn
+              ? "Hire a specialist. The plan is saved to this account."
+              : "Sign in to see hires from another browser, or paste a claim code. Guest hires still work from Hire — no account required for a plan."}
           </p>
           {!ready && (
-            <p className="mt-2 text-[11px] text-white/35">Checking account…</p>
+            <p className="mt-2 text-[11px] text-white/35">
+              Checking account in the background…
+            </p>
           )}
           <div className="mx-auto mt-6 max-w-md space-y-4 text-left">
             <HireAccountBar
@@ -258,9 +264,11 @@ export function HireDashboard() {
                       ${typeof price === "number" ? price.toFixed(2) : price}
                     </span>
                     <span
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${statusStyle(h.status)}`}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${statusStyle(
+                        hasLivePayload(h) ? h.status : "quoted",
+                      )}`}
                     >
-                      {statusLabel(h.status)}
+                      {statusLabel(h)}
                     </span>
                   </div>
                 </div>

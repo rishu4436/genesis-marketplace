@@ -135,7 +135,7 @@ export default async function ComparePage({ searchParams }: Props) {
       label: "Pay rail",
       values: agents.map((a) => {
         const c = hireClassForAgent(a);
-        if (c === "genesis") return "Soft hire · optional ERC-8183";
+        if (c === "genesis") return "Genesis APEX · L0 plan hire · L2 optional";
         if (a.x402_supported) return "x402 + A2A";
         if (c === "live") return "A2A quote (0.1 $U typical)";
         return "None";

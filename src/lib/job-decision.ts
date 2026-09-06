@@ -6,6 +6,7 @@
 import type { JobAcceptanceState } from "./job-spec";
 import type { HireJob } from "./hire-engine";
 import { SEED_JOBS } from "./seed-jobs";
+import { hasLivePayload } from "./job-outcome";
 
 export const DISPUTE_COOLING_MS = 7 * 24 * 60 * 60 * 1000;
 export const SLASH_CAP = 0.75;
@@ -40,11 +41,15 @@ export function canDecide(job: HireJob): { ok: true } | { ok: false; error: stri
   if (SEED_JOBS.some((s) => s.id === job.id)) {
     return { ok: false, error: "Demo receipts are read-only" };
   }
-  if (job.status !== "delivered" || !job.deliverable) {
-    return { ok: false, error: "Only a delivered plan can be accepted or disputed" };
+  if (!hasLivePayload(job) || job.status !== "delivered") {
+    return { ok: false, error: "Only a delivered plan with a live payload can be accepted or disputed" };
   }
   if (job.decision) {
     return { ok: false, error: `Already ${job.decision.state}` };
+  }
+  const acc = job.receipt?.acceptance?.state;
+  if (acc === "accepted" || acc === "disputed") {
+    return { ok: false, error: `Already ${acc}` };
   }
   return { ok: true };
 }

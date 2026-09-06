@@ -22,7 +22,7 @@ export const DESTINATION = {
     {
       n: "03",
       t: "Plan, then optional escrow",
-      d: "L0 returns a plan in seconds. L2 ERC-8183 is optional on /fund. Never READY without a payload.",
+      d: "L0 returns a plan in seconds. L2 ERC-8183 is optional from the agent page. Never READY without a payload.",
     },
     {
       n: "04",
