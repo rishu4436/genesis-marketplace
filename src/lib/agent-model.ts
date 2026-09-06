@@ -52,10 +52,10 @@ export function marketplaceTiers(opts?: {
     },
     {
       id: "full",
-      label: "Full analysis",
-      short: "Full",
-      costLabel: "Listed $ (soft settle)",
-      settlement: "Marketplace soft purchase · deliverable unlocked",
+      label: "L0 Plan-only",
+      short: "L0",
+      costLabel: "Free / listed $ (soft settle)",
+      settlement: "Plan-only · you keep the keys · no on-chain lock",
       speed: "~2–5s",
       includes: [
         "Multi-source DeFi brief",
@@ -68,10 +68,10 @@ export function marketplaceTiers(opts?: {
     },
     {
       id: "escrow",
-      label: "On-chain escrow",
-      short: "Escrow",
-      costLabel: "0.21+ U (when live)",
-      settlement: "ERC-8183 fund → deliver → 24h settle",
+      label: "L2 Escrow hire",
+      short: "L2",
+      costLabel: "0.21+ U on /fund",
+      settlement: "Optional ERC-8183 fund → deliver → 24h settle",
       speed: "minutes + 24h settle",
       includes: [
         "Same full analysis payload",

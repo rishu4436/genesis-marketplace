@@ -3,6 +3,15 @@ import type { GenesisAgent } from "@/lib/genesis-agents";
 import { genesisHref, genesisToAgentCard } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 import { BRAND } from "@/lib/brand";
+import { genesisTrustBadges, skuForCategory } from "@/lib/desk";
+import { TrustBadges } from "@/components/TrustBadges";
+import { admitAllSpecialists } from "@/lib/admission";
+
+let admissionCache: ReturnType<typeof admitAllSpecialists> | null = null;
+function admissionGrade(slug: string) {
+  admissionCache ??= admitAllSpecialists();
+  return admissionCache.find((a) => a.slug === slug)?.grade === "admitted";
+}
 import { ScorePentagon } from "@/components/ScorePentagon";
 import {
   compositeFromAxes,
@@ -17,6 +26,12 @@ export function GenesisAgentCard({
   receiptFit?: number;
 }) {
   const cat = getCategory(agent.categoryId);
+  const sku = skuForCategory(agent.categoryId);
+  const admitted = admissionGrade(agent.slug);
+  const badges = genesisTrustBadges({
+    healthHireable: true,
+    admissionAdmitted: admitted,
+  });
   const card = genesisToAgentCard(agent, { receiptFit });
   // Same boosts as dashboard specialists so cards match scored specialists
   let axes = computeAxes(card).map((ax) => {
@@ -63,12 +78,11 @@ export function GenesisAgentCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px] font-medium text-white/45">
-            {BRAND.specialistLabel}
-            {cat ? ` · ${cat.shortName}` : ""} · ~{agent.etaMinutes}m
+            {sku?.job || cat?.shortName} · L0 · ~{agent.etaMinutes}m
           </p>
-          <p className="mt-1 text-[10px] font-medium text-emerald-300/80">
-            Registered · ${agent.basePriceUsd}
-          </p>
+          <div className="mt-1">
+            <TrustBadges badges={badges} />
+          </div>
         </div>
       </div>
 

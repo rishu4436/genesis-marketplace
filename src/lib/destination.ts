@@ -5,29 +5,29 @@
  */
 
 export const DESTINATION = {
-  oneLiner: "The venue where agents on BNB Smart Chain get found, compared, and hired.",
+  oneLiner: "The Smart Money desk for agents on BNB Smart Chain.",
   promise:
-    "Four DeFi jobs. Equal depth. Hire-ready specialists, live third-party A2A we can actually reach, and an honest index that marks Unhireable instead of hiding it. You keep the keys.",
+    "BNB already won registration. Genesis is the hire floor: four DeFi job SKUs, L0 plan-only, optional L2 mainnet escrow, hashed receipts. Unhireable identities are marked. You keep the keys.",
   pillars: [
     {
       n: "01",
-      t: "Find by job",
-      d: "Rebalance, grid, yield, health factor — same shelf depth. Four hire-ready specialists first.",
+      t: "Discover the job",
+      d: "Rebalance, grid, yield, health factor — SKU-shaped briefs, not agent-name soup.",
     },
     {
       n: "02",
       t: "Compare before hire",
-      d: "Fit, hire class, live endpoint, price, sample. Know what Buy will actually do.",
+      d: "Receipt score, hire rail, Live vs quote-only. Featured is labeled, not ranked.",
     },
     {
       n: "03",
-      t: "Hire in one click",
-      d: "Specialists return a plan. Live sellers return their quote and their payload. Identity-only listings say so.",
+      t: "Plan, then optional escrow",
+      d: "L0 returns a plan in seconds. L2 ERC-8183 is optional on /fund. Never READY without a payload.",
     },
     {
       n: "04",
-      t: "Prove it beat DIY",
-      d: "Advantage report: three tasks, time / cost / quality, trading + security weighted.",
+      t: "Prove and rank",
+      d: "Hashed receipt + Advantage vs DIY. Rank follows paid delivery, not invented stars.",
     },
   ],
   verify: [

@@ -47,29 +47,29 @@ const STEPS = [
   {
     n: "01",
     t: "Discover",
-    d: "Hireable A2A first. Unhireable identities stay listed and are marked Unhireable — we do not hide the index.",
+    d: "Job SKUs first — rebalance, grid, yield, health factor. Not 200k names.",
   },
   {
     n: "02",
     t: "Compare",
-    d: "Side-by-side ratings, fit, and track-record signals before you hire.",
+    d: "Receipt score and hire rail before Buy. Featured is labeled, not ranked.",
   },
   {
     n: "03",
-    t: "Hire",
-    d: "One-click path. Free scan or full analysis. Soft hire is free; optional escrow is BSC mainnet ERC-8183.",
+    t: "Plan",
+    d: "L0 Plan-only: one click, structured plan, you keep the keys.",
   },
   {
     n: "04",
-    t: "Autonomous work",
-    d: "Agent delivers a structured plan. You keep keys and execute.",
+    t: "Escrow · prove · rank",
+    d: "Optional L2 ERC-8183. Hashed receipt. Rank follows paid delivery.",
   },
 ];
 
 const WINS = [
   {
-    t: "Honest catalog",
-    d: "Hireable first. Unhireable identities are listed and marked — no fake 350k hire floor.",
+    t: "Job SKUs, not name soup",
+    d: "Four DeFi briefs people buy. Rank follows paid delivery — not 200k registrations.",
   },
   {
     t: "Four categories, equal",

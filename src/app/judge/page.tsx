@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { readLiveProof } from "@/lib/altana/proof";
 import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
+import { DeskStrip } from "@/components/DeskStrip";
 import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
 import { allGenesisAgents } from "@/lib/genesis-agents";
 
@@ -22,14 +23,18 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        Hire runs on{" "}
+        This is the hire floor, not an explorer. Loop: discover → compare
+        → plan → escrow → prove → rank. Runtime is{" "}
         <span className="text-white/75">Genesis APEX</span> (Ready, not
-        Studio-live) until Bedrock AgentCore quota lands. Specialists are{" "}
-        <span className="text-white/75">ERC-8004 on BSC mainnet</span>
-        {" "}#336622–#336625. Hire is plan-only; optional escrow is mainnet
-        ERC-8183. Altana is a post-hire grant on the same specialist.
+        Studio-live). Specialists are ERC-8004 on BSC{" "}
+        <span className="text-white/75">#336622–#336625</span>. L0 is
+        plan-only. L2 ERC-8183 is optional. Altana is a post-hire grant
+        with spend caps — never a master key.
       </p>
       <div className="mt-6">
+        <DeskStrip compact />
+      </div>
+      <div className="mt-4">
         <PartnerStatusStrip compact />
       </div>
       <Link

@@ -5,6 +5,16 @@ import { listClaims } from "@/lib/seller-claims";
 import { LIVE_SELLERS } from "@/lib/third-party-sellers";
 import { admitAllSpecialists } from "@/lib/admission";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
+import {
+  DESK,
+  DESK_RAILS,
+  JOB_SKUS,
+  genesisTrustBadges,
+  sellerPayloadKind,
+  skuForCategory,
+  thirdPartyTrustBadges,
+} from "@/lib/desk";
+import { deskWeek } from "@/lib/desk-metrics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,10 +25,11 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const origin = new URL(req.url).origin;
-  const [health, claims, scores] = await Promise.all([
+  const [health, claims, scores, week] = await Promise.all([
     checkAllAgentHealth(origin),
     listClaims(20),
     scoreAllSpecialists(),
+    deskWeek(),
   ]);
   const scoreBySlug = Object.fromEntries(scores.map((s) => [s.slug, s]));
   const healthBySlug = Object.fromEntries(health.map((h) => [h.slug, h]));
@@ -32,6 +43,10 @@ export async function GET(req: Request) {
     slug: a.slug,
     name: a.name,
     categoryId: a.categoryId,
+    job: skuForCategory(a.categoryId)?.job,
+    deliverableSchema: "structured-plan" as const,
+    proof: skuForCategory(a.categoryId)?.proof,
+    priceRail: "L0" as const,
     tagline: a.tagline,
     skills: a.skills,
     protocols: a.protocols,
@@ -42,6 +57,12 @@ export async function GET(req: Request) {
     tokenId: a.tokenId,
     buyUrl: `${origin}/genesis/${a.slug}#buy`,
     hireApi: `${origin}/api/hire`,
+    badges: genesisTrustBadges({
+      healthHireable: healthBySlug[a.slug]?.hireable !== false,
+      admissionAdmitted: admissionBySlug[a.slug]?.grade === "admitted",
+    })
+      .filter((b) => b.on)
+      .map((b) => b.id),
     health: healthBySlug[a.slug]
       ? {
           status: healthBySlug[a.slug].status,
@@ -77,6 +98,11 @@ export async function GET(req: Request) {
     slug: s.slug,
     name: s.name,
     categoryId: s.categoryId,
+    job: skuForCategory(s.categoryId)?.job,
+    deliverableSchema: "structured-plan" as const,
+    proof: skuForCategory(s.categoryId)?.proof,
+    priceRail: "L0" as const,
+    payload: sellerPayloadKind(s),
     tagline: s.tagline,
     chainId: s.chainId,
     tokenId: s.tokenId,
@@ -85,7 +111,13 @@ export async function GET(req: Request) {
     a2a: s.a2aCardUrl || null,
     rest: s.restBase,
     featured: Boolean(s.featured),
-    note: "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
+    badges: thirdPartyTrustBadges(sellerPayloadKind(s))
+      .filter((b) => b.on)
+      .map((b) => b.id),
+    note:
+      sellerPayloadKind(s) === "quote"
+        ? "A2A quote only. Not a completed plan until they deliver on-chain."
+        : "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
   }));
 
   const claimed = claims.map((c) => ({
@@ -104,7 +136,11 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
     marketplace: "Genesis Marketplace",
-    version: "1",
+    version: "1.1",
+    desk: DESK,
+    rails: DESK_RAILS,
+    skus: JOB_SKUS,
+    week,
     count: specialists.length + liveThird.length + claimed.length,
     data: [...specialists, ...liveThird, ...claimed],
   });

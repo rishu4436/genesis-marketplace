@@ -27,6 +27,12 @@ import {
   isPinnedLiveSeller,
 } from "../src/lib/third-party-sellers";
 import { siteUrl, PRODUCTION_SITE_URL } from "../src/lib/site-url";
+import {
+  JOB_SKUS,
+  genesisTrustBadges,
+  sellerPayloadKind,
+  thirdPartyTrustBadges,
+} from "../src/lib/desk";
 import { brainHitToAgent } from "../src/lib/brain-find";
 import type { Agent } from "../src/lib/types";
 import { catalogDropReason } from "../src/lib/catalog-quality";
@@ -192,6 +198,20 @@ function main() {
     isPublicHireableUrl(
       "https://gvwyso8occ.execute-api.us-east-1.amazonaws.com/a2a",
     ) === false,
+  );
+  check("four job SKUs", JOB_SKUS.length === 4);
+  check(
+    "genesis never claims bonded or insured",
+    genesisTrustBadges({
+      healthHireable: true,
+      admissionAdmitted: true,
+    }).every((b) => (b.id === "bonded" || b.id === "insured" ? b.on === false : true)),
+  );
+  check(
+    "chainhelix is quote-only so Live badge is off",
+    thirdPartyTrustBadges(sellerPayloadKind(helixPin)).every(
+      (b) => b.id !== "live" || b.on === false,
+    ),
   );
   check("five extra live pins", EXTRA_LIVE_SELLERS.length === 5);
   check("eleven live third-party pins", LIVE_SELLERS.length === 11);

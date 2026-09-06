@@ -20,6 +20,7 @@ import {
   splitHireable,
 } from "@/lib/hire-class";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
+import { DeskStrip } from "@/components/DeskStrip";
 import {
   compareByReadiness,
   compositeFromAxes,
@@ -159,14 +160,18 @@ export default async function HirePage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-12 sm:px-8 sm:py-16">
-      <p className="section-label">Hire</p>
-      <h1 className="display-section mt-3 text-white">Hire an agent</h1>
+      <p className="section-label">Smart Money desk</p>
+      <h1 className="display-section mt-3 text-white">Hire the job</h1>
       <p className="lead mt-4 max-w-xl">
-        Hireable A2A first. Unhireable identities stay listed below and
-        are marked Unhireable.
+        Discover → compare → plan → escrow → prove → rank. Four DeFi SKUs.
+        L0 is a plan. L2 escrow is optional. Unhireable identities are
+        marked, not featured.
       </p>
       <div className="mt-6">
         <CatalogModeNav active="hireable" />
+      </div>
+      <div className="mt-6">
+        <DeskStrip compact />
       </div>
       <SoftHireNote className="mt-6 max-w-xl" />
       <div className="mt-6">

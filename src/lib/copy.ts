@@ -5,10 +5,10 @@
  */
 
 export const SOFT_HIRE_LINE =
-  "Plan only. You keep the keys. Soft hire is free — optional on-chain lock is BSC mainnet ERC-8183.";
+  "L0 Plan-only: free structured plan, you keep the keys. L2 Escrow is optional BSC mainnet ERC-8183 on /fund.";
 
 export const SOFT_HIRE_SHORT =
-  "Soft hire · plan only · you keep the keys · optional mainnet escrow on /fund";
+  "L0 plan-only · you keep the keys · L2 optional mainnet escrow on /fund";
 
 export const INTELLIGENCE_LINE =
   "Hireable agents first. Unhireable ERC-8004 identities stay listed and are marked Unhireable — we do not hide the index.";

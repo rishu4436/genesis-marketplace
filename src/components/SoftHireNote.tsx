@@ -30,9 +30,10 @@ export function SoftHireNote({
         </>
       ) : (
         <>
-          Plan only. You keep the keys. Soft hire is free — the agent does
-          not move funds. Optional on-chain lock is BSC mainnet ERC-8183.
-          Create an account so the plan follows you.
+          L0 Plan-only: free structured plan, you keep the keys, the agent
+          does not move funds. L2 Escrow is optional BSC mainnet ERC-8183
+          on /fund — not part of soft hire. Create an account so the plan
+          follows you.
         </>
       )}
     </div>

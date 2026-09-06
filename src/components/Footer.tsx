@@ -11,6 +11,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/dashboard", label: "My hires" },
       { href: "/login", label: "Sign in / recover" },
       { href: "/categories", label: "Four jobs" },
+      { href: "/for-agents", label: "Machine API" },
       { href: "/partners", label: "Partners" },
     ],
   },

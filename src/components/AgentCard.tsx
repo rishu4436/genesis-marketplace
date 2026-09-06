@@ -10,7 +10,16 @@ import {
   compositeFromAxes,
   computeAxes,
 } from "@/lib/marketplace-score";
-import { isFeaturedThirdParty } from "@/lib/third-party-sellers";
+import {
+  getFeaturedByToken,
+  isFeaturedThirdParty,
+} from "@/lib/third-party-sellers";
+import {
+  genesisTrustBadges,
+  sellerPayloadKind,
+  thirdPartyTrustBadges,
+} from "@/lib/desk";
+import { TrustBadges } from "@/components/TrustBadges";
 import {
   hireClassForAgent,
   hireClassLabel,
@@ -42,6 +51,18 @@ export function AgentCard({
   const href = listingHref(agent);
   const cls = hireClassForAgent(agent);
   const canHire = cls === "genesis" || cls === "live";
+  const pinned = getFeaturedByToken(agent.chain_id, agent.token_id);
+  const badges =
+    cls === "genesis"
+      ? genesisTrustBadges({
+          healthHireable: true,
+          admissionAdmitted: true,
+        })
+      : cls === "live"
+        ? thirdPartyTrustBadges(
+            pinned ? sellerPayloadKind(pinned) : "quote",
+          )
+        : [];
   const actionLabel = canHire ? ctaLabel : "View identity";
   const actionHref = canHire ? `${href}#buy` : href;
 
@@ -99,6 +120,11 @@ export function AgentCard({
             ) : (
               <span className="rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-200">
                 Unhireable
+              </span>
+            )}
+            {badges.length > 0 && (
+              <span className="ml-0.5">
+                <TrustBadges badges={badges} />
               </span>
             )}
           </div>

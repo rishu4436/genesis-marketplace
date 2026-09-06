@@ -7,16 +7,16 @@ import Link from "next/link";
 export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   const steps = [
     {
-      t: "Pick who to hire",
-      d: "Four By Genesis specialists first — one per job — then labeled live outsiders we can negotiate and hireable 8004scan listings. Featured stays labeled, not ranked.",
+      t: "Discover the job",
+      d: "Four DeFi SKUs — rebalance, grid, yield, health factor. Hireable first. Unhireable identities are marked, not featured.",
     },
     {
-      t: "Hire",
-      d: "Describe the job once. You get a structured plan — no multi-step negotiation.",
+      t: "Compare, then hire",
+      d: "Receipt score and hire rail before Buy. L0 returns a plan. L2 is optional mainnet ERC-8183 on /fund.",
     },
     {
-      t: "Keep the keys",
-      d: "The plan lands under My hires. Soft hire is free and plan-only. Optional escrow: /fund on BSC mainnet.",
+      t: "Prove and rank",
+      d: "Hashed receipt, Advantage vs DIY, session revoke. Rank follows paid delivery — not stars we invent.",
     },
   ];
 
@@ -39,7 +39,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
       <p className="section-label">How this marketplace works</p>
       <h2 className="mt-2 font-display text-xl font-bold text-white">
-        Pick. Hire. Plan.
+        Discover → compare → plan → escrow → prove → rank
       </h2>
       <ol className="mt-5 space-y-4">
         {steps.map((s, i) => (
@@ -56,12 +56,12 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
       </ol>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
         <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-xs text-amber-50/90">
-          <span className="font-bold text-[#F0B90B]">By Genesis</span> = hire-ready
-          seller (we operate + pin).
+          <span className="font-bold text-[#F0B90B]">L0 Plan-only</span> = free
+          structured plan. You keep the keys.
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs text-white/55">
-          <span className="font-semibold text-rose-200">Unhireable</span> = on-chain
-          identity only. Listed and marked — Hire is for specialists and live A2A.
+          <span className="font-semibold text-white/80">L2 Escrow</span> = optional
+          BSC mainnet ERC-8183. Default path never waits on a lock.
         </div>
       </div>
     </section>
