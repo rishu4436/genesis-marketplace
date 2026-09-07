@@ -13,6 +13,7 @@ import { CopyClaimCode } from "@/components/CopyClaimCode";
 import { skuQuotedLine } from "@/lib/sku-label";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type Props = {
   params: Promise<{ id: string }>;

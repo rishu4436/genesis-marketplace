@@ -194,9 +194,29 @@ export async function saveJob(job: HireJob): Promise<HireJob> {
   return sealed;
 }
 
+async function readKvJob(id: string): Promise<HireJob | null> {
+  const fromKv = await kvCmd<string>("GET", `genesis:job:${id}`);
+  if (!fromKv) return null;
+  try {
+    const job = JSON.parse(fromKv) as HireJob;
+    if (!job?.id) return null;
+    memory.set(job.id, job);
+    indexClaim(job);
+    return job;
+  } catch {
+    return null;
+  }
+}
+
 export async function getJob(id: string): Promise<HireJob | null> {
   ensureSeeds();
   const want = decodeURIComponent(id);
+  // KV is the production source of truth. In-memory hits on a warm
+  // serverless instance must not hide a later accept/dispute write.
+  if (kvEnabled()) {
+    const kvJob = await readKvJob(want);
+    if (kvJob) return hydrateEvidence(kvJob);
+  }
   if (memory.has(want)) return hydrateEvidence(memory.get(want)!);
   try {
     const raw = await fs.readFile(filePath(want), "utf8");
@@ -205,18 +225,11 @@ export async function getJob(id: string): Promise<HireJob | null> {
     indexClaim(job);
     return hydrateEvidence(job);
   } catch {
-    /* try kv */
+    /* try kv if we skipped it (local) */
   }
-  const fromKv = await kvCmd<string>("GET", `genesis:job:${want}`);
-  if (fromKv) {
-    try {
-      const job = JSON.parse(fromKv) as HireJob;
-      memory.set(job.id, job);
-      indexClaim(job);
-      return hydrateEvidence(job);
-    } catch {
-      /* ignore */
-    }
+  if (!kvEnabled()) {
+    const kvJob = await readKvJob(want);
+    if (kvJob) return hydrateEvidence(kvJob);
   }
   const seed = SEED_JOBS.find((j) => j.id === want);
   return seed ? hydrateEvidence(seed) : null;
@@ -300,12 +313,7 @@ export async function listJobs(limit = 50): Promise<HireJob[]> {
       /* ignore */
     }
   }
-  await Promise.all(
-    [...extraIds].map(async (id) => {
-      if (memory.has(id)) return;
-      await getJob(id);
-    }),
-  );
+  await Promise.all([...extraIds].map((id) => getJob(id)));
 
   return [...memory.values()]
     .map(hydrateEvidence)
