@@ -195,7 +195,11 @@ export function genesisHref(g: GenesisAgent) {
   return `/genesis/${g.slug}`;
 }
 
-/** Query before hash so HireWizard can read task / auto-buy. */
+/**
+ * Query before hash so HireWizard can read task.
+ * `buy=1` auto-starts a hire — judge cold path only. Recommendation CTAs
+ * must omit it so Get plan / Soft hire is an explicit click.
+ */
 export function genesisBuyHref(
   g: GenesisAgent,
   opts?: { task?: string; buy?: boolean },
@@ -205,4 +209,10 @@ export function genesisBuyHref(
   if (opts?.buy) p.set("buy", "1");
   const q = p.toString();
   return `/genesis/${g.slug}${q ? `?${q}` : ""}#buy`;
+}
+
+/** True when a listing href would auto-POST /api/hire via HireWizard. */
+export function hrefAutoHires(href: string): boolean {
+  const path = href.split("#")[0] || href;
+  return /(?:\?|&)buy=1(?:&|$)/.test(path);
 }

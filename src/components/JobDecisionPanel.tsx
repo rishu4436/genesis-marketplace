@@ -72,7 +72,7 @@ export function JobDecisionPanel({ job }: { job: HireJob }) {
 
   return (
     <section
-      className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4"
+      className="relative z-[60] mt-4 rounded-xl border border-white/10 bg-black/20 p-4"
       aria-label="Accept or dispute"
     >
       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">

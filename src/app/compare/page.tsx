@@ -216,12 +216,12 @@ export default async function ComparePage({ searchParams }: Props) {
                       {(row.eligible ? row.why : row.blockers).join(" · ")}
                     </td>
                     <td className="px-3 py-2">
-                      <Link
+                      <a
                         href={row.buyHref}
                         className="text-[11px] font-semibold text-amber-300 hover:underline"
                       >
-                        Hire
-                      </Link>
+                        Hire {row.name}
+                      </a>
                     </td>
                   </tr>
                 ))}
@@ -327,13 +327,13 @@ export default async function ComparePage({ searchParams }: Props) {
 
           <div className="mt-6 flex flex-wrap gap-3">
             {agents.map((a) => (
-              <Link
+              <a
                 key={a.agent_id}
                 href={`${listingHref(a)}#buy`}
                 className="rounded-full bg-[#F0B90B] px-4 py-2 text-xs font-semibold text-black hover:bg-amber-300"
               >
                 Hire {a.name?.slice(0, 18) || a.token_id} →
-              </Link>
+              </a>
             ))}
           </div>
         </>

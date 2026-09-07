@@ -9,6 +9,8 @@ import { JobEscrowPanel } from "@/components/JobEscrowPanel";
 import { ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
 import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
 import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
+import { CopyClaimCode } from "@/components/CopyClaimCode";
+import { skuQuotedLine } from "@/lib/sku-label";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,7 @@ export default async function JobPage({ params }: Props) {
     : `/agents/${job.chainId}/${job.tokenId}`;
   const delivered = hasLivePayload(job) && job.status === "delivered";
   const outcome = jobOutcome(job);
+  const ready = outcome.kind === "ready";
   const canUpgrade =
     !job.escrow &&
     Boolean(
@@ -72,19 +75,17 @@ export default async function JobPage({ params }: Props) {
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${
-            delivered
-              ? "bg-emerald-400/15 text-emerald-300"
-              : "bg-amber-400/15 text-amber-200"
+            outcome.kind === "disputed"
+              ? "bg-rose-400/15 text-rose-300"
+              : ready
+                ? "bg-emerald-400/15 text-emerald-300"
+                : "bg-amber-400/15 text-amber-200"
           }`}
         >
           {outcome.label}
         </span>
         <span className="font-mono text-[11px] text-white/30">{job.id}</span>
-        {job.claimCode && (
-          <span className="rounded-full border border-amber-400/25 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-amber-200">
-            {job.claimCode}
-          </span>
-        )}
+        {job.claimCode && <CopyClaimCode code={job.claimCode} />}
       </div>
 
       <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-white">
@@ -92,11 +93,7 @@ export default async function JobPage({ params }: Props) {
       </h1>
       <p className="mt-2 text-sm text-white/50">
         {job.agentName}
-        {job.escrow
-          ? ` · ${job.escrow.amountU} ${job.escrow.tokenSymbol} locked`
-          : job.quote
-            ? ` · SKU $${job.quote.priceUsd} · L0 no charge`
-            : ""}{" "}
+        {` · ${skuQuotedLine(job)}`}{" "}
         ·{" "}
         <Link href={href} className="text-amber-300 hover:underline">
           Open agent

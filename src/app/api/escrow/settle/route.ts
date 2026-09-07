@@ -7,6 +7,7 @@ import {
   isTxHash,
 } from "@/lib/erc8183-escrow";
 import { readOnchainJob } from "@/lib/erc8183-read";
+import { pinEscrowJudgeProof } from "@/lib/judge-proof";
 
 export const runtime = "nodejs";
 
@@ -91,6 +92,11 @@ export async function POST(req: Request) {
       ],
     };
     const saved = await saveJob(next);
+    try {
+      await pinEscrowJudgeProof(saved);
+    } catch {
+      /* pin is best-effort */
+    }
 
     return NextResponse.json({
       success: true,

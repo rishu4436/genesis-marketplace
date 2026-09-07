@@ -3,6 +3,7 @@ import { getPackage, packagePricing } from "@/lib/packages";
 import { createJobWithLiveNegotiate } from "@/lib/hire-engine";
 import { saveJob } from "@/lib/job-store";
 import type { HireJob } from "@/lib/hire-engine";
+import { allowRate, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,23 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   try {
+    const gated = await allowRate({
+      key: `packages:${clientIp(req)}`,
+      limit: 6,
+      windowSec: 10 * 60,
+    });
+    if (!gated.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many package runs. Wait a few minutes — L0 is still free.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(gated.retryAfterSec) },
+        },
+      );
+    }
     const body = (await req.json()) as {
       packageId?: string;
       taskOverrides?: Record<string, string>;

@@ -5,6 +5,8 @@
 
 import { listJobs } from "./job-store";
 import type { HireJob } from "./hire-engine";
+import { isTxHash } from "./erc8183-escrow";
+import { hasLivePayload } from "./job-outcome";
 
 export type DeskWeek = {
   windowDays: 7;
@@ -19,9 +21,13 @@ const CACHE_MS = 60_000;
 let cached: { at: number; week: DeskWeek } | null = null;
 
 function isPaidEscrow(job: HireJob): boolean {
-  if (job.status !== "delivered") return false;
+  if (job.purpose === "holdout") return false;
   if (job.tier !== "escrow") return false;
-  return job.quote?.protocol === "ERC-8183";
+  if (job.quote?.protocol === "ERC-8183-sim") return false;
+  if (!isTxHash(job.escrow?.fundTx)) return false;
+  const settled = isTxHash(job.escrow?.settleTx);
+  const delivered = job.status === "delivered" && hasLivePayload(job);
+  return settled || delivered;
 }
 
 export async function deskWeek(): Promise<DeskWeek> {

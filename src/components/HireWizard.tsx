@@ -18,6 +18,8 @@ import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
 import { ESCROW_CTA, ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
 import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
+import { skuQuotedLine } from "@/lib/sku-label";
+import { CopyClaimCode } from "@/components/CopyClaimCode";
 import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
 import { EscrowWizard } from "@/components/EscrowWizard";
 
@@ -180,7 +182,7 @@ export function HireWizard({
     }
   }
 
-  // Prefill ?task= ; ?buy=1 starts hire immediately (judge cold path)
+  // Prefill ?task=. ?buy=1 auto-starts hire — judge cold path only.
   useEffect(() => {
     try {
       const sp = new URLSearchParams(window.location.search);
@@ -237,10 +239,9 @@ export function HireWizard({
 
   if (job && phase === "done") {
     const d = job.deliverable;
-    const paid = job.quote?.priceUsd ?? displayPrice;
     const path = sharePath || `/jobs/${encodeURIComponent(job.id)}`;
-    const complete = hasLivePayload(job) && job.status === "delivered";
     const outcome = jobOutcome(job);
+    const complete = outcome.kind === "ready";
     return (
       <div id="buy" className="space-y-3 scroll-mt-28">
         <div
@@ -296,6 +297,11 @@ export function HireWizard({
             <p className="mt-1 font-mono text-lg font-bold tracking-widest text-white">
               {job.claimCode || job.id}
             </p>
+            {job.claimCode && (
+              <div className="mt-2">
+                <CopyClaimCode code={job.claimCode} buttonOnly />
+              </div>
+            )}
             <p className="mt-1 text-[11px] leading-relaxed text-white/50">
               This plan lives at the result page. Sign in below so My hires
               shows it on another browser. Or keep this claim code / result
@@ -314,9 +320,9 @@ export function HireWizard({
 
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-black/25 px-2 py-2">
-              <div className="text-[10px] text-white/40">SKU · L0</div>
-              <div className="text-sm font-semibold text-white">
-                ${paid} · no charge
+              <div className="text-[10px] text-white/40">SKU · quoted</div>
+              <div className="text-[11px] font-semibold leading-snug text-white">
+                {skuQuotedLine(job)}
               </div>
             </div>
             <div className="rounded-lg bg-black/25 px-2 py-2">
@@ -376,7 +382,7 @@ export function HireWizard({
           tokenId={tokenId}
         />
 
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="relative z-[60] flex flex-wrap gap-2 pt-1">
           <a href={path} className="btn-primary !px-4 !py-2 !text-xs">
             Open result page
           </a>

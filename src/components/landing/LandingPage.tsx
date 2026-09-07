@@ -81,7 +81,7 @@ export function LandingPage() {
               const cat = getCategory(a.categoryId);
               return (
                 <li key={a.slug}>
-                  <Link
+                  <a
                     href={`${genesisHref(a)}#buy`}
                     className={`grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 transition hover:bg-white/[0.03] sm:grid-cols-[auto_1fr_auto_auto] ${
                       i > 0 ? "border-t border-white/[0.06]" : ""
@@ -111,7 +111,7 @@ export function LandingPage() {
                     <span className="rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-xs font-semibold text-black">
                       Hire
                     </span>
-                  </Link>
+                  </a>
                 </li>
               );
             })}
@@ -132,7 +132,7 @@ export function LandingPage() {
               const cat = getCategory(a.categoryId);
               return (
                 <FadeIn key={a.slug} delay={i * 0.05}>
-                  <Link
+                  <a
                     href={`${genesisHref(a)}#buy`}
                     className="group flex h-full gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
                   >
@@ -157,7 +157,7 @@ export function LandingPage() {
                         {a.tagline}
                       </span>
                     </span>
-                  </Link>
+                  </a>
                 </FadeIn>
               );
             })}

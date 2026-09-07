@@ -18,6 +18,7 @@ import { JOB_CHIPS } from "../src/lib/job-chips";
 import { allGenesisAgents } from "../src/lib/genesis-agents";
 import { sealJob, verifyJobReceipt } from "../src/lib/job-receipt";
 import type { HireJob } from "../src/lib/hire-engine";
+import { jobOutcome } from "../src/lib/job-outcome";
 
 type Check = { name: string; ok: boolean; detail?: string };
 const checks: Check[] = [];
@@ -54,6 +55,13 @@ function main() {
     "Band math does not match the brief",
   );
   check("dispute works", disputed.ok && disputed.job.decision?.state === "disputed");
+  const disputedOut = jobOutcome(disputed.ok ? disputed.job : job);
+  check(
+    "disputed outcome is not Ready/Delivered",
+    disputedOut.kind === "disputed" &&
+      !/ready|delivered/i.test(disputedOut.label),
+    disputedOut.label,
+  );
 
   const sealed = sealJob(disputed.ok ? disputed.job : job, { resign: true });
   check(

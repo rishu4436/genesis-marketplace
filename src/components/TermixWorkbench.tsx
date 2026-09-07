@@ -13,6 +13,7 @@ import {
   advantage,
 } from "@/lib/termix";
 import type { HireJob } from "@/lib/hire-engine";
+import { PROOF_JOBS } from "@/lib/proof-jobs";
 
 const STORAGE = "genesis-termix-report";
 
@@ -136,6 +137,48 @@ export function TermixWorkbench() {
     }
   }
 
+  async function loadSample(task: TermixTask) {
+    const slug = task.genesisSlug as keyof typeof PROOF_JOBS | undefined;
+    const id = slug ? PROOF_JOBS[slug] : undefined;
+    if (!id) {
+      setMsg("No sealed proof receipt for this task.");
+      return;
+    }
+    setBusy(task.id);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/jobs/${encodeURIComponent(id)}`);
+      const json = (await res.json()) as {
+        success?: boolean;
+        data?: HireJob;
+        error?: string;
+      };
+      if (!json.success || !json.data) {
+        throw new Error(json.error || "Sample receipt not on this server");
+      }
+      const arm = armFromJob(json.data);
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === task.id
+            ? {
+                ...t,
+                withAgent: arm,
+                jobId: json.data!.id,
+                completedAt: json.data!.updatedAt || json.data!.createdAt,
+              }
+            : t,
+        ),
+      );
+      setMsg(
+        `Loaded sample from proof receipt ${id} — labeled sample, not a new hire.`,
+      );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Sample load failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function runAllAgents() {
     for (const t of tasks) {
       if (t.genesisSlug) await runWithAgent(t);
@@ -210,14 +253,24 @@ export function TermixWorkbench() {
                   {t.genesisSlug || "—"}
                 </p>
               </div>
-              <button
-                type="button"
-                disabled={busy === t.id || !t.genesisSlug}
-                onClick={() => void runWithAgent(t)}
-                className="rounded-lg bg-amber-400/20 px-3 py-1.5 text-[11px] font-medium text-amber-100 disabled:opacity-40"
-              >
-                {busy === t.id ? "Hiring…" : "Run with agent"}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy === t.id || !t.genesisSlug}
+                  onClick={() => void runWithAgent(t)}
+                  className="rounded-lg bg-amber-400/20 px-3 py-1.5 text-[11px] font-medium text-amber-100 disabled:opacity-40"
+                >
+                  {busy === t.id ? "Hiring…" : "Run with agent"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === t.id || !t.genesisSlug}
+                  onClick={() => void loadSample(t)}
+                  className="rounded-lg border border-white/15 px-3 py-1.5 text-[11px] font-medium text-white/70 disabled:opacity-40"
+                >
+                  Load sample receipt
+                </button>
+              </div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -229,6 +282,7 @@ export function TermixWorkbench() {
               <ArmEditor
                 title="With agent"
                 arm={t.withAgent}
+                emptyHint="No with-agent run yet. Click Run with agent for a live L0 hire, or Load sample receipt from a sealed proof job. Empty rows are not a TermiX score."
                 onChange={(p) => updateArm(t.id, "withAgent", p)}
               />
             </div>
@@ -270,14 +324,22 @@ function ArmEditor({
   title,
   arm,
   onChange,
+  emptyHint,
 }: {
   title: string;
   arm: TermixArm;
   onChange: (p: Partial<TermixArm>) => void;
+  emptyHint?: string;
 }) {
+  const empty = !arm.outputSummary?.trim() && !arm.timeMinutes;
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
       <div className="text-[11px] font-semibold text-amber-200/90">{title}</div>
+      {empty && emptyHint && (
+        <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+          {emptyHint}
+        </p>
+      )}
       <div className="mt-2 grid grid-cols-3 gap-2">
         <label className="text-[10px] text-white/40">
           Time (min)

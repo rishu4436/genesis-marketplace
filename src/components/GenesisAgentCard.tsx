@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { GenesisAgent } from "@/lib/genesis-agents";
 import { genesisHref, genesisToAgentCard } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
@@ -55,7 +54,7 @@ export function GenesisAgentCard({
   const gid = `genesis-${agent.slug}`;
 
   return (
-    <Link
+    <a
       href={`${genesisHref(agent)}#buy`}
       className="group flex flex-col rounded-2xl border border-amber-400/20 bg-gradient-to-b from-amber-400/[0.1] to-white/[0.02] p-4 transition-colors hover:border-amber-400/40"
     >
@@ -141,6 +140,6 @@ export function GenesisAgentCard({
           Buy · ${agent.basePriceUsd}
         </span>
       </div>
-    </Link>
+    </a>
   );
 }

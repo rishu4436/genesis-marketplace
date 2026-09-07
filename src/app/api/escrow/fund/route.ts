@@ -22,6 +22,7 @@ import { a2aNotifyFunded, getPlatformConfig } from "@/lib/platform-a2a";
 import { BSC_MAINNET_CHAIN_ID } from "@/lib/pins";
 import type { CategoryId } from "@/lib/categories";
 import type { HireIntent } from "@/lib/hire";
+import { pinEscrowJudgeProof } from "@/lib/judge-proof";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -170,6 +171,7 @@ export async function POST(req: Request) {
       escrow,
       quote: {
         priceUsd: job.quote?.priceUsd ?? g?.basePriceUsd ?? 8,
+        listSkuUsd: g?.basePriceUsd ?? job.quote?.priceUsd ?? 8,
         currency: "U",
         etaMinutes: job.quote?.etaMinutes ?? g?.etaMinutes ?? 2,
         protocol: "ERC-8183",
@@ -250,6 +252,12 @@ export async function POST(req: Request) {
       job = await saveJob(job);
     } catch {
       job = sealJob(job, { resign: true });
+    }
+
+    try {
+      await pinEscrowJudgeProof(job);
+    } catch {
+      /* pin is best-effort */
     }
 
     return NextResponse.json({

@@ -46,7 +46,7 @@ export async function MarketplaceHome() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {JOB_CHIPS.map((chip) => (
-          <Link
+          <a
             key={chip.id}
             href={`/genesis/${
               specialists.find((s) => s.categoryId === chip.categoryId)?.slug
@@ -54,7 +54,7 @@ export async function MarketplaceHome() {
             className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[13px] text-white/65 transition hover:border-amber-400/40 hover:text-amber-100"
           >
             {chip.label}
-          </Link>
+          </a>
         ))}
       </div>
 
@@ -74,7 +74,7 @@ export async function MarketplaceHome() {
         {specialists.map((a) => {
           const cat = getCategory(a.categoryId);
           return (
-            <Link
+            <a
               key={a.slug}
               href={`${genesisHref(a)}#buy`}
               className="group flex h-full flex-col rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
@@ -99,14 +99,14 @@ export async function MarketplaceHome() {
                 <span className="text-white/35">${a.basePriceUsd}</span>
                 <span className="font-medium text-[#F0B90B]">Hire →</span>
               </div>
-            </Link>
+            </a>
           );
         })}
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {LIVE_SELLERS.map((s) => (
-          <Link
+          <a
             key={s.slug}
             href={`${thirdPartyHref(s)}#buy`}
             className="flex items-center gap-3 rounded-[12px] border border-white/[0.08] px-4 py-3 text-[13px] transition hover:border-white/20"
@@ -121,7 +121,7 @@ export async function MarketplaceHome() {
               <p className="truncate text-[12px] text-white/40">{s.tagline}</p>
             </div>
             <span className="shrink-0 text-[12px] text-white/45">Open →</span>
-          </Link>
+          </a>
         ))}
       </div>
 

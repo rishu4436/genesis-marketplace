@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadBuyerContext } from "@/lib/buyer-context";
 
@@ -78,7 +77,7 @@ export function AiConcierge() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-50 flex h-12 items-center gap-2 rounded-full bg-[#F0B90B] px-4 text-sm font-semibold text-black shadow-lg shadow-amber-900/30 transition hover:bg-amber-300"
+        className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-[#F0B90B] px-4 text-sm font-semibold text-black shadow-lg shadow-amber-900/30 transition hover:bg-amber-300"
       >
         <span className="text-base">✦</span>
         AI Concierge
@@ -88,7 +87,7 @@ export function AiConcierge() {
       </button>
 
       {open && (
-        <div className="fixed bottom-20 right-5 z-50 flex h-[min(28rem,70vh)] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0c12] shadow-2xl">
+        <div className="fixed bottom-20 right-5 z-40 flex h-[min(28rem,70vh)] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0c12] shadow-2xl">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-white">Genesis AI</p>
@@ -130,25 +129,27 @@ export function AiConcierge() {
             {last?.picks && last.picks.length > 0 && (
               <div className="space-y-1.5">
                 {last.picks.map((p) => (
-                  <Link
+                  <a
                     key={p.slug}
                     href={p.buyHref}
+                    onClick={() => setOpen(false)}
                     className="block rounded-lg border border-white/10 px-2.5 py-2 text-[11px] hover:border-amber-400/40"
                   >
                     <span className="font-semibold text-white">{p.name}</span>
                     <span className="text-white/40"> · {p.score}/100</span>
                     <p className="mt-0.5 text-white/45">{p.why}</p>
-                  </Link>
+                  </a>
                 ))}
               </div>
             )}
             {last?.cta && (
-              <Link
+              <a
                 href={last.cta.href}
+                onClick={() => setOpen(false)}
                 className="inline-flex rounded-full bg-amber-400 px-3 py-1.5 text-[11px] font-semibold text-black"
               >
                 {last.cta.label}
-              </Link>
+              </a>
             )}
           </div>
 

@@ -76,7 +76,7 @@ function picksFromMatch(q: string, limit = 3): AiAgentPick[] {
     categoryId: m.agent.categoryId,
     score: Math.round(m.score),
     why: m.reasons.join("; "),
-    buyHref: `${genesisBuyHref(m.agent, { task: normalizedTask, buy: true })}`,
+    buyHref: genesisBuyHref(m.agent, { task: normalizedTask }),
     priceUsd: m.agent.basePriceUsd,
     etaMinutes: m.agent.etaMinutes,
   }));
@@ -114,7 +114,7 @@ export async function orchestrateHire(opts: {
       "Rules-based match. Confirm the specialist plan against live venues before you move capital.",
     ],
     nextAction: fallbackPicks[0]
-      ? `Buy ${fallbackPicks[0].name} with Full analysis`
+      ? `Open ${fallbackPicks[0].name} and click Get plan`
       : "Browse categories",
     fallbackReason: hasXaiKey() ? undefined : "ai-off",
   };
@@ -183,7 +183,7 @@ Rules:
         categoryId: a.categoryId,
         score: Math.min(100, Math.max(0, Number(p.score) || 0)),
         why: p.why || "Strong category fit",
-        buyHref: `/genesis/${a.slug}#buy?task=${encodeURIComponent(brief)}`,
+        buyHref: genesisBuyHref(a, { task: brief }),
         priceUsd: a.basePriceUsd,
         etaMinutes: a.etaMinutes,
       } satisfies AiAgentPick;
@@ -412,7 +412,7 @@ ctaSlug must be a catalog slug or "hire" or "browse".`;
         categoryId: a.categoryId,
         score: Math.min(100, Math.max(0, Number(p.score) || 70)),
         why: p.why,
-        buyHref: `/genesis/${a.slug}#buy?task=${encodeURIComponent(task)}`,
+        buyHref: genesisBuyHref(a, { task }),
         priceUsd: a.basePriceUsd,
         etaMinutes: a.etaMinutes,
       };
@@ -421,7 +421,9 @@ ctaSlug must be a catalog slug or "hire" or "browse".`;
 
   let href = "/hire";
   if (raw.ctaSlug && agentBySlug(raw.ctaSlug)) {
-    href = `/genesis/${raw.ctaSlug}#buy?task=${encodeURIComponent(raw.suggestedTask || opts.message)}`;
+    href = genesisBuyHref(agentBySlug(raw.ctaSlug)!, {
+      task: raw.suggestedTask || opts.message,
+    });
   } else if (raw.ctaSlug === "browse") href = "/browse";
   else if (picks[0]) href = picks[0].buyHref;
 

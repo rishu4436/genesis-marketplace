@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { DM_Sans, Syne } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { CompareTray } from "@/components/CompareTray";
 import { TrialBanner } from "@/components/TrialBanner";
-import { AiConcierge } from "@/components/AiConcierge";
+import { SiteOverlays } from "@/components/SiteOverlays";
 import { AppShellBackground } from "@/components/brand/AppShellBackground";
 import { HashScroll } from "@/components/HashScroll";
 import "./globals.css";
@@ -87,8 +86,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
-        <CompareTray />
-        <AiConcierge />
+        <SiteOverlays />
       </body>
     </html>
   );

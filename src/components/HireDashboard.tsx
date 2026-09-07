@@ -3,24 +3,27 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { HireJob, HireStatus } from "@/lib/hire-engine";
-import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
+import { jobOutcome } from "@/lib/job-outcome";
 import { BRAND } from "@/lib/brand";
 import { HireAccountBar } from "@/components/HireAccountBar";
 import { RecoverHireBox } from "@/components/RecoverHireBox";
 
-function statusStyle(status: HireStatus | string) {
-  switch (status) {
-    case "delivered":
+function statusStyle(job: HireJob) {
+  const kind = jobOutcome(job).kind;
+  switch (kind) {
+    case "ready":
       return "bg-emerald-400/15 text-emerald-300 ring-emerald-400/20";
-    case "failed":
+    case "disputed":
       return "bg-rose-400/15 text-rose-300 ring-rose-400/20";
     case "funded":
-    case "fulfilling":
+    case "working":
       return "bg-sky-400/15 text-sky-300 ring-sky-400/20";
     case "quoted":
-    case "negotiating":
       return "bg-amber-400/15 text-amber-200 ring-amber-400/20";
     default:
+      if (job.status === "failed") {
+        return "bg-rose-400/15 text-rose-300 ring-rose-400/20";
+      }
       return "bg-white/10 text-white/60 ring-white/10";
   }
 }
@@ -28,19 +31,13 @@ function statusStyle(status: HireStatus | string) {
 /** User-facing label — hide internal negotiate jargon */
 function statusLabel(job: HireJob) {
   const out = jobOutcome(job);
-  if (out.kind === "quoted" && !hasLivePayload(job)) return out.label;
+  if (out.kind === "disputed") return out.label;
+  if (out.kind === "quoted") return out.label;
   if (out.kind === "funded" || out.kind === "working") return out.label;
+  if (out.kind === "ready") return out.label;
   switch (job.status as HireStatus | string) {
-    case "delivered":
-      return hasLivePayload(job) ? "Delivered" : out.label;
     case "failed":
       return "Failed";
-    case "funded":
-    case "fulfilling":
-      return "In progress";
-    case "quoted":
-    case "negotiating":
-      return "Quoted";
     default:
       return job.status;
   }
@@ -109,7 +106,9 @@ export function HireDashboard() {
   }, []);
 
   const stats = useMemo(() => {
-    const delivered = jobs.filter((j) => j.status === "delivered").length;
+    const delivered = jobs.filter(
+      (j) => jobOutcome(j).kind === "ready",
+    ).length;
     const active = jobs.filter(
       (j) => j.status !== "delivered" && j.status !== "failed",
     ).length;
@@ -265,7 +264,7 @@ export function HireDashboard() {
                     </span>
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${statusStyle(
-                        hasLivePayload(h) ? h.status : "quoted",
+                        h,
                       )}`}
                     >
                       {statusLabel(h)}

@@ -156,7 +156,7 @@ export function JobIntentSearch({ variant = "hero" }: Props) {
           )}
 
           {organic.map((row: RankedListing) => (
-            <Link
+            <a
               key={row.slug}
               href={row.buyHref}
               className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3 transition hover:border-amber-400/35"
@@ -178,7 +178,7 @@ export function JobIntentSearch({ variant = "hero" }: Props) {
               <span className="shrink-0 rounded-full bg-amber-400 px-3 py-1.5 text-xs font-semibold text-black">
                 Hire
               </span>
-            </Link>
+            </a>
           ))}
 
           {rank && (
@@ -191,7 +191,7 @@ export function JobIntentSearch({ variant = "hero" }: Props) {
           )}
 
           {rank?.featured?.map((f) => (
-            <Link
+            <a
               key={f.slug}
               href={f.buyHref}
               className="block rounded-xl border border-sky-400/25 bg-sky-400/[0.06] px-4 py-3"
@@ -201,7 +201,7 @@ export function JobIntentSearch({ variant = "hero" }: Props) {
               </p>
               <p className="mt-1 text-sm font-semibold text-white">{f.name}</p>
               <p className="mt-0.5 text-[11px] text-white/45">{f.reason}</p>
-            </Link>
+            </a>
           ))}
 
           {orch?.planOfAttack && orch.planOfAttack.length > 0 && (

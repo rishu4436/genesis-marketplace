@@ -34,8 +34,8 @@ function buyHrefForFeatured(
 ): string {
   const q = new URLSearchParams();
   if (task?.trim()) q.set("task", task.trim());
-  q.set("buy", "1");
-  return `${href}?${q.toString()}#buy`;
+  const qs = q.toString();
+  return `${href}${qs ? `?${qs}` : ""}#buy`;
 }
 
 function slotFromSeller(seller: ThirdPartySeller, task?: string): FeaturedSlot {

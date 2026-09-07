@@ -71,6 +71,8 @@ export type EscrowRecord = {
 
 export type HireQuote = {
   priceUsd: number;
+  /** Catalog list SKU — labeling only on L0; may differ from quoted. */
+  listSkuUsd?: number;
   currency: string;
   etaMinutes: number;
   protocol: "ERC-8183" | "ERC-8183-sim" | "ERC-8183-live" | "x402-free";
@@ -220,8 +222,10 @@ export function buildQuote(
 
   const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
+  const priceUsd = Math.round(price * 100) / 100;
   return {
-    priceUsd: Math.round(price * 100) / 100,
+    priceUsd,
+    listSkuUsd: g?.basePriceUsd ?? priceUsd,
     currency: "USD",
     etaMinutes: eta,
     protocol: "ERC-8183-sim",
@@ -457,6 +461,7 @@ export async function createJobWithLiveNegotiate(input: {
             ),
             quote: {
               priceUsd,
+              listSkuUsd: g?.basePriceUsd ?? priceUsd,
               currency: a2a.currency || "USD-sim",
               etaMinutes: g?.etaMinutes ?? 2,
               protocol: "ERC-8183-sim",
@@ -522,6 +527,7 @@ export async function createJobWithLiveNegotiate(input: {
           ),
           quote: {
             priceUsd,
+            listSkuUsd: g?.basePriceUsd ?? priceUsd,
             currency: isGenesisApex
               ? "USD-sim"
               : (data.currency as string) || "USD-sim",

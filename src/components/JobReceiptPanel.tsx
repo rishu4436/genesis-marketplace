@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { HireJob } from "@/lib/hire-engine";
 import { jobWithEvidence } from "@/lib/job-receipt";
+import { skuQuotedLine } from "@/lib/sku-label";
+import { CopyClaimCode } from "@/components/CopyClaimCode";
 
 function shortHash(hex: string | null): string {
   if (!hex) return "—";
@@ -44,6 +46,17 @@ export function JobReceiptPanel({ job }: { job: HireJob }) {
             : "Plan only · no custody"}
         </span>
       </div>
+      {job.claimCode && (
+        <div className="mt-2">
+          <CopyClaimCode code={job.claimCode} />
+        </div>
+      )}
+      <p className="mt-2 text-[11px] text-white/50">{skuQuotedLine(job)}</p>
+      {job.quote?.protocol === "ERC-8183-sim" && (
+        <p className="mt-1 text-[10px] text-white/35">
+          Soft-hire sim — not mainnet escrow proof.
+        </p>
+      )}
 
       <dl className="mt-3 grid gap-2 text-[11px] text-white/55 sm:grid-cols-2">
         <div>

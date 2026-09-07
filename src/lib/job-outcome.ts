@@ -4,7 +4,12 @@
  * Quote-only / identity-only / escrow-funded-without-payload never read as Ready.
  */
 
-export type JobOutcomeKind = "ready" | "quoted" | "working" | "funded";
+export type JobOutcomeKind =
+  | "ready"
+  | "quoted"
+  | "working"
+  | "funded"
+  | "disputed";
 
 export type JobOutcomeInput = {
   status?: string;
@@ -16,6 +21,8 @@ export type JobOutcomeInput = {
     sections?: unknown[];
   } | null;
   escrow?: { fundTx?: string; chainStatus?: string } | null;
+  decision?: { state?: string } | null;
+  receipt?: { acceptance?: { state?: string } } | null;
 };
 
 function schemaPresent(d: JobOutcomeInput["deliverable"]): boolean {
@@ -34,12 +41,24 @@ export function hasLivePayload(job: JobOutcomeInput): boolean {
   return false;
 }
 
+function decisionState(job: JobOutcomeInput): string | undefined {
+  return job.decision?.state || job.receipt?.acceptance?.state;
+}
+
 export function jobOutcome(job: JobOutcomeInput): {
   kind: JobOutcomeKind;
   label: string;
   hint: string;
 } {
   const live = hasLivePayload(job);
+  const decision = decisionState(job);
+  if (decision === "disputed") {
+    return {
+      kind: "disputed",
+      label: "Disputed",
+      hint: "Not Delivered — buyer disputed this plan",
+    };
+  }
   if (job.escrow?.fundTx && !live) {
     const st = (job.escrow.chainStatus || "").toUpperCase();
     if (st === "FUNDED" || st === "OPEN" || !st) {

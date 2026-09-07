@@ -188,7 +188,7 @@ export function AgentCard({
         )}
         <div className="ml-auto flex items-center gap-2">
           {showCompare && <CompareToggle agentKey={agentKey(agent)} />}
-          <Link
+          <a
             href={actionHref}
             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
               canHire
@@ -197,7 +197,7 @@ export function AgentCard({
             }`}
           >
             {actionLabel}
-          </Link>
+          </a>
         </div>
       </div>
     </div>

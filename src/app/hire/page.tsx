@@ -208,7 +208,7 @@ export default async function HirePage({ searchParams }: Props) {
         {specialists.map((a, i) => {
           const cat = getCategory(a.categoryId);
           return (
-            <Link
+            <a
               key={a.slug}
               href={`${genesisHref(a)}#buy`}
               className={`grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 transition hover:bg-white/[0.03] sm:grid-cols-[auto_1fr_auto_auto] ${
@@ -244,7 +244,7 @@ export default async function HirePage({ searchParams }: Props) {
               <span className="rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-xs font-semibold text-black">
                 Hire
               </span>
-            </Link>
+            </a>
           );
         })}
       </div>
@@ -263,9 +263,9 @@ export default async function HirePage({ searchParams }: Props) {
                 <p className="text-sm font-semibold text-white">{f.name}</p>
                 <p className="mt-0.5 text-[12px] text-white/45">{f.tagline}</p>
               </div>
-              <Link href={f.buyHref} className="btn-line !h-9 !text-xs">
+              <a href={f.buyHref} className="btn-line !h-9 !text-xs">
                 Hire featured
-              </Link>
+              </a>
             </div>
           </div>
         ))}

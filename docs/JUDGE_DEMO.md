@@ -10,7 +10,7 @@ Public entry: **`/judge`** (footer). Canonical host: **https://genesis-marketpla
 4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
 5. **1:00** Open result / share · My hires `/dashboard`
 6. **1:15** `/advantage` — with vs without, live 2026-09-06 receipts
-7. **1:20** Third-party `/agents/56/265375?buy=1` (LP) · `/agents/56/302258` (grid) · `/agents/56/304493` (yield) · `/agents/56/302257` (health)
+7. **1:20** Third-party `/agents/56/265375#buy` (LP) · `/agents/56/302258#buy` (grid) · `/agents/56/304493#buy` (yield) · `/agents/56/302257#buy` (health) — open the listing, then Get plan (no auto-hire)
 8. **1:25** `/partners` — live 8004scan, Altana, TermiX, PCS, featured A2A
 
 ## Live proof jobs (no buy required)

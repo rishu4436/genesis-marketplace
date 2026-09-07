@@ -238,7 +238,7 @@ export function rankGenesisForJob(
       name: agent.name,
       categoryId: agent.categoryId,
       href: genesisHref(agent),
-      buyHref: genesisBuyHref(agent, { task: normalized, buy: true }),
+      buyHref: genesisBuyHref(agent, { task: normalized }),
       hireable: true,
       eligible: elig.eligible,
       organic: true as const,
@@ -276,7 +276,7 @@ export function listingToMatchShape(row: RankedListing, task: string) {
   return {
     agent,
     href: row.href,
-    buyHref: row.buyHref || genesisBuyHref(agent, { task, buy: true }),
+    buyHref: row.buyHref || genesisBuyHref(agent, { task }),
     score: Number.isFinite(row.points) ? row.points : 0,
     reasons: row.eligible ? row.why : row.blockers,
     categoryId: row.categoryId,

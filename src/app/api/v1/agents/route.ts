@@ -15,6 +15,7 @@ import {
   thirdPartyTrustBadges,
 } from "@/lib/desk";
 import { deskWeek } from "@/lib/desk-metrics";
+import { catalogRecordMatchesQuery } from "@/lib/catalog-search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const origin = new URL(req.url).origin;
+  const q = new URL(req.url).searchParams.get("q")?.trim() || "";
   const [health, claims, scores, week] = await Promise.all([
     checkAllAgentHealth(origin),
     listClaims(20),
@@ -106,7 +108,7 @@ export async function GET(req: Request) {
     tagline: s.tagline,
     chainId: s.chainId,
     tokenId: s.tokenId,
-    buyUrl: `${origin}/agents/${s.chainId}/${s.tokenId}?buy=1#buy`,
+    buyUrl: `${origin}/agents/${s.chainId}/${s.tokenId}#buy`,
     hireApi: `${origin}/api/hire`,
     a2a: s.a2aCardUrl || null,
     rest: s.restBase,
@@ -133,6 +135,34 @@ export async function GET(req: Request) {
     buyUrl: `${origin}/agents/${c.chainId}/${c.tokenId}#buy`,
   }));
 
+  let data = [...specialists, ...liveThird, ...claimed];
+  if (q) {
+    data = data.filter((item) => {
+      const rec = item as Record<string, unknown>;
+      return catalogRecordMatchesQuery(
+        {
+          name: String(rec.name || ""),
+          slug: rec.slug != null ? String(rec.slug) : null,
+          tagline: rec.tagline != null ? String(rec.tagline) : null,
+          description:
+            rec.pitch != null
+              ? String(rec.pitch)
+              : rec.tagline != null
+                ? String(rec.tagline)
+                : rec.description != null
+                  ? String(rec.description)
+                  : null,
+          skills: Array.isArray(rec.skills)
+            ? rec.skills.map((s) => String(s))
+            : null,
+          tokenId: rec.tokenId != null ? String(rec.tokenId) : null,
+          categoryId: rec.categoryId != null ? String(rec.categoryId) : null,
+        },
+        q,
+      );
+    });
+  }
+
   return NextResponse.json({
     success: true,
     marketplace: "Genesis Marketplace",
@@ -141,7 +171,8 @@ export async function GET(req: Request) {
     rails: DESK_RAILS,
     skus: JOB_SKUS,
     week,
-    count: specialists.length + liveThird.length + claimed.length,
-    data: [...specialists, ...liveThird, ...claimed],
+    query: q || null,
+    count: data.length,
+    data,
   });
 }

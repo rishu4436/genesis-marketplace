@@ -8,14 +8,18 @@ export function HashScroll() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const id = window.location.hash.replace(/^#/, "");
-    if (!id) return;
     const jump = () => {
+      const id = window.location.hash.replace(/^#/, "");
+      if (!id) return;
       document.getElementById(id)?.scrollIntoView({ block: "start" });
     };
     jump();
-    const t = window.setTimeout(jump, 80);
-    return () => window.clearTimeout(t);
+    const timers = [80, 250, 600, 1200].map((ms) => window.setTimeout(jump, ms));
+    window.addEventListener("hashchange", jump);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("hashchange", jump);
+    };
   }, [pathname]);
 
   return null;

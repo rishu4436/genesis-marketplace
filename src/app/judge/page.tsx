@@ -5,9 +5,10 @@ import { DeskStrip } from "@/components/DeskStrip";
 import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
 import { allGenesisAgents } from "@/lib/genesis-agents";
 import {
-  escrowJudgeProof,
   escrowProofExplorer,
+  judgeDemoEmbed,
   judgeDemoVideoUrl,
+  resolveEscrowJudgeProof,
 } from "@/lib/judge-proof";
 
 export const metadata = {
@@ -20,8 +21,9 @@ export const dynamic = "force-dynamic";
 export default async function JudgePage() {
   const proof = await readLiveProof();
   const specialists = allGenesisAgents();
-  const escrowProof = escrowJudgeProof();
+  const escrowProof = await resolveEscrowJudgeProof();
   const demoVideo = judgeDemoVideoUrl();
+  const demoEmbed = demoVideo ? judgeDemoEmbed(demoVideo) : null;
 
   return (
     <div className="mx-auto max-w-lg px-5 py-12 sm:px-8">
@@ -55,22 +57,47 @@ export default async function JudgePage() {
         Then open the receipt → /advantage → /altana revoke. Record that
         as a 60–90s walkthrough for the intake form.
       </p>
-      {demoVideo ? (
-        <a
-          href={demoVideo}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-block text-sm font-semibold text-amber-300 hover:underline"
-        >
-          60–90s judge video ↗
-        </a>
+      {demoVideo && demoEmbed ? (
+        <div className="mt-4">
+          {demoEmbed.kind === "youtube" || demoEmbed.kind === "vimeo" ? (
+            <div className="aspect-video overflow-hidden rounded-xl border border-white/10 bg-black">
+              <iframe
+                src={demoEmbed.src}
+                title="Genesis judge demo"
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          ) : demoEmbed.kind === "video" ? (
+            <video
+              className="w-full rounded-xl border border-white/10"
+              src={demoEmbed.src}
+              controls
+              playsInline
+            />
+          ) : (
+            <a
+              href={demoVideo}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-block text-sm font-semibold text-amber-300 hover:underline"
+            >
+              60–90s judge video ↗
+            </a>
+          )}
+          <p className="mt-2 text-[11px] text-white/40">
+            Path: home → compare → soft hire → receipt → advantage → /judge.
+            Soft-hire receipts below are not ERC-8183 escrow proof.
+          </p>
+        </div>
       ) : (
         <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-white/45">
           60–90s walkthrough not uploaded yet. Set{" "}
           <code className="text-white/60">NEXT_PUBLIC_JUDGE_DEMO_URL</code> or
           <code className="text-white/60"> config/judge-proof.json demoVideoUrl</code>{" "}
-          after you record Hire RangeKeeper → receipt → Advantage → Altana
-          revoke. Do not invent a link.
+          after you record home → compare → soft hire → receipt → advantage →
+          /judge. Do not invent a link.
         </p>
       )}
       <ol className="mt-8 space-y-3 text-sm text-white/65">
@@ -84,13 +111,14 @@ export default async function JudgePage() {
         <li>
           <span className="font-semibold text-white">2.</span>{" "}
           <Link
-            href="/genesis/range-keeper?buy=1#buy"
+            href="/genesis/range-keeper#buy"
             className="text-amber-300 hover:underline"
           >
             RangeKeeper
           </Link>{" "}
-          — buy once (pass <code className="text-white/70">nft #id</code> to
-          read the PCS position)
+          — open Hire, then click Get plan (pass{" "}
+          <code className="text-white/70">nft #id</code> to read the PCS
+          position)
         </li>
         <li>
           <span className="font-semibold text-white">3.</span>{" "}
@@ -109,63 +137,63 @@ export default async function JudgePage() {
         <li>
           <span className="font-semibold text-white">5.</span>{" "}
           <Link
-            href="/agents/56/265375?buy=1#buy"
+            href="/agents/56/265375#buy"
             className="text-amber-300 hover:underline"
           >
             LP rebalancer #265375
           </Link>
           {" · "}
           <Link
-            href="/agents/56/302258?buy=1#buy"
+            href="/agents/56/302258#buy"
             className="text-amber-300 hover:underline"
           >
             Brain grid #302258
           </Link>
           {" · "}
           <Link
-            href="/agents/56/304493?buy=1#buy"
+            href="/agents/56/304493#buy"
             className="text-amber-300 hover:underline"
           >
             Brain yield #304493
           </Link>
           {" · "}
           <Link
-            href="/agents/56/302257?buy=1#buy"
+            href="/agents/56/302257#buy"
             className="text-amber-300 hover:underline"
           >
             Brain HF #302257
           </Link>
           {" · "}
           <Link
-            href="/agents/56/304494?buy=1#buy"
+            href="/agents/56/304494#buy"
             className="text-amber-300 hover:underline"
           >
             Brain rebalance #304494
           </Link>
           {" · "}
           <Link
-            href="/agents/56/310460?buy=1#buy"
+            href="/agents/56/310460#buy"
             className="text-amber-300 hover:underline"
           >
             Brain PCS tier #310460
           </Link>
           {" · "}
           <Link
-            href="/agents/56/269223?buy=1#buy"
+            href="/agents/56/269223#buy"
             className="text-amber-300 hover:underline"
           >
             ChainHelix rebalance #269223
           </Link>
           {" · "}
           <Link
-            href="/agents/56/265876?buy=1#buy"
+            href="/agents/56/265876#buy"
             className="text-amber-300 hover:underline"
           >
             Yield optimizer #265876
           </Link>
           {" · "}
           <Link
-            href="/agents/56/266933?buy=1#buy"
+            href="/agents/56/266933#buy"
             className="text-amber-300 hover:underline"
           >
             Lending guardian #266933

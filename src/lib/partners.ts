@@ -78,7 +78,7 @@ export const PARTNERS: PartnerDef[] = [
     name: "BNB LP Rebalancer",
     track: "Live third-party",
     role: "Labeled featured LP seller — not organic rank. One of four outsiders (LP + Brain grid/yield/HF). We negotiate their A2A and return their payload.",
-    href: "/agents/56/265375?buy=1#buy",
+    href: "/agents/56/265375#buy",
     powers: [
       "A2A negotiate + quote",
       "Operator REST report",
