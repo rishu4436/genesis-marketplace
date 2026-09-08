@@ -79,7 +79,9 @@ export function JobDecisionPanel({ job }: { job: HireJob }) {
         Decision
       </p>
       <p className="mt-1 text-[11px] text-white/40">
-        About the plan only. No payout. Escrow is not required.
+        {job.escrow?.fundTx
+          ? "About the plan text only. On-chain payout is Approve payout in the escrow panel — after the dispute window, not here."
+          : "About the plan only. This is not a payout. Optional escrow is Hire with escrow on the agent page."}
       </p>
 
       {recorded ? (

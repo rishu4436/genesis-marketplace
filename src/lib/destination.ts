@@ -67,11 +67,11 @@ export const DESTINATION = {
   faq: [
     {
       q: "Is this a directory or a marketplace?",
-      a: "A marketplace. Hireable A2A is listed first. Unhireable ERC-8004 identities stay on the floor and are marked Unhireable — we do not hide the index or pretend 350k registrations can be hired.",
+      a: "A marketplace. Browse is the hire floor. Unhireable ERC-8004 identities stay on Index and category pages, marked Unhireable — we do not hide the index or pretend 350k registrations can be hired.",
     },
     {
       q: "Why only four categories?",
-      a: "Those are the official BNB Agent Studio jobs: rebalancing, grid trading, yield, health factor. Equal depth on all four is the judging bar. If those work, the venue can take what comes next.",
+      a: "Those are the official BNB Agent Studio jobs: rebalancing, grid trading, yield, health factor. Each shelf has a By Genesis specialist plus live A2A. If those four work, the venue can take what comes next.",
     },
     {
       q: "Do you custody funds?",
@@ -87,13 +87,13 @@ export const DESTINATION = {
     },
     {
       q: "How do I know hiring beat doing it myself?",
-      a: "Open /advantage. Three real tasks run both ways — time, cost, output quality — at least one trading/security weighted. TermiX judges that report independently.",
+      a: "Open /advantage. Four real tasks run both ways — time, cost, output quality — trading and security weighted. Without-agent times are operator-timed baselines, disclosed on the page. TermiX judges that report independently.",
     },
   ],
   stats: [
-    { k: "4", l: "job categories", d: "equal depth" },
+    { k: "4", l: "job categories", d: "specialist on every shelf" },
     { k: "4", l: "hire-ready specialists", d: "By Genesis" },
-    { k: "11", l: "live third-party hires", d: "A2A we can complete" },
+    { k: "17", l: "live third-party hires", d: "A2A we can complete" },
     { k: "1-click", l: "buy path", d: "plan or their report" },
   ],
 } as const;

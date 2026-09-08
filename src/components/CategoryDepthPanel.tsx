@@ -6,7 +6,7 @@ export function CategoryDepthPanel({ categoryId }: { categoryId: CategoryId }) {
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-      <p className="section-label">Equal depth</p>
+      <p className="section-label">This category</p>
       <h2 className="mt-1 font-display text-lg font-bold text-white">
         What buyers get in this category
       </h2>

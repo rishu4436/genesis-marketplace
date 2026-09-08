@@ -434,7 +434,7 @@ export function LandingPageCinematic({
               <ul className="mt-8 space-y-3">
                 {[
                   `${tally.hireable.toLocaleString("en-US")} hireable first · ${tally.unhireableRegistered.toLocaleString("en-US")} unhireable identities marked, not hidden`,
-                  "Equal depth across four DeFi job types",
+                  "Four DeFi jobs — a By Genesis specialist on every shelf",
                   "Hire in one flow — plan-first, keys stay yours",
                 ].map((line) => (
                   <li
@@ -473,13 +473,12 @@ export function LandingPageCinematic({
             <p className="section-label">Capabilities</p>
             <h2 className="mt-5 max-w-2xl font-display text-[clamp(1.9rem,4vw,3rem)] font-bold tracking-tight text-white">
               Four categories.{" "}
-              <span className="text-white/40">Equal depth.</span>
+              <span className="text-white/40">A specialist on every shelf.</span>
             </h2>
             <p className="mt-4 max-w-lg text-sm text-white/50">
-              Each shelf leads with hireable A2A (
-              {Object.values(tally.byCategory).reduce((a, b) => a + b, 0)}{" "}
-              probed). Unhireable identities stay listed on the category
-              page and are marked Unhireable.
+              {tally.genesis} By Genesis specialists ·{" "}
+              {tally.liveThirdParty} live A2A. Unhireable identities stay
+              on category pages and Index, marked Unhireable.
             </p>
           </FadeIn>
           <div className="mt-14 grid gap-4 sm:grid-cols-2">

@@ -18,7 +18,9 @@ export function JobSessionPanel({ job }: { job: HireJob }) {
           session that is revoked when the plan lands.
         </p>
         <p className="mt-2 text-[11px] text-white/35">
-          Escrow not required · {ESCROW_STANCE.reason}
+          {job.escrow?.fundTx
+            ? "Plan session is separate from the $U lock"
+            : `Plan session · escrow optional · ${ESCROW_STANCE.reason}`}
         </p>
       </section>
     );
@@ -41,7 +43,9 @@ export function JobSessionPanel({ job }: { job: HireJob }) {
           Spend {session.policy.spend} · no funds
         </span>
         <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/50">
-          Escrow not required
+          {job.escrow?.fundTx
+            ? "Plan session · $U lock is separate"
+            : "Plan session · escrow optional"}
         </span>
       </div>
 
