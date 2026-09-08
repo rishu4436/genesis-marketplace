@@ -15,7 +15,7 @@ import {
   censusAgentsForCategory,
   fetchCensusAlive,
 } from "./census-alive";
-import { hireableBscAsAgents } from "./hireable-bsc";
+import { categorizeHireable, hireableBscAsAgents } from "./hireable-bsc";
 import type { Agent } from "./types";
 
 function textMatch(agent: Agent, keywords: string[]): number {
@@ -116,11 +116,17 @@ export async function getAgentsForCategory(
     if (r.data) collected.push(...r.data);
   }
 
+  const collectedForCat = collected.filter((a) => {
+    const id = categorizeHireable(a.name, a.description || "", a.census_category);
+    if (id) return id === categoryId;
+    return textMatch(a, cat.keywords) > 0;
+  });
+
   const pool = filterHireableCatalog(
     dedupeAgents([
       ...hireableBscAsAgents(categoryId),
       ...censusAgentsForCategory(census.agents, categoryId),
-      ...collected,
+      ...collectedForCat,
     ]),
   );
 
