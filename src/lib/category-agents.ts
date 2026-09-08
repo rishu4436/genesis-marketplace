@@ -141,7 +141,9 @@ export async function getAgentsForCategory(
   const without = pool
     .filter((a) => textMatch(a, cat.keywords) === 0)
     .sort(compareByScore);
-  let ranked = overlayA2a(dedupeAgents([...withHits, ...without]), brain);
+  let ranked = filterHireableCatalog(
+    overlayA2a(dedupeAgents([...withHits, ...without]), brain),
+  );
   const pinned = getLiveSellers(categoryId).map((s) => featuredAsAgent(s));
   if (pinned.length) {
     ranked = overlayA2a(dedupeAgents([...pinned, ...ranked]), []);

@@ -17,7 +17,7 @@ import {
 import { filterHireableCatalog } from "./catalog-quality";
 import { hireableBscAsAgents } from "./hireable-bsc";
 
-const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v4";
+const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v5";
 
 export type CatalogSortMode = "rank" | "score" | "newest" | "ratings";
 
@@ -153,16 +153,16 @@ export async function fetchHireablePool(opts: {
   ]);
   const { error, apiTotal } = collect(results, collected);
   const pinned = LIVE_SELLERS.map((s) => featuredAsAgent(s));
-  let agents = overlayA2a(
-    filterHireableCatalog(
+  let agents = filterHireableCatalog(
+    overlayA2a(
       dedupeAgents([
         ...pinned,
         ...hireableBscAsAgents(),
         ...census.agents,
         ...collected,
       ]),
+      brain,
     ),
-    brain,
   );
   if (searching) {
     agents = agents.filter((a) => agentMatchesQuery(a, opts.q!));
