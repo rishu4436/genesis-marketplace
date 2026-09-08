@@ -10,11 +10,11 @@
     "label": "ERC-8183 escrow proof (separate from soft-hire jobs)",
     "network": "bsc-mainnet",
     "chainId": 56,
-    "marketplaceJobId": null,
-    "onchainJobId": null,
-    "fundTx": null,
+    "marketplaceJobId": "job_mtsv2f9d_9yjpwg",
+    "onchainJobId": "56748",
+    "fundTx": "0x9a9f3f4531668c4760b5a36a93c005ed0fb0adb93f1caca99334d97bcee7cdbe",
     "settleTx": null,
     "disputeTx": null,
-    "note": "No mainnet escrow fund is recorded yet. Do not invent hashes. Soft-hire receipts on /judge are not escrow proof."
+    "note": "BSC mainnet job 56748 FUNDED. Buyer 0xd951…0b93 locked 0.08 U in kernel 0xEa4D…EBA6. RangeKeeper 0xa17E…0133 is counterparty only — seller $U stayed 0. Soft-hire receipts are not this proof. Dispute window is 7d after SUBMITTED; do not approve payout early."
   }
 }
