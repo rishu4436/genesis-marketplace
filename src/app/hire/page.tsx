@@ -13,7 +13,6 @@ import { fetchHireablePool } from "@/lib/catalog-pool";
 import { catalogFilterStats } from "@/lib/catalog-quality";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
 import {
-  catalogLiveStats,
   isGenesisListing,
   isHireableListing,
   sortForDestination,
@@ -21,6 +20,8 @@ import {
 } from "@/lib/hire-class";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { DeskStrip } from "@/components/DeskStrip";
+import { HireTallyBoard } from "@/components/HireTallyBoard";
+import { getHireTally } from "@/lib/hire-tally";
 import {
   compareByReadiness,
   compositeFromAxes,
@@ -47,7 +48,7 @@ type Props = {
 export const metadata = {
   title: "Hire an agent",
   description:
-    "Hire a By Genesis specialist or a live third-party agent. Unhireable identities stay listed and are marked.",
+    "Hire a By Genesis specialist or a live third-party A2A. Counts show hireable vs registered identity. Unhireable names stay listed and are marked.",
 };
 
 function buildHireHref(
@@ -93,13 +94,16 @@ export default async function HirePage({ searchParams }: Props) {
     live: sp.live === "1" ? "1" : undefined,
   };
 
-  const pool = await fetchHireablePool({
-    q: q || undefined,
-    sortMode,
-    x402: filters.x402 === "1",
-    verified: filters.verified === "1",
-    live: filters.live === "1",
-  });
+  const [pool, tally] = await Promise.all([
+    fetchHireablePool({
+      q: q || undefined,
+      sortMode,
+      x402: filters.x402 === "1",
+      verified: filters.verified === "1",
+      live: filters.live === "1",
+    }),
+    getHireTally(),
+  ]);
   const quality = catalogFilterStats(pool.agents);
 
   const strictFilters = {
@@ -127,7 +131,6 @@ export default async function HirePage({ searchParams }: Props) {
   const hireableSorted = sortGroup(split.hireable);
   const identitySorted = sortGroup(split.identity);
 
-  const liveStats = catalogLiveStats(catalogPool);
   const totalFiltered = hireableSorted.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
   const safePage = Math.min(Math.max(1, page), totalPages);
@@ -163,15 +166,19 @@ export default async function HirePage({ searchParams }: Props) {
       <p className="section-label">Smart Money desk</p>
       <h1 className="display-section mt-3 text-white">Hire the job</h1>
       <p className="lead mt-4 max-w-xl">
-        Discover → compare → plan → escrow → prove → rank. Four DeFi SKUs.
-        L0 is a plan. L2 escrow is optional. Unhireable identities are
-        marked, not featured.
+        {tally.hireable.toLocaleString("en-US")} hireable on this desk.{" "}
+        {tally.unhireableRegistered.toLocaleString("en-US")} registered identities
+        are not a hire. L0 is a plan. L2 escrow is optional. Unhireable
+        names are marked, not featured.
       </p>
       <div className="mt-6">
         <CatalogModeNav active="hireable" />
       </div>
       <div className="mt-6">
-        <DeskStrip compact />
+        <HireTallyBoard tally={tally} />
+      </div>
+      <div className="mt-6">
+        <DeskStrip compact hideCensus />
       </div>
       <SoftHireNote className="mt-6 max-w-xl" />
       <div className="mt-6">
@@ -278,8 +285,10 @@ export default async function HirePage({ searchParams }: Props) {
             Other hireable listings
           </h2>
           <p className="mt-1 max-w-xl text-[13px] text-white/45">
-            Endpoints we can negotiate. {liveStats.identity} unhireable
-            identities are listed below, marked Unhireable.
+            {tally.hireable.toLocaleString("en-US")} hireable on the desk (
+            {tally.genesis} By Genesis · {tally.liveThirdParty} live A2A).
+            This catalog page: {totalFiltered} with a public A2A URL ·{" "}
+            {identitySorted.length} unhireable identities below.
           </p>
         </div>
         <Link href="/browse" className="text-sm font-semibold text-amber-300">
@@ -338,11 +347,11 @@ export default async function HirePage({ searchParams }: Props) {
         <span>
           {pool.error && pageAgents.length === 0
             ? "Index is slow — specialists above still hire"
-            : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} hireable · ${identitySorted.length} unhireable · page ${safePage}/${totalPages}`}
+            : `Desk ${tally.hireable} hireable · ${tally.unhireableRegistered.toLocaleString("en-US")} not. This list: ${totalFiltered} A2A · ${identitySorted.length} unhireable · page ${safePage}/${totalPages}`}
           {pool.census?.alive ? (
             <span className="ml-1 text-lime-200/80">
-              · {pool.census.alive.toLocaleString()} endpoint-alive of{" "}
-              {pool.census.registered.toLocaleString()} registered
+              · {pool.census.alive.toLocaleString("en-US")} endpoint-alive of{" "}
+              {pool.census.registered.toLocaleString("en-US")} registered
             </span>
           ) : null}
           {sortMode === "score" && pageAgents.length > 0 && (
@@ -360,7 +369,7 @@ export default async function HirePage({ searchParams }: Props) {
           {pool.apiTotal != null && (
             <span className="text-white/30">
               {" "}
-              · ~{pool.apiTotal.toLocaleString()} on BSC index
+              · ~{pool.apiTotal.toLocaleString("en-US")} on BSC index
             </span>
           )}
         </span>
@@ -433,9 +442,10 @@ export default async function HirePage({ searchParams }: Props) {
               Show indexed identities
             </h2>
             <p className="mt-1 max-w-xl text-[13px] text-white/45">
-              {identitySorted.length} on-chain names with no live hire we
-              can complete. Marked Unhireable. Closed by default so the
-              hire floor stays specialists + live A2A.
+              {identitySorted.length} on this page ·{" "}
+              {tally.unhireableRegistered.toLocaleString("en-US")} registered on
+              BSC are not a hire. Marked Unhireable. Closed by default so
+              the floor stays specialists + live A2A.
             </p>
           </summary>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

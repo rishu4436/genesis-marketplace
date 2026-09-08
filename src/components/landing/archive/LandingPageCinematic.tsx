@@ -11,11 +11,12 @@ import {
 } from "framer-motion";
 import Lenis from "lenis";
 import { LandingBackgroundCinematic } from "@/components/landing/archive/LandingBackgroundCinematic";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, getCategory, type CategoryId } from "@/lib/categories";
 import { GENESIS_AGENTS, genesisHref } from "@/lib/genesis-agents";
-import { getCategory } from "@/lib/categories";
 import { PartnerLiveBadges } from "@/components/PartnerLiveBadges";
 import { PARTNERS } from "@/lib/partners";
+import type { HireTally } from "@/lib/hire-tally-types";
+import type { ReactNode } from "react";
 
 const CATEGORY_META: Record<
   string,
@@ -132,9 +133,11 @@ function FadeIn({
 function CategoryCard({
   id,
   index,
+  hireableCount,
 }: {
   id: string;
   index: number;
+  hireableCount: number;
 }) {
   const cat = CATEGORIES.find((c) => c.id === id)!;
   const meta = CATEGORY_META[id];
@@ -156,8 +159,8 @@ function CategoryCard({
           <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/40 text-lg text-[#F0B90B]">
             {meta.icon}
           </span>
-          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/40">
-            {meta.metric}
+          <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-100/80">
+            {hireableCount} hireable
           </span>
         </div>
         <h3 className="relative mt-5 font-display text-xl font-bold tracking-tight text-white">
@@ -180,7 +183,15 @@ function CategoryCard({
   );
 }
 
-function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+function Hero({
+  scrollYProgress,
+  tally,
+  tallyBoard,
+}: {
+  scrollYProgress: MotionValue<number>;
+  tally: HireTally;
+  tallyBoard: ReactNode;
+}) {
   const reduce = useReducedMotion();
   const scale = useTransform(
     scrollYProgress,
@@ -222,8 +233,9 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.32, duration: 0.7 }}
         >
-          Four hire-ready specialists on BNB Smart Chain. Pick a job, hire
-          in one click, get a plan — you keep the keys.
+          {tally.hireable.toLocaleString("en-US")} hireable on this desk.{" "}
+          {tally.unhireableRegistered.toLocaleString("en-US")} registered names
+          are not a hire. Pick a job, get a plan — you keep the keys.
         </motion.p>
         <motion.p
           className="mt-5 max-w-xl text-[15px] font-medium leading-snug tracking-tight text-[#F0B90B] sm:text-base"
@@ -231,8 +243,10 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          Hireable A2A first. Unhireable identities stay listed and are
-          marked Unhireable.
+          {tally.hireable.toLocaleString("en-US")} hireable ·{" "}
+          {tally.aliveNotHireable.toLocaleString("en-US")} endpoint-alive (not a
+          hire) · {tally.unhireableRegistered.toLocaleString("en-US")} registered
+          (not a hire)
         </motion.p>
         <motion.div
           className="mt-10 flex flex-wrap items-center gap-3"
@@ -269,13 +283,21 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
           ))}
         </motion.div>
         <motion.div
-          className="mt-20 flex flex-wrap gap-10 border-t border-white/[0.07] pt-10"
+          className="mt-12 max-w-4xl"
+          initial={reduce ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.58 }}
+        >
+          {tallyBoard}
+        </motion.div>
+        <motion.div
+          className="mt-10 flex flex-wrap gap-10 border-t border-white/[0.07] pt-8"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.65 }}
+          transition={{ delay: 0.7 }}
         >
           {[
-            ["4", "specialists"],
+            [String(tally.genesis), "By Genesis specialists"],
             ["4", "jobs"],
             ["1-click", "hire"],
             ["No custody", "you keep keys"],
@@ -302,7 +324,13 @@ function Hero({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
  * Cinematic Genesis landing — spatial, scroll-driven, hackathon-ready.
  */
 /** Archived cinematic landing (pre-FinChip-inspired redesign). */
-export function LandingPageCinematic() {
+export function LandingPageCinematic({
+  tally,
+  tallyBoard,
+}: {
+  tally: HireTally;
+  tallyBoard: ReactNode;
+}) {
   const reduce = useReducedMotion();
   useLenis(!reduce);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -315,7 +343,11 @@ export function LandingPageCinematic() {
     <div ref={rootRef} className="relative w-full bg-[#05070A]">
       <LandingBackgroundCinematic />
 
-      <Hero scrollYProgress={scrollYProgress} />
+      <Hero
+        scrollYProgress={scrollYProgress}
+        tally={tally}
+        tallyBoard={tallyBoard}
+      />
 
       {/* PROBLEM */}
       <section className="relative border-t border-white/[0.06] py-28 sm:py-36">
@@ -323,10 +355,12 @@ export function LandingPageCinematic() {
           <FadeIn>
             <p className="section-label">The problem</p>
             <h2 className="mt-5 max-w-3xl font-display text-[clamp(1.9rem,4.5vw,3.25rem)] font-bold leading-[1.08] tracking-tight text-white">
-              Four jobs. One hire floor.
+              {tally.hireable.toLocaleString("en-US")} hireable.{" "}
+              {tally.unhireableRegistered.toLocaleString("en-US")} not.
               <br />
               <span className="text-white/40">
-                The rest of the index is noise until it can be hired.
+                {tally.endpointAlive.toLocaleString("en-US")} endpoint-alive is
+                still not a hire.
               </span>
             </h2>
           </FadeIn>
@@ -399,7 +433,7 @@ export function LandingPageCinematic() {
               </p>
               <ul className="mt-8 space-y-3">
                 {[
-                  "Hireable first · unhireable identities marked, not hidden",
+                  `${tally.hireable.toLocaleString("en-US")} hireable first · ${tally.unhireableRegistered.toLocaleString("en-US")} unhireable identities marked, not hidden`,
                   "Equal depth across four DeFi job types",
                   "Hire in one flow — plan-first, keys stay yours",
                 ].map((line) => (
@@ -442,13 +476,20 @@ export function LandingPageCinematic() {
               <span className="text-white/40">Equal depth.</span>
             </h2>
             <p className="mt-4 max-w-lg text-sm text-white/50">
-              Each shelf is hireable only — specialist first, then live
-              endpoints. Identity-only listings never appear here.
+              Each shelf leads with hireable A2A (
+              {Object.values(tally.byCategory).reduce((a, b) => a + b, 0)}{" "}
+              probed). Unhireable identities stay listed on the category
+              page and are marked Unhireable.
             </p>
           </FadeIn>
           <div className="mt-14 grid gap-4 sm:grid-cols-2">
             {CATEGORIES.map((c, i) => (
-              <CategoryCard key={c.id} id={c.id} index={i} />
+              <CategoryCard
+                key={c.id}
+                id={c.id}
+                index={i}
+                hireableCount={tally.byCategory[c.id as CategoryId] ?? 0}
+              />
             ))}
           </div>
         </div>

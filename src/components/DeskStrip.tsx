@@ -6,10 +6,17 @@ import { loadHireableBsc } from "@/lib/hireable-bsc";
 
 export async function DeskStrip({
   compact = false,
+  hideCensus = false,
 }: {
   compact?: boolean;
+  hideCensus?: boolean;
 }) {
-  const [week, census] = await Promise.all([deskWeek(), fetchCensusAlive()]);
+  const [week, census] = await Promise.all([
+    deskWeek(),
+    hideCensus
+      ? Promise.resolve(null)
+      : fetchCensusAlive(),
+  ]);
 
   return (
     <section
@@ -26,16 +33,30 @@ export async function DeskStrip({
         {DESK.loop}
       </p>
       <p className="mt-1 text-[11px] text-white/40">{DESK.northStar}</p>
-      {census.stats.alive > 0 && (
+      {!hideCensus && census && census.stats.alive > 0 && (
         <p className="mt-1 text-[11px] text-white/45">
-          BSC register {census.stats.registered.toLocaleString()} ·{" "}
-          <span className="text-lime-200/90">
-            {census.stats.alive.toLocaleString()} endpoint-alive
-          </span>
-          {" · "}
           {(() => {
-            const h = loadHireableBsc().byCategory;
-            return `hireable A2A · rebalance ${h.rebalancing} · grid ${h["grid-trading"]} · yield ${h["yield-optimisation"]} · health ${h["health-factor"]}`;
+            const h = loadHireableBsc();
+            const hireable = Object.values(h.byCategory).reduce(
+              (a, n) => a + n,
+              0,
+            );
+            return (
+              <>
+                <span className="text-amber-100">
+                  {hireable.toLocaleString("en-US")} hireable
+                </span>
+                {" · "}
+                <span className="text-lime-200/80">
+                  {census.stats.alive.toLocaleString("en-US")} alive, not a hire
+                </span>
+                {" · "}
+                <span className="text-rose-200/70">
+                  {census.stats.registered.toLocaleString("en-US")} registered, not
+                  a hire
+                </span>
+              </>
+            );
           })()}
         </p>
       )}

@@ -1,11 +1,21 @@
 import { LandingPageCinematic } from "@/components/landing/archive/LandingPageCinematic";
+import { HireTallyBoard } from "@/components/HireTallyBoard";
+import { getHireTally } from "@/lib/hire-tally";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "The agent marketplace for the Smart Money Era",
   description:
-    "The Smart Money desk: discover → compare → plan → escrow → prove → rank. Four DeFi job SKUs on BNB Smart Chain.",
+    "The Smart Money desk: discover → compare → plan → escrow → prove → rank. Four DeFi job SKUs on BNB Smart Chain. Hireable A2A is counted separately from registered identity.",
 };
 
-export default function HomePage() {
-  return <LandingPageCinematic />;
+export default async function HomePage() {
+  const tally = await getHireTally();
+  return (
+    <LandingPageCinematic
+      tally={tally}
+      tallyBoard={<HireTallyBoard tally={tally} compact />}
+    />
+  );
 }
