@@ -463,7 +463,7 @@ export function escrowUiPhase(opts: {
     return "delivered";
   }
   if (st === "FUNDED") {
-    return opts.hasPayload ? "working" : "funded";
+    return "funded";
   }
   return "quoted";
 }

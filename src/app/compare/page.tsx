@@ -168,11 +168,17 @@ export default async function ComparePage({ searchParams }: Props) {
   const receiptBySlug = Object.fromEntries(
     receiptScores.map((s) => [s.slug, s.composite]),
   );
-  const raw = (sp.ids || "")
+  const requested = (sp.ids || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
     .slice(0, 3);
+  const defaultIds = allGenesisAgents()
+    .filter((g) => g.tokenId)
+    .slice(0, 3)
+    .map((g) => `56:${g.tokenId}`);
+  const usingDefault = requested.length === 0;
+  const raw = usingDefault ? defaultIds : requested;
 
   const agents = await loadCompared(raw);
 
@@ -257,8 +263,8 @@ export default async function ComparePage({ searchParams }: Props) {
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-white/55">
         Side-by-side what each agent does, list price, and whether we can
-        complete a hire. Tap Compare on Browse cards, then load the tray.
-        Up to three agents.
+        complete a hire. Opens with three By Genesis specialists. Swap from
+        Browse or the chips below. Up to three agents.
       </p>
       <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/40">
         {PRICE_LEGEND} SKU $ is not $U.
@@ -294,6 +300,12 @@ export default async function ComparePage({ searchParams }: Props) {
               })}
           </div>
         </details>
+      ) : null}
+
+      {usingDefault && agents.length > 0 ? (
+        <p className="mt-4 text-[11px] text-white/40">
+          Default desk: three By Genesis specialists. Not a ranking.
+        </p>
       ) : null}
 
       {agents.length === 0 ? (

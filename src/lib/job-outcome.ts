@@ -59,19 +59,28 @@ export function jobOutcome(job: JobOutcomeInput): {
       hint: "Not Delivered — buyer disputed this plan",
     };
   }
-  if (job.escrow?.fundTx && !live) {
+  if (job.escrow?.fundTx) {
     const st = (job.escrow.chainStatus || "").toUpperCase();
-    if (st === "FUNDED" || st === "OPEN" || !st) {
+    if (st === "COMPLETED") {
       return {
-        kind: "funded",
-        label: "Escrow funded",
-        hint: "Awaiting deliverable — not Delivered",
+        kind: "ready",
+        label: "Settled",
+        hint: "On-chain payout approved after the dispute window",
+      };
+    }
+    if (st === "SUBMITTED") {
+      return {
+        kind: "working",
+        label: "Submitted on-chain",
+        hint: "Dispute window open — not paid out",
       };
     }
     return {
-      kind: "working",
-      label: "Working",
-      hint: "Escrow funded · payload not in yet",
+      kind: "funded",
+      label: "Escrow funded",
+      hint: live
+        ? "Plan is on this receipt · $U locked in the kernel, not paid out"
+        : "Awaiting deliverable — not Delivered",
     };
   }
   if (live && job.status === "delivered" && job.genesisSlug) {

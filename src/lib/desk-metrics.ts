@@ -1,17 +1,17 @@
 /**
- * North-star counters. Escrowed+paid stays 0 until a real ERC-8183
- * lock with payment-tied feedback exists. Do not invent GMV.
+ * North-star counters. Settled/paid stays 0 until a real ERC-8183
+ * settle tx exists. Funded is a lock, not a payout. Do not invent GMV.
  */
 
 import { listJobs } from "./job-store";
 import type { HireJob } from "./hire-engine";
 import { isTxHash } from "./erc8183-escrow";
-import { hasLivePayload } from "./job-outcome";
 
 export type DeskWeek = {
   windowDays: 7;
   asOf: string;
   l0PlansDelivered: number;
+  l2EscrowFunded: number;
   l2EscrowedPaid: number;
   uniquePayers: number;
   northStar: string;
@@ -20,14 +20,15 @@ export type DeskWeek = {
 const CACHE_MS = 60_000;
 let cached: { at: number; week: DeskWeek } | null = null;
 
-function isPaidEscrow(job: HireJob): boolean {
+function isEscrowJob(job: HireJob): boolean {
   if (job.purpose === "holdout") return false;
   if (job.tier !== "escrow") return false;
   if (job.quote?.protocol === "ERC-8183-sim") return false;
-  if (!isTxHash(job.escrow?.fundTx)) return false;
-  const settled = isTxHash(job.escrow?.settleTx);
-  const delivered = job.status === "delivered" && hasLivePayload(job);
-  return settled || delivered;
+  return isTxHash(job.escrow?.fundTx);
+}
+
+function isPaidEscrow(job: HireJob): boolean {
+  return isEscrowJob(job) && isTxHash(job.escrow?.settleTx);
 }
 
 export async function deskWeek(): Promise<DeskWeek> {
@@ -45,7 +46,8 @@ export async function deskWeek(): Promise<DeskWeek> {
       j.purpose !== "holdout" &&
       (Boolean(j.genesisSlug) || j.quote?.live === true),
   ).length;
-  const paid = recent.filter(isPaidEscrow);
+  const funded = recent.filter(isEscrowJob);
+  const paid = funded.filter(isPaidEscrow);
   const payers = new Set(
     paid
       .map((j) =>
@@ -57,6 +59,7 @@ export async function deskWeek(): Promise<DeskWeek> {
     windowDays: 7,
     asOf: new Date().toISOString(),
     l0PlansDelivered,
+    l2EscrowFunded: funded.length,
     l2EscrowedPaid: paid.length,
     uniquePayers: payers.size,
     northStar:

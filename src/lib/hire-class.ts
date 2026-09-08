@@ -36,6 +36,8 @@ export function listingHref(agent: Agent): string {
 /** Directory leaks — names that must never look hireable. */
 const JUNK_NAME =
   /^(test\.agent|test agent|test[._-]agent|demo\.agent|foo\.agent)$/i;
+const MEME_OR_AIRDROP =
+  /meme token|buyback-and-burn|four\.meme|deflationary|airdrop|\(\$[A-Z0-9]{2,10}\)/i;
 const TEST_DEPLOYMENT =
   /\(test\)|test deployment|not for production use/i;
 
@@ -69,6 +71,7 @@ export function isDirectoryLeak(agent: Agent): boolean {
   if (/test\.agent/i.test(name)) return true;
   if (GENERIC_BOT_NAME.test(name)) return true;
   if (GENERIC_SLEEP_BOT.test(name) || GENERIC_SLEEP_BOT.test(desc)) return true;
+  if (MEME_OR_AIRDROP.test(`${name} ${desc}`)) return true;
   return false;
 }
 
@@ -91,7 +94,7 @@ export function hireClassForAgent(agent: Agent): HireClass {
   if (isGenesisListing(agent)) return "genesis";
   if (isDirectoryLeak(agent)) return "indexed";
   if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return "live";
-  if (hasPublicA2a(agent)) return "live";
+  if (hasPublicA2a(agent) && isDefiJobAgent(agent)) return "live";
   return "indexed";
 }
 

@@ -11,7 +11,7 @@ import { ADVANTAGE_TASKS } from "./advantage-report";
 import { fetchOnchainMarket } from "./onchain-market";
 import { FEATURED_THIRD_PARTY } from "./third-party-sellers";
 
-export type PartnerMode = "live" | "proof" | "local" | "down";
+export type PartnerMode = "live" | "proof" | "local" | "stale" | "down";
 
 export type PartnerProbe = {
   id: PartnerId;
@@ -52,13 +52,14 @@ async function probe8004scan(): Promise<Pick<PartnerProbe, "ok" | "mode" | "deta
       detail: stats.error,
     };
   }
+  const ok = agents != null && agents > 0;
   return {
-    ok: agents != null && agents > 0,
-    mode: agents != null && agents > 0 ? "live" : "down",
+    ok,
+    mode: ok ? (stats.stale ? "stale" : "live") : "down",
     detail:
       agents != null
         ? stats.stale
-          ? "Public ERC-8004 index (last-good — live probe timed out)"
+          ? "Public ERC-8004 index (last-good — live /stats failed)"
           : "Public ERC-8004 index answering"
         : stats.error || "Index returned no totals",
     metric:

@@ -1,4 +1,6 @@
 import type { Agent, ApiResponse, Feedback, PlatformStats } from "./types";
+import { kvCmd } from "./kv";
+import { loadHireableBsc } from "./hireable-bsc";
 
 const BASE =
   process.env.SCAN_API_BASE?.replace(/\/$/, "") ||
@@ -14,6 +16,7 @@ const STATS_MS = 2_000;
 const STATS_STALE_MS = 30 * 60 * 1000;
 
 let lastGoodStats: { at: number; data: PlatformStats } | null = null;
+const STATS_KV = "genesis:8004scan:stats:v1";
 
 function headers(): HeadersInit {
   const h: HeadersInit = {
@@ -272,11 +275,42 @@ export async function getStatsSafe(): Promise<{
   });
   if (fresh.data) {
     lastGoodStats = { at: Date.now(), data: fresh.data };
+    void kvCmd("SET", STATS_KV, JSON.stringify(lastGoodStats));
     return fresh;
   }
   if (lastGoodStats && Date.now() - lastGoodStats.at < STATS_STALE_MS) {
     return {
       data: lastGoodStats.data,
+      error: null,
+      stale: true,
+    };
+  }
+  const cached = await kvCmd<string>("GET", STATS_KV);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached) as {
+        at?: number;
+        data?: PlatformStats;
+      };
+      if (parsed.data && (parsed.data.total_agents || 0) > 0) {
+        lastGoodStats = {
+          at: parsed.at || Date.now(),
+          data: parsed.data,
+        };
+        return {
+          data: parsed.data,
+          error: null,
+          stale: true,
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  const file = loadHireableBsc();
+  if (file.registered > 0) {
+    return {
+      data: { total_agents: file.registered },
       error: null,
       stale: true,
     };

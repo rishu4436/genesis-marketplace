@@ -5,7 +5,7 @@ import type { GenesisAgent } from "@/lib/genesis-agents";
 import { AgentCard } from "@/components/AgentCard";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { isHireableListing } from "@/lib/hire-class";
+import { isGenesisListing, isHireableListing } from "@/lib/hire-class";
 
 export function CategoryPreview({
   category,
@@ -19,7 +19,9 @@ export function CategoryPreview({
   receiptFitBySlug?: Record<string, number>;
 }) {
   const g = genesis?.[0];
-  const hireable = agents.filter(isHireableListing);
+  const hireable = agents.filter(
+    (a) => isHireableListing(a) && !isGenesisListing(a),
+  );
 
   return (
     <section className="panel p-4 sm:p-5">

@@ -460,6 +460,40 @@ function main() {
     "third-party sample is not Delivered",
     thirdLive.kind === "quoted" && thirdLive.label.includes("live sample"),
   );
+  const memeTok = {
+    name: "Brain On BNB AI ($BOBAI)",
+    description:
+      "AI-built deflationary meme token on BNB Chain. Fair launch on Four.Meme.",
+    a2a_endpoint: "https://brainonbnb.com/.well-known/agent-card.json",
+    chain_id: 56,
+    token_id: "49467",
+  } as Agent;
+  check(
+    "meme token A2A is not hireable",
+    isHireableListing(memeTok) === false,
+  );
+  const fundedPlan = jobOutcome({
+    status: "delivered",
+    genesisSlug: "range-keeper",
+    escrow: {
+      fundTx:
+        "0x9a9f3f4531668c4760b5a36a93c005ed0fb0adb93f1caca99334d97bcee7cdbe",
+      chainStatus: "FUNDED",
+    },
+    deliverable: {
+      title: "Plan",
+      summary: "Bands",
+      sections: [{}],
+    },
+  });
+  check(
+    "escrow funded plan is not Ready",
+    fundedPlan.kind === "funded" && fundedPlan.label === "Escrow funded",
+  );
+  check(
+    "judge demo video is youtube",
+    Boolean(demo && /youtu\.be\/|youtube\.com\//.test(demo)),
+  );
 
   const noHf = parseBrief(
     "Simulate −15% collateral shock on my Venus account; repay vs add-collateral ladder",

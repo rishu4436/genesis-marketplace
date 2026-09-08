@@ -28,6 +28,7 @@ import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
 import { getHireTally } from "@/lib/hire-tally";
 import { fetchCensusAlive } from "@/lib/census-alive";
+import { deskFloorAgents } from "@/lib/desk-floor";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -123,7 +124,10 @@ export default async function BrowsePage({ searchParams }: Props) {
         getHireTally(),
       ]);
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
-  const merged = dedupeAgents([...genesisCards, ...pool.agents]);
+  const floor = deskFloorAgents();
+  const merged = showIndex
+    ? dedupeAgents([...genesisCards, ...pool.agents])
+    : dedupeAgents([...genesisCards, ...floor, ...pool.agents]);
   const quality = catalogFilterStats(merged);
 
   let agents = filterAgents(quality.kept, {
@@ -153,8 +157,7 @@ export default async function BrowsePage({ searchParams }: Props) {
   if (showIndex) {
     agents = sortGroup(agents);
   } else {
-    const split = splitHireable(agents);
-    agents = [...sortGroup(split.hireable), ...sortGroup(split.identity)];
+    agents = sortGroup(agents.filter(isHireableListing));
   }
   const liveSplit = splitHireable(agents);
 
@@ -199,7 +202,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         <p className="lead mt-3">
           {showIndex
             ? "Every ERC-8004 name we loaded, including identity-only rows. Unhireable is marked on each card. This is not the hire floor."
-            : "Landing Hire opens here. Specialists and live A2A you can complete a hire against. Unhireable identities stay listed and are marked."}
+            : "Landing Hire opens here. Specialists and live A2A we can complete. Unhireable identities are on Index and category pages — not this floor."}
         </p>
       </div>
 
@@ -293,7 +296,9 @@ export default async function BrowsePage({ searchParams }: Props) {
         <span>
           {pool.error && pageAgents.length === 0
             ? "—"
-            : `${q ? "Search" : showIndex ? "Raw index" : "Catalog"} · ${liveSplit.hireable.length} hireable · ${liveSplit.identity.length} unhireable · page ${safePage}/${totalPages}`}
+            : showIndex
+              ? `Raw index · ${liveSplit.hireable.length} hireable · ${liveSplit.identity.length} unhireable · page ${safePage}/${totalPages}`
+              : `Hire floor · ${tally ? tally.hireable : liveSplit.hireable.length} hireable · page ${safePage}/${totalPages}`}
           {pool.census?.alive ? (
             <span className="ml-1 text-lime-200/80">
               · {pool.census.alive.toLocaleString()} endpoint-alive of{" "}

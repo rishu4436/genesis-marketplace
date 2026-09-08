@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DESK } from "@/lib/desk";
 import { deskWeek } from "@/lib/desk-metrics";
 import { fetchCensusAlive } from "@/lib/census-alive";
-import { loadHireableBsc } from "@/lib/hireable-bsc";
+import { deskFloorAgents } from "@/lib/desk-floor";
 
 export async function DeskStrip({
   compact = false,
@@ -36,11 +36,7 @@ export async function DeskStrip({
       {!hideCensus && census && census.stats.alive > 0 && (
         <p className="mt-1 text-[11px] text-white/45">
           {(() => {
-            const h = loadHireableBsc();
-            const hireable = Object.values(h.byCategory).reduce(
-              (a, n) => a + n,
-              0,
-            );
+            const hireable = deskFloorAgents().length;
             return (
               <>
                 <span className="text-amber-100">
@@ -71,18 +67,18 @@ export async function DeskStrip({
         </div>
         <div className="rounded-xl border border-white/10 px-3 py-2">
           <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">
-            Escrowed+paid / 7d
+            Escrow funded / 7d
           </p>
           <p className="mt-0.5 font-display text-lg text-white">
-            {week.l2EscrowedPaid}
+            {week.l2EscrowFunded}
           </p>
         </div>
         <div className="rounded-xl border border-white/10 px-3 py-2">
           <p className="text-[9px] font-semibold uppercase tracking-wider text-white/40">
-            Unique payers / 7d
+            Settled / 7d
           </p>
           <p className="mt-0.5 font-display text-lg text-white">
-            {week.uniquePayers}
+            {week.l2EscrowedPaid}
           </p>
         </div>
         <Link

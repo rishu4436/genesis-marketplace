@@ -195,7 +195,7 @@ export async function getAllCategorySnapshots(perCategory = 4) {
       });
       return {
         category: cat,
-        agents: res.agents,
+        agents: res.hireable.slice(0, perCategory),
         source: res.source,
         error: res.error,
         totalMatched: res.totalMatched,

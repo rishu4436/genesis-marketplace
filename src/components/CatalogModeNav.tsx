@@ -24,8 +24,7 @@ export function CatalogModeNav({
         </p>
         <p className="mt-1.5 text-[12px] leading-relaxed text-white/55">
           Hireable catalog. By Genesis specialists and live A2A we can
-          complete a hire against. This is the desk — pick an agent and
-          Get plan or Hire with escrow on the listing.
+          complete a hire against. Unhireable identities stay on Index.
         </p>
       </Link>
       <Link
