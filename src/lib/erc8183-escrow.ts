@@ -7,7 +7,7 @@
 import { encodeFunctionData, parseEther, formatUnits } from "viem";
 import { getPin } from "./pins";
 import { getFeaturedByToken } from "./third-party-sellers";
-import { getGenesisAgent } from "./genesis-agents";
+import { GENESIS_AGENTS, getGenesisAgent } from "./genesis-agents";
 
 export const ERC8183_CHAIN_ID = 56;
 export const ERC8183_CHAIN_HEX = "0x38";
@@ -247,6 +247,7 @@ export function resolveEscrowProvider(opts: {
   genesisSlug?: string;
   chainId?: number;
   tokenId?: string;
+  ownerAddress?: string;
 }): EscrowProvider | null {
   if (opts.genesisSlug) {
     const pin = getPin(opts.genesisSlug);
@@ -260,6 +261,22 @@ export function resolveEscrowProvider(opts: {
       };
     }
   }
+  if (opts.tokenId) {
+    for (const g of GENESIS_AGENTS) {
+      const pin = getPin(g.slug);
+      if (
+        String(pin.tokenId) === String(opts.tokenId) &&
+        isHexAddress(pin.walletAddress)
+      ) {
+        return {
+          address: pin.walletAddress,
+          label: g.name,
+          genesisSlug: g.slug,
+          role: "escrow-counterparty",
+        };
+      }
+    }
+  }
   if (opts.chainId && opts.tokenId) {
     const featured = getFeaturedByToken(opts.chainId, opts.tokenId);
     if (featured && isHexAddress(featured.ownerAddress)) {
@@ -269,6 +286,14 @@ export function resolveEscrowProvider(opts: {
         role: "escrow-counterparty",
       };
     }
+  }
+  if (isHexAddress(opts.ownerAddress)) {
+    return {
+      address: opts.ownerAddress,
+      label: opts.genesisSlug || `Agent #${opts.tokenId || ""}`,
+      genesisSlug: opts.genesisSlug,
+      role: "escrow-counterparty",
+    };
   }
   return null;
 }

@@ -56,7 +56,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     rpcUrl: "https://agent.brainonbnb.com/a2a",
     skillId: "grid_plan",
     exampleUrl: "https://agent.brainonbnb.com/example?service=grid_plan",
-    ownerAddress: "",
+    ownerAddress: "0x73809f69916fcf7ddc5bb1315fbdf96a569a5963",
     featured: true,
   },
   {
@@ -72,7 +72,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     rpcUrl: "https://agent.brainonbnb.com/a2a",
     skillId: "yield_plan",
     exampleUrl: "https://agent.brainonbnb.com/example?service=yield_plan",
-    ownerAddress: "",
+    ownerAddress: "0x73809f69916fcf7ddc5bb1315fbdf96a569a5963",
     featured: true,
   },
   {
@@ -88,7 +88,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     rpcUrl: "https://agent.brainonbnb.com/a2a",
     skillId: "health_factor",
     exampleUrl: "https://agent.brainonbnb.com/example?service=health_factor",
-    ownerAddress: "",
+    ownerAddress: "0x73809f69916fcf7ddc5bb1315fbdf96a569a5963",
     featured: true,
   },
   {
@@ -104,7 +104,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     rpcUrl: "https://agent.brainonbnb.com/a2a",
     skillId: "rebalance_plan",
     exampleUrl: "https://agent.brainonbnb.com/example?service=rebalance_plan",
-    ownerAddress: "",
+    ownerAddress: "0x73809f69916fcf7ddc5bb1315fbdf96a569a5963",
     featured: true,
   },
   {
@@ -120,7 +120,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     rpcUrl: "https://agent.brainonbnb.com/a2a",
     skillId: "lp_tier_plan",
     exampleUrl: "https://agent.brainonbnb.com/example?service=lp_tier_plan",
-    ownerAddress: "",
+    ownerAddress: "0x73809f69916fcf7ddc5bb1315fbdf96a569a5963",
     featured: true,
   },
 ];
@@ -158,7 +158,7 @@ export const EXTRA_LIVE_SELLERS: ThirdPartySeller[] = [
       "https://agents.chainhelix.io/gridtrader/.well-known/agent-card.json",
     rpcUrl: "https://agents.chainhelix.io/gridtrader/",
     skillId: "grid",
-    ownerAddress: "",
+    ownerAddress: "0xb8143345687aa5a527f4f9568d508ebbc612d06d",
   },
   {
     slug: "chainhelix-health",
@@ -173,7 +173,7 @@ export const EXTRA_LIVE_SELLERS: ThirdPartySeller[] = [
       "https://agents.chainhelix.io/healthmon/.well-known/agent-card.json",
     rpcUrl: "https://agents.chainhelix.io/healthmon/",
     skillId: "health",
-    ownerAddress: "",
+    ownerAddress: "0x91f4602760e1627007bfc16f78a74cf8b9de8da2",
   },
   {
     slug: "bnb-yield-optimizer",

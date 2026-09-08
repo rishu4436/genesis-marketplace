@@ -73,6 +73,7 @@ type Props = {
   agentName: string;
   categoryId?: CategoryId | null;
   genesisSlug?: string;
+  ownerAddress?: string;
   task: string;
 };
 
@@ -125,6 +126,7 @@ export function EscrowWizard({
   agentName,
   categoryId,
   genesisSlug,
+  ownerAddress,
   task,
 }: Props) {
   const router = useRouter();
@@ -167,6 +169,7 @@ export function EscrowWizard({
         genesisSlug,
         chainId,
         tokenId,
+        ownerAddress,
         task: brief,
         wallet: wallet || undefined,
       }),

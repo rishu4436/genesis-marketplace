@@ -34,6 +34,8 @@ type Props = {
   etaMinutes?: number;
   /** Seller lists x402 */
   x402?: boolean;
+  /** ERC-8004 owner — identity/counterparty for optional L2 lock */
+  ownerAddress?: string;
 };
 
 function persistJobLocal(job: HireJob) {
@@ -60,6 +62,7 @@ export function HireWizard({
   priceUsd = 10,
   etaMinutes = 2,
   x402 = false,
+  ownerAddress,
 }: Props) {
   const isHireReady = hireReady ?? Boolean(genesisSlug);
   const templates = useMemo(
@@ -95,8 +98,9 @@ export function HireWizard({
         genesisSlug,
         chainId,
         tokenId,
+        ownerAddress,
       }),
-    [genesisSlug, chainId, tokenId],
+    [genesisSlug, chainId, tokenId, ownerAddress],
   );
   const escrowOk = ESCROW_STANCE.available && Boolean(escrowProvider);
 
@@ -431,7 +435,8 @@ export function HireWizard({
           tokenId={tokenId}
           agentName={agentName}
           categoryId={categoryId}
-          genesisSlug={genesisSlug}
+          genesisSlug={genesisSlug || escrowProvider?.genesisSlug}
+          ownerAddress={ownerAddress}
           task={job.task || task}
         />
       </div>
@@ -516,6 +521,32 @@ export function HireWizard({
             ? "Run free scan"
             : "Get plan"}
       </button>
+      {escrowOk ? (
+        <>
+          <button
+            type="button"
+            id="escrow"
+            disabled={!canBuy || loading}
+            onClick={() => {
+              setRail("escrow");
+              setEscrowOpen(true);
+            }}
+            className="mt-2 w-full rounded-full border border-amber-400/50 bg-amber-400/15 px-4 py-2.5 text-sm font-semibold text-amber-50 transition hover:border-amber-400 hover:bg-amber-400/25 disabled:opacity-40"
+          >
+            Hire with escrow (on-chain)
+          </button>
+          <p className="mt-2 text-center text-[10px] leading-relaxed text-white/45">
+            {ESCROW_CTA}
+          </p>
+        </>
+      ) : (
+        <Link
+          href="/genesis/range-keeper?escrow=1#buy"
+          className="mt-2 flex w-full items-center justify-center rounded-full border border-amber-400/35 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-400/70"
+        >
+          L2 on-chain escrow → RangeKeeper
+        </Link>
+      )}
       <p className="mt-2 text-center text-[10px] text-white/40">
         {SOFT_HIRE_SHORT}
       </p>
@@ -533,21 +564,6 @@ export function HireWizard({
           the seller.
         </p>
       </div>
-      {escrowOk && (
-        <>
-          <button
-            type="button"
-            disabled={!canBuy || loading}
-            onClick={() => setEscrowOpen(true)}
-            className="btn-secondary mt-2 w-full disabled:opacity-40"
-          >
-            Hire with escrow (on-chain)
-          </button>
-          <p className="mt-2 text-center text-[10px] leading-relaxed text-white/45">
-            {ESCROW_CTA}
-          </p>
-        </>
-      )}
 
       <div className="mt-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
@@ -555,9 +571,10 @@ export function HireWizard({
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {modes
-            .filter((m) => m.available && m.rail !== "escrow")
+            .filter((m) => m.available)
             .map((m) => {
               const active = rail === m.rail;
+              const escrowChip = m.rail === "escrow";
               return (
                 <button
                   key={m.rail}
@@ -566,11 +583,14 @@ export function HireWizard({
                   title={m.description}
                   onClick={() => {
                     setRail(m.rail);
+                    if (escrowChip && escrowOk) setEscrowOpen(true);
                   }}
                   className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                     active
                       ? "bg-amber-400 text-black"
-                      : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
+                      : escrowChip
+                        ? "border border-amber-400/40 bg-amber-400/10 text-amber-100 hover:border-amber-400/70"
+                        : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
                   }`}
                 >
                   {m.short}
@@ -581,15 +601,14 @@ export function HireWizard({
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
           {modes.find((m) => m.rail === rail)?.description}
         </p>
-        {escrowOk && (
-          <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
-            {ESCROW_LINE}. Advanced notes on{" "}
-            <Link href="/fund" className="text-amber-300/80 hover:underline">
-              /fund
-            </Link>
-            .
-          </p>
-        )}
+        <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
+          {ESCROW_LINE}. {escrowOk ? "Use L2 or Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
+          Notes on{" "}
+          <Link href="/fund" className="text-amber-300/80 hover:underline">
+            /fund
+          </Link>
+          .
+        </p>
       </div>
 
       {rail !== "free" && (
@@ -682,7 +701,8 @@ export function HireWizard({
         tokenId={tokenId}
         agentName={agentName}
         categoryId={categoryId}
-        genesisSlug={genesisSlug}
+        genesisSlug={genesisSlug || escrowProvider?.genesisSlug}
+        ownerAddress={ownerAddress}
         task={task}
       />
     </div>

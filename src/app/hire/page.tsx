@@ -180,6 +180,25 @@ export default async function HirePage({ searchParams }: Props) {
       <div className="mt-6">
         <DeskStrip compact hideCensus />
       </div>
+      <div className="mt-6 max-w-xl rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
+          L2 on-chain escrow
+        </p>
+        <p className="mt-1 text-[13px] leading-relaxed text-white/70">
+          Optional ERC-8183 lock in $U. Not on this list — open a specialist
+          (or a live listing with a seller identity) and use{" "}
+          <span className="font-semibold text-amber-100">
+            Hire with escrow (on-chain)
+          </span>
+          . Never send $U to a seller address.
+        </p>
+        <Link
+          href="/genesis/range-keeper?escrow=1#buy"
+          className="mt-2 inline-flex text-sm font-semibold text-amber-200 hover:underline"
+        >
+          Open RangeKeeper escrow →
+        </Link>
+      </div>
       <SoftHireNote className="mt-6 max-w-xl" />
       <div className="mt-6">
         <PartnerStatusStrip compact />

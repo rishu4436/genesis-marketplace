@@ -38,7 +38,9 @@ import {
 import {
   hireClassForAgent,
   isHireableListing,
+  matchingGenesisSlug,
 } from "@/lib/hire-class";
+import { hireableOwnerFor } from "@/lib/hireable-bsc";
 import { bscscanNftUrl } from "@/lib/proof-jobs";
 
 export const revalidate = 90;
@@ -147,6 +149,13 @@ export default async function AgentDetailPage({ params }: Props) {
               tokenId={String(agent.token_id)}
               agentName={agent.name || `Agent #${agent.token_id}`}
               categoryId={categoryId}
+              genesisSlug={matchingGenesisSlug(agent) ?? undefined}
+              ownerAddress={
+                agent.owner_address ||
+                hireableOwnerFor(cid, tokenId) ||
+                featured?.ownerAddress ||
+                undefined
+              }
               hireReady={isHireableListing(agent)}
               priceUsd={
                 isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0

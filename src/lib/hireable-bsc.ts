@@ -138,3 +138,17 @@ export function hireableBscAsAgents(categoryId?: CategoryId): Agent[] {
     }));
   return rows;
 }
+
+export function hireableOwnerFor(
+  chainId: number,
+  tokenId: string | number,
+): string | undefined {
+  const row = loadHireableBsc().hireable.find(
+    (r) =>
+      Number(r.chainId) === Number(chainId) &&
+      String(r.tokenId) === String(tokenId),
+  );
+  return row?.owner && /^0x[a-fA-F0-9]{40}$/.test(row.owner)
+    ? row.owner
+    : undefined;
+}

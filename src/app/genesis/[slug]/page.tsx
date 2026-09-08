@@ -125,6 +125,7 @@ export default async function GenesisAgentPage({ params }: Props) {
             agentName={agent.name}
             categoryId={agent.categoryId}
             genesisSlug={agent.slug}
+            ownerAddress={getPin(agent.slug).walletAddress}
             hireReady
             priceUsd={agent.basePriceUsd}
             etaMinutes={agent.etaMinutes}

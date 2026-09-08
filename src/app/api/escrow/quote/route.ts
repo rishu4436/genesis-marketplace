@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       genesisSlug?: string;
       chainId?: number;
       tokenId?: string;
+      ownerAddress?: string;
       task?: string;
       wallet?: string;
       budgetU?: string;
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
       genesisSlug: body.genesisSlug,
       chainId: body.chainId,
       tokenId: body.tokenId,
+      ownerAddress: body.ownerAddress,
     });
     if (!provider) {
       return NextResponse.json(
