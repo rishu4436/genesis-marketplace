@@ -88,8 +88,13 @@ export default function DemoPage() {
             ).
           </li>
           <li>
-            Platform sellers: {PLATFORM_LIVE_AGENTS.join(", ") || "—"}. Local
-            APEX: {LOCAL_APEX_AGENTS.join(", ") || "—"}.
+            Runtime: Genesis APEX for all four specialists (Studio trial
+            expired).{" "}
+            {PLATFORM_LIVE_AGENTS.map((a) => a.name).join(", ")}
+            {LOCAL_APEX_AGENTS.length
+              ? ` · ${LOCAL_APEX_AGENTS.map((a) => a.name).join(", ")}`
+              : ""}
+            .
           </li>
         </ul>
       </section>

@@ -10,6 +10,7 @@ import {
   hireClassForAgent,
   hireClassLabel,
   hireRailLabel,
+  isDirectoryLeak,
   isHireableListing,
   isPublicHireableUrl,
   listingHref,
@@ -286,6 +287,15 @@ function main() {
     a2a_endpoint: "https://example.invalid/agent-card.json",
   };
   check("test.agent is not hireable", isHireableListing(testStub) === false);
+  check(
+    "BNB Grid Trader (test) is identity-only",
+    isDirectoryLeak({
+      ...testStub,
+      name: "BNB Grid Trader (test)",
+      description: "TEST DEPLOYMENT — not for production use.",
+      token_id: "269233",
+    }) === true,
+  );
   const sleepBot: Agent = {
     ...featured,
     name: "DeFiBot.agent",

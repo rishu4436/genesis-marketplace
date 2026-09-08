@@ -36,6 +36,8 @@ export function listingHref(agent: Agent): string {
 /** Directory leaks — names that must never look hireable. */
 const JUNK_NAME =
   /^(test\.agent|test agent|test[._-]agent|demo\.agent|foo\.agent)$/i;
+const TEST_DEPLOYMENT =
+  /\(test\)|test deployment|not for production use/i;
 
 const GENERIC_SLEEP_BOT =
   /while you sleep|personalized yield strategies|automated crypto trading bot with dca/i;
@@ -47,6 +49,7 @@ export function isDirectoryLeak(agent: Agent): boolean {
   const desc = (agent.description || "").trim();
   if (!name) return true;
   if (JUNK_NAME.test(name)) return true;
+  if (TEST_DEPLOYMENT.test(name) || TEST_DEPLOYMENT.test(desc)) return true;
   if (/^test\./i.test(name)) return true;
   if (/test\.agent/i.test(name)) return true;
   if (GENERIC_BOT_NAME.test(name)) return true;
