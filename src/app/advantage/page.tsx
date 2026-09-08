@@ -217,7 +217,7 @@ export default function AdvantagePage() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/hire" className="btn-primary">
+        <Link href="/browse" className="btn-primary">
           Buy an agent
         </Link>
         <Link href="/termix" className="btn-secondary">

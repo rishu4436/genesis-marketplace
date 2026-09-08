@@ -333,7 +333,7 @@ export async function conciergeChat(opts: {
       suggestedTask: opts.message,
       cta: fallbackPicks[0]
         ? { label: `Open ${fallbackPicks[0].name}`, href: fallbackPicks[0].buyHref }
-        : { label: "Browse", href: "/hire" },
+        : { label: "Browse", href: "/browse" },
       fallbackReason: "ai-off",
     };
   }
@@ -419,7 +419,7 @@ ctaSlug must be a catalog slug or "hire" or "browse".`;
     })
     .filter(Boolean) as AiAgentPick[];
 
-  let href = "/hire";
+  let href = "/browse";
   if (raw.ctaSlug && agentBySlug(raw.ctaSlug)) {
     href = genesisBuyHref(agentBySlug(raw.ctaSlug)!, {
       task: raw.suggestedTask || opts.message,

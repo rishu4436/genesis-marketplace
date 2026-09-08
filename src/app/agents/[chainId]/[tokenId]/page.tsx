@@ -172,7 +172,7 @@ export default async function AgentDetailPage({ params }: Props) {
                 This row is on-chain identity only. No live hire we can
                 complete. Open a specialist for a plan you can run.
               </p>
-              <Link href="/hire" className="btn-solid mt-3 inline-flex !text-sm">
+              <Link href="/browse" className="btn-solid mt-3 inline-flex !text-sm">
                 Hire a specialist
               </Link>
             </div>

@@ -65,7 +65,7 @@ export function AiConcierge() {
     } catch {
       setHistory((h) => [
         ...h,
-        { role: "assistant", content: "Concierge unavailable. Try /hire." },
+        { role: "assistant", content: "Concierge unavailable. Try /browse." },
       ]);
     } finally {
       setLoading(false);

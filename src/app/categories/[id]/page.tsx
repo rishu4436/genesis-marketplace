@@ -231,8 +231,8 @@ export default async function CategoryDetailPage({
               error ||
               `The ${BRAND.byBadge} specialist above is still hireable.`
             }
-            actionHref="/hire"
-            actionLabel="Open hire floor"
+            actionHref="/browse"
+            actionLabel="Open hireable catalog"
           />
         </div>
       )}

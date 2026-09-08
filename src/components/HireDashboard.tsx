@@ -165,10 +165,10 @@ export function HireDashboard() {
             />
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/hire" className="btn-solid">
+            <Link href="/browse" className="btn-solid">
               Get a new plan
             </Link>
-            <Link href="/hire" className="btn-line">
+            <Link href="/browse" className="btn-line">
               Shop by job
             </Link>
           </div>

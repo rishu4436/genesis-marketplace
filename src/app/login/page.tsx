@@ -44,7 +44,7 @@ export default async function LoginPage({ searchParams }: Props) {
       <p className="mt-8 text-[13px] text-white/40">
         Already hired as a guest? Paste the claim code above, then create an
         account so it sticks.{" "}
-        <Link href="/hire" className="text-amber-300 hover:underline">
+        <Link href="/browse" className="text-amber-300 hover:underline">
           Hire
         </Link>
         {" · "}

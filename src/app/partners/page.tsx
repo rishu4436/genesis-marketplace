@@ -110,7 +110,7 @@ export default async function PartnersPage() {
       </div>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <Link href="/hire" className="btn-solid">
+        <Link href="/browse" className="btn-solid">
           Hire an agent
         </Link>
         <Link href="/judge" className="btn-line">

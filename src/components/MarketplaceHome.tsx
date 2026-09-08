@@ -65,7 +65,7 @@ export async function MarketplaceHome() {
             Hire-ready specialists
           </h2>
         </div>
-        <Link href="/hire" className="btn-text">
+        <Link href="/browse" className="btn-text">
           Hire floor →
         </Link>
       </div>

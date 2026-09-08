@@ -14,11 +14,10 @@ const PRIMARY = [
 ];
 
 const MOBILE = [
-  { href: "/hire", label: "Hire" },
+  { href: "/browse", label: "Browse" },
   { href: "/judge", label: "Judge" },
   { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
-  { href: "/browse", label: "Browse" },
   { href: "/packages", label: "Packages" },
   { href: "/partners", label: "Partners" },
 ];
@@ -92,7 +91,7 @@ export function Header() {
               </Link>
             );
           })}
-          <Link href="/hire" className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
+          <Link href="/browse" className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
             Hire
           </Link>
           <span className="ml-1">
@@ -101,7 +100,7 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 md:hidden">
-          <Link href="/hire" className="btn-solid !h-9 !px-3 !text-[0.75rem]">
+          <Link href="/browse" className="btn-solid !h-9 !px-3 !text-[0.75rem]">
             Hire
           </Link>
           <AuthNav compact />

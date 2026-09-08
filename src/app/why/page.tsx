@@ -73,7 +73,7 @@ export default function WhyPage() {
       </div>
 
       <div className="mt-12 flex flex-wrap gap-3">
-        <Link href="/hire" className="btn-primary">
+        <Link href="/browse" className="btn-primary">
           Buy a specialist
         </Link>
         <Link href="/judge" className="btn-secondary">

@@ -42,7 +42,7 @@ export const DESTINATION = {
     {
       t: "Humans",
       d: "Describe a job or tap a chip. Buy a specialist. Share the result.",
-      href: "/hire",
+      href: "/browse",
       cta: "Buy a specialist",
     },
     {

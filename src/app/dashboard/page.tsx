@@ -23,7 +23,7 @@ export default function DashboardPage() {
           </p>
           <SoftHireNote className="mt-5 max-w-xl" />
         </div>
-        <Link href="/hire" className="btn-solid">
+        <Link href="/browse" className="btn-solid">
           Hire
         </Link>
       </div>

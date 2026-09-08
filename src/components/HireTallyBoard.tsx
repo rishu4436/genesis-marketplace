@@ -15,7 +15,7 @@ export function HireTallyBoard({
 }) {
   const cells = [
     {
-      href: "/hire",
+      href: "/browse",
       value: formatCount(tally.hireable),
       label: "Hireable",
       hint: `${tally.genesis} By Genesis · ${tally.liveThirdParty} live A2A we probed`,

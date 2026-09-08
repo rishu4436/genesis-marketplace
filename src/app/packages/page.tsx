@@ -87,7 +87,7 @@ export default function PackagesPage() {
 
       <p className="body-sm mt-8">
         Prefer a single agent?{" "}
-        <Link href="/hire" className="text-amber-300 hover:underline">
+        <Link href="/browse" className="text-amber-300 hover:underline">
           Get a plan
         </Link>
         .

@@ -3,38 +3,52 @@ import Link from "next/link";
 export function CatalogModeNav({
   active,
 }: {
-  active: "hireable" | "browse" | "index";
+  active: "browse" | "index";
 }) {
-  const pill = (on: boolean) =>
-    on
-      ? "bg-[#F0B90B] text-black"
-      : "border border-white/10 bg-white/5 text-white/65 hover:border-amber-400/30 hover:text-amber-100";
-
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Link
-        href="/hire"
-        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${pill(active === "hireable")}`}
-      >
-        Hire
-      </Link>
+    <div className="grid gap-3 sm:grid-cols-2">
       <Link
         href="/browse"
-        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${pill(active === "browse")}`}
+        className={`rounded-2xl border px-4 py-3.5 transition ${
+          active === "browse"
+            ? "border-amber-400/50 bg-amber-400/[0.1]"
+            : "border-white/10 bg-white/[0.03] hover:border-amber-400/30"
+        }`}
       >
-        Browse
+        <p
+          className={`text-sm font-semibold ${
+            active === "browse" ? "text-amber-100" : "text-white"
+          }`}
+        >
+          Browse
+        </p>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-white/55">
+          Hireable catalog. By Genesis specialists and live A2A we can
+          complete a hire against. This is the desk — pick an agent and
+          Get plan (L0) or Hire with escrow (L2) on the listing.
+        </p>
       </Link>
       <Link
         href="/browse?index=1"
-        className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${pill(active === "index")}`}
+        className={`rounded-2xl border px-4 py-3.5 transition ${
+          active === "index"
+            ? "border-rose-400/40 bg-rose-400/[0.08]"
+            : "border-white/10 bg-white/[0.03] hover:border-rose-400/25"
+        }`}
       >
-        Index
+        <p
+          className={`text-sm font-semibold ${
+            active === "index" ? "text-rose-100" : "text-white"
+          }`}
+        >
+          Index
+        </p>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-white/55">
+          Raw ERC-8004 identity dump on BSC. Most rows are Unhireable
+          (HTTP-alive or name-only). Shown so the registry is not hidden.
+          Not a hire floor.
+        </p>
       </Link>
-      <p className="text-[11px] text-white/40">
-        {active === "index"
-          ? "Raw index — unhireable rows are marked Unhireable."
-          : "Hireable first. Unhireable identities are listed and marked."}
-      </p>
     </div>
   );
 }

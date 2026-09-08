@@ -186,7 +186,7 @@ export function ProfileHome() {
               Tied to this account. Recover older receipts with a claim code.
             </p>
           </div>
-          <Link href="/hire" className="btn-primary !py-2 !text-sm">
+          <Link href="/browse" className="btn-primary !py-2 !text-sm">
             Hire an agent
           </Link>
         </div>

@@ -254,7 +254,7 @@ function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <Link href="/hire" className="btn-primary !px-6 !py-3 !text-[0.95rem]">
+          <Link href="/browse" className="btn-primary !px-6 !py-3 !text-[0.95rem]">
             Hire an agent
           </Link>
           <Link
@@ -663,7 +663,7 @@ export function LandingPageCinematic({
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/hire"
+                href="/browse"
                 className="btn-primary !px-8 !py-3.5 !text-base"
               >
                 Hire an agent

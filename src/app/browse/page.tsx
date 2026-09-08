@@ -20,6 +20,8 @@ import {
 } from "@/lib/hire-class";
 import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
+import { HireTallyBoard } from "@/components/HireTallyBoard";
+import { getHireTally } from "@/lib/hire-tally";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -91,13 +93,16 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const showIndex = filters.index === "1";
 
-  const pool = await fetchHireablePool({
-    q: q || undefined,
-    sortMode,
-    x402: filters.x402 === "1",
-    verified: filters.verified === "1",
-    live: filters.live === "1",
-  });
+  const [pool, tally] = await Promise.all([
+    fetchHireablePool({
+      q: q || undefined,
+      sortMode,
+      x402: filters.x402 === "1",
+      verified: filters.verified === "1",
+      live: filters.live === "1",
+    }),
+    getHireTally(),
+  ]);
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
   const quality = catalogFilterStats(merged);
@@ -166,20 +171,27 @@ export default async function BrowsePage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <div className="max-w-2xl">
-        <p className="section-label">Browse</p>
+        <p className="section-label">
+          {showIndex ? "Index" : "Browse"}
+        </p>
         <h1 className="display-section mt-3 text-white">
-          {showIndex ? "Raw identity index" : "Catalog"}
+          {showIndex ? "Raw identity index" : "Hireable catalog"}
         </h1>
         <p className="lead mt-3">
           {showIndex
-            ? "ERC-8004 names including identity-only rows. Unhireable is marked on each card."
-            : "Hireable A2A first. Unhireable identities stay listed and are marked Unhireable."}
+            ? "Every ERC-8004 name we loaded, including identity-only rows. Unhireable is marked on each card. This is not the hire floor."
+            : "Landing Hire opens here. Specialists and live A2A you can complete a hire against. Unhireable identities stay listed and are marked."}
         </p>
       </div>
 
       <div className="mt-6">
         <CatalogModeNav active={showIndex ? "index" : "browse"} />
       </div>
+      {!showIndex && (
+        <div className="mt-6">
+          <HireTallyBoard tally={tally} compact />
+        </div>
+      )}
 
       <form className="mt-8 flex flex-col gap-3 sm:flex-row" action="/browse">
         <input

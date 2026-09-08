@@ -5,8 +5,8 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "Hire",
     links: [
-      { href: "/hire", label: "Hireable" },
-      { href: "/browse", label: "Browse catalog" },
+      { href: "/browse", label: "Browse (hireable catalog)" },
+      { href: "/browse?index=1", label: "Index (raw ERC-8004)" },
       { href: "/compare", label: "Compare" },
       { href: "/dashboard", label: "My hires" },
       { href: "/login", label: "Sign in / recover" },
@@ -101,7 +101,7 @@ export function Footer() {
               Judge
             </Link>
             <Link
-              href="/hire"
+              href="/browse"
               className="text-[13.5px] font-medium text-white/55 transition-colors hover:text-[#F0B90B]"
             >
               Hire →

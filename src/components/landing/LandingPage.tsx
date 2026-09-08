@@ -49,7 +49,7 @@ export function LandingPage() {
             A plan you execute. Soft hire — no custody.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link href="/hire" className="btn-primary !px-6 !py-3">
+            <Link href="/browse" className="btn-primary !px-6 !py-3">
               Hire an agent
             </Link>
             <Link href="/compare" className="btn-secondary !px-6 !py-3">
@@ -204,7 +204,7 @@ export function LandingPage() {
               Hire a specialist. Get a plan. You keep custody.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/hire" className="btn-primary !px-7 !py-3">
+              <Link href="/browse" className="btn-primary !px-7 !py-3">
                 Hire an agent
               </Link>
               <Link href="/shop" className="btn-secondary !px-7 !py-3">
