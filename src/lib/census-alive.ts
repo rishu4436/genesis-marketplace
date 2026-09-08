@@ -121,7 +121,42 @@ async function fetchPage(page: number): Promise<CensusPage | null> {
   }
 }
 
+async function mapPool<T, R>(
+  items: T[],
+  n: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const ret = new Array<R>(items.length);
+  let i = 0;
+  async function worker() {
+    while (i < items.length) {
+      const idx = i++;
+      ret[idx] = await fn(items[idx]);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(n, items.length) }, () => worker()),
+  );
+  return ret;
+}
+
+let inflight: Promise<{
+  agents: Agent[];
+  stats: CensusAliveStats;
+}> | null = null;
+
 export async function fetchCensusAlive(): Promise<{
+  agents: Agent[];
+  stats: CensusAliveStats;
+}> {
+  if (inflight) return inflight;
+  inflight = loadCensusAlive().finally(() => {
+    inflight = null;
+  });
+  return inflight;
+}
+
+async function loadCensusAlive(): Promise<{
   agents: Agent[];
   stats: CensusAliveStats;
 }> {
@@ -140,8 +175,10 @@ export async function fetchCensusAlive(): Promise<{
     }
   }
 
-  const pages = await Promise.all(
-    Array.from({ length: ALIVE_PAGES }, (_, i) => fetchPage(i + 1)),
+  const pages = await mapPool(
+    Array.from({ length: ALIVE_PAGES }, (_, i) => i + 1),
+    4,
+    fetchPage,
   );
   const agents: Agent[] = [];
   let registered = 0;

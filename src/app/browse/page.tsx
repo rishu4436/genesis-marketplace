@@ -22,6 +22,7 @@ import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
 import { getHireTally } from "@/lib/hire-tally";
+import { fetchCensusAlive } from "@/lib/census-alive";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -93,16 +94,29 @@ export default async function BrowsePage({ searchParams }: Props) {
 
   const showIndex = filters.index === "1";
 
-  const [pool, tally] = await Promise.all([
-    fetchHireablePool({
-      q: q || undefined,
-      sortMode,
-      x402: filters.x402 === "1",
-      verified: filters.verified === "1",
-      live: filters.live === "1",
-    }),
-    getHireTally(),
-  ]);
+  const [pool, tally] = showIndex
+    ? await (async () => {
+        const census = await fetchCensusAlive();
+        return [
+          {
+            agents: census.agents,
+            error: census.stats.error,
+            apiTotal: census.stats.registered,
+            census: census.stats,
+          },
+          null,
+        ] as const;
+      })()
+    : await Promise.all([
+        fetchHireablePool({
+          q: q || undefined,
+          sortMode,
+          x402: filters.x402 === "1",
+          verified: filters.verified === "1",
+          live: filters.live === "1",
+        }),
+        getHireTally(),
+      ]);
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const merged = dedupeAgents([...genesisCards, ...pool.agents]);
   const quality = catalogFilterStats(merged);
@@ -187,7 +201,7 @@ export default async function BrowsePage({ searchParams }: Props) {
       <div className="mt-6">
         <CatalogModeNav active={showIndex ? "index" : "browse"} />
       </div>
-      {!showIndex && (
+      {!showIndex && tally && (
         <div className="mt-6">
           <HireTallyBoard tally={tally} compact />
         </div>
@@ -239,7 +253,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         ))}
       </div>
 
-      {!q && safePage === 1 && (
+      {!showIndex && !q && safePage === 1 && (
         <div className="mt-10">
           <JobFloor perShelf={3} />
         </div>
