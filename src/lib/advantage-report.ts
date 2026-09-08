@@ -24,7 +24,7 @@ export type AdvantageTask = {
     genesisSlug: string;
     jobId: string;
     timeMin: number;
-    /** L0 charged amount — always 0 on Genesis soft hire. */
+    /** Plan charged amount — always 0 on Genesis soft hire. */
     costUsd: number;
     /** Catalog SKU label only — not a charge. */
     skuUsd: number;

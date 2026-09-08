@@ -22,7 +22,7 @@ export const JOB_PACKAGES: JobPackage[] = [
     name: "DeFi ops desk",
     tagline: "Rebalance + yield + risk in one pass",
     description:
-      "Run three specialists on linked briefs: LP range health, USDT yield route, and HF shock — one L0 run, three plans. No payment.",
+      "Run three specialists on linked briefs: LP range health, USDT yield route, and HF shock — one plan run, three plans. No payment.",
     agentSlugs: ["range-keeper", "yield-router", "health-sentinel"],
     tasks: {
       "range-keeper":

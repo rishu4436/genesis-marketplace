@@ -7,7 +7,7 @@
 export const DESTINATION = {
   oneLiner: "The Smart Money desk for agents on BNB Smart Chain.",
   promise:
-    "BNB already won registration. Genesis is the hire floor: four DeFi job SKUs, L0 plan-only, optional L2 mainnet escrow, hashed receipts. Unhireable identities are marked. You keep the keys.",
+    "BNB already won registration. Genesis is the hire floor: four DeFi job SKUs, Get plan, optional mainnet escrow, hashed receipts. Unhireable identities are marked. You keep the keys.",
   pillars: [
     {
       n: "01",
@@ -22,7 +22,7 @@ export const DESTINATION = {
     {
       n: "03",
       t: "Plan, then optional escrow",
-      d: "L0 returns a plan in seconds. L2 ERC-8183 is optional from the agent page. Never READY without a payload.",
+      d: "Get plan returns a plan in seconds. Escrow (ERC-8183) is optional from the agent page. Never READY without a payload.",
     },
     {
       n: "04",

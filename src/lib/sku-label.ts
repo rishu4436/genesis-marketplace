@@ -1,5 +1,5 @@
 /**
- * List SKU vs quoted amount. SKU $ is labeling; L0 never charges.
+ * List SKU vs quoted amount. SKU $ is labeling; Get plan never charges.
  */
 
 import type { HireJob } from "./hire-engine";
@@ -25,7 +25,7 @@ export function skuQuotedLine(job: HireJob): string {
   const locked = Boolean(job.escrow?.fundTx);
   const pay = locked
     ? `${job.escrow?.amountU || ""} $U locked`.trim()
-    : "L0 no charge";
+    : "plan · no charge";
   if (
     listUsd != null &&
     quotedUsd != null &&

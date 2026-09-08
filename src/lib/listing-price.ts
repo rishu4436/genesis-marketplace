@@ -1,6 +1,6 @@
 /**
  * Browse/list price for a card.
- * SKU $ is labeling (L0 never charges). $U is only shown when the seller
+ * SKU $ is labeling (Get plan never charges). $U is only shown when the seller
  * published a list quote — we do not stamp 0.1 $U on every live agent.
  */
 

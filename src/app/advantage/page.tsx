@@ -41,7 +41,7 @@ export default function AdvantagePage() {
           {
             label: "Agent cost",
             value: `$${t.withCost}`,
-            sub: `L0 no charge · SKU $${t.skuUsd} labeled only`,
+            sub: `plan · no charge · SKU $${t.skuUsd} labeled only`,
           },
         ].map((s) => (
           <div key={s.label} className="panel px-5 py-4">
@@ -194,7 +194,7 @@ export default function AdvantagePage() {
         <p className="font-semibold text-white/80">Method notes</p>
         <ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-relaxed">
           <li>
-            With-agent runs are 2026-09-06 Genesis L0 hires (plan
+            With-agent runs are 2026-09-06 Genesis plan hires (plan
             deliverables, charged $0). SKU $ is labeling. Open the linked
             receipts and machine JSON.
           </li>

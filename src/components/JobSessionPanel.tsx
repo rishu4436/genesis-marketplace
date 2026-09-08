@@ -68,7 +68,7 @@ export function JobSessionPanel({ job }: { job: HireJob }) {
       </dl>
 
       <p className="mt-3 text-[11px] text-white/40">
-        Isolation spend 0 — the session cannot move funds. L0 SKU $ is not a
+        Isolation spend 0 — the session cannot move funds. SKU $ is not a
         charge. This is not an Altana spend key. Secrets never sit on this
         envelope.
       </p>

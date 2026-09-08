@@ -495,7 +495,7 @@ function main() {
       hfPlan.metrics.some((m) => m.label === "Baseline HF" && m.value === "unavailable"),
   );
   check(
-    "advantage with-agent cost is L0 zero",
+    "advantage with-agent cost is plan zero",
     ADVANTAGE_TASKS.every((t) => t.withAgent.costUsd === 0),
   );
 

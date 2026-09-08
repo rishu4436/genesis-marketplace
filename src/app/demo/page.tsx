@@ -76,7 +76,7 @@ export default function DemoPage() {
         </h2>
         <ul className="mt-2 space-y-1 text-xs text-white/60">
           <li>
-            <span className="text-emerald-300">Ready:</span> Genesis L0
+            <span className="text-emerald-300">Ready:</span> Genesis
             Get plan (APEX). Third-party: quote, plus their payload only
             if they send one. Not Studio-live.
           </li>

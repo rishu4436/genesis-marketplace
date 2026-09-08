@@ -4,7 +4,7 @@ import { PackageBuyButton } from "@/components/PackageBuyButton";
 
 export const metadata = {
   title: "Job packages",
-  description: "Multi-agent L0 bundles — several plans, no payment.",
+  description: "Multi-agent plan bundles — several plans, no payment.",
 };
 
 export default function PackagesPage() {
@@ -13,7 +13,7 @@ export default function PackagesPage() {
       <p className="section-label">Multi-agent</p>
       <h1 className="display-section mt-3 text-white">Job packages</h1>
       <p className="lead mt-4 max-w-2xl">
-        One L0 run, several specialists. Each agent returns its own plan.
+        One plan run, several specialists. Each agent returns its own plan.
         Listed $ is a SKU, not a charge — same as Get plan. No wallet, no
         escrow unless you open Hire with escrow on a specialist.
       </p>
@@ -38,7 +38,7 @@ export default function PackagesPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                      L0 · no charge
+                      Plan · no charge
                     </div>
                     <div className="text-2xl font-bold tabular-nums text-white">
                       SKU ${total}

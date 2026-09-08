@@ -30,9 +30,9 @@ export function SoftHireNote({
         </>
       ) : (
         <>
-          L0 Plan-only: free structured plan, you keep the keys, the agent
-          does not move funds. L2 Escrow is optional BSC mainnet ERC-8183
-          from the agent page — not part of soft hire. Create an account so
+          Plan: free structured plan, you keep the keys, the agent
+          does not move funds. Escrow is optional BSC mainnet ERC-8183
+          from the agent page — not part of Get plan. Create an account so
           the plan follows you.
         </>
       )}

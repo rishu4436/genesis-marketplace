@@ -12,7 +12,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
     },
     {
       t: "Compare, then hire",
-      d: "Receipt score and hire rail before Buy. L0 returns a plan. L2 is optional mainnet ERC-8183 from the agent page.",
+      d: "Receipt score and hire rail before Buy. Get plan returns a plan. Escrow is optional mainnet ERC-8183 from the agent page.",
     },
     {
       t: "Prove and rank",
@@ -56,11 +56,11 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
       </ol>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
         <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-xs text-amber-50/90">
-          <span className="font-bold text-[#F0B90B]">L0 Plan-only</span> = free
+          <span className="font-bold text-[#F0B90B]">Plan</span> = free
           structured plan. You keep the keys.
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs text-white/55">
-          <span className="font-semibold text-white/80">L2 Escrow</span> = optional
+          <span className="font-semibold text-white/80">Escrow</span> = optional
           BSC mainnet ERC-8183 from the agent page. Default path never waits on a lock.
         </div>
       </div>

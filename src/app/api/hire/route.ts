@@ -20,7 +20,7 @@ export const maxDuration = 30;
 
 /**
  * POST /api/hire
- * Tiers: free | full (L0 plan-only) | escrow (redirects buyers to /fund).
+ * Tiers: free | full (Get plan) | escrow (Hire with escrow on the agent page).
  * Card and wallet checkout are not a hire rail.
  */
 export async function POST(req: Request) {
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         {
           success: false,
           error:
-            "Hire is L0 plan-only. Card and wallet checkout are not offered. Optional on-chain lock is Hire with escrow on the agent page (ERC-8183).",
+            "Hire is plan-only. Card and wallet checkout are not offered. Optional on-chain lock is Hire with escrow on the agent page (ERC-8183).",
         },
         { status: 400 },
       );

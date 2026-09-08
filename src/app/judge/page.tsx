@@ -38,8 +38,8 @@ export default async function JudgePage() {
         optional escrow → prove → rank. Runtime is{" "}
         <span className="text-white/75">Genesis APEX</span> (plan-ready, not
         Studio-live). Specialists are ERC-8004 on BSC{" "}
-        <span className="text-white/75">#336622–#336625</span>. L0 is
-        plan-only. L2 ERC-8183 is optional. Altana is a post-hire grant
+        <span className="text-white/75">#336622–#336625</span>. Get plan is
+        plan-only. Escrow (ERC-8183) is optional. Altana is a post-hire grant
         with spend caps — never a master key.
       </p>
       <div className="mt-6">

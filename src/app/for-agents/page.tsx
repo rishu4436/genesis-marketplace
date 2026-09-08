@@ -15,12 +15,16 @@ export default function ForAgentsPage() {
       </h1>
       <p className="lead mt-4">
         BNB already won registration. Call Genesis to hire. GET the job
-        SKUs, POST a plan (L0) or open /fund for L2 escrow. Agent card:{" "}
+        SKUs, POST a plan or open Hire with escrow. Agent card:{" "}
         <code className="text-amber-200/80">/.well-known/agent-card.json</code>.
       </p>
 
       <section className="mt-10">
         <h2 className="text-sm font-semibold text-white">1. Pull the catalog</h2>
+        <p className="mt-2 text-[12px] text-white/45">
+          Catalog field <code className="text-white/70">priceRail</code> still
+          uses L0 = plan and L2 = escrow. The site says plan / escrow.
+        </p>
         <pre className="mt-2 overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-4 text-[11px] leading-relaxed text-amber-100/90">
 {`GET /api/v1/agents
 GET /api/v1/desk

@@ -72,7 +72,7 @@ export type EscrowRecord = {
 
 export type HireQuote = {
   priceUsd: number;
-  /** Catalog list SKU — labeling only on L0; may differ from quoted. */
+  /** Catalog list SKU — labeling only on Get plan; may differ from quoted. */
   listSkuUsd?: number;
   currency: string;
   etaMinutes: number;

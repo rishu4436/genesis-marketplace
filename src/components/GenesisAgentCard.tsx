@@ -77,7 +77,7 @@ export function GenesisAgentCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px] font-medium text-white/45">
-            {sku?.job || cat?.shortName} · L0 · ~{agent.etaMinutes}m
+            {sku?.job || cat?.shortName} · plan · ~{agent.etaMinutes}m
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span

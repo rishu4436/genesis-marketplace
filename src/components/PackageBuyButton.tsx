@@ -53,7 +53,7 @@ export function PackageBuyButton({ packageId, total }: Props) {
     return (
       <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
         <p className="text-sm font-semibold text-emerald-200">
-          {jobIds.length} L0 plans ready · no payment
+          {jobIds.length} plans ready · no payment
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {jobIds.map((id) => (
@@ -84,7 +84,7 @@ export function PackageBuyButton({ packageId, total }: Props) {
         onClick={buy}
         className="btn-primary w-full sm:w-auto disabled:opacity-50"
       >
-        {loading ? "Running specialists…" : "Run L0 package · no charge"}
+        {loading ? "Running specialists…" : "Run package · no charge"}
       </button>
       <p className="mt-2 text-[11px] text-white/40">
         Listed SKU ${total} · plan only · you keep the keys. Not a

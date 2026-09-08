@@ -1,6 +1,6 @@
 /**
  * Soft in-process + optional KV rate limit. Fail-open if KV is down
- * still uses memory so a noisy client cannot stampede L0 package runs.
+ * still uses memory so a noisy client cannot stampede plan package runs.
  */
 
 import { kvCmd } from "./kv";

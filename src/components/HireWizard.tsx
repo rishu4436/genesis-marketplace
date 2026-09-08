@@ -41,7 +41,7 @@ type Props = {
   etaMinutes?: number;
   /** Seller lists x402 */
   x402?: boolean;
-  /** ERC-8004 owner — identity/counterparty for optional L2 lock */
+  /** ERC-8004 owner — identity/counterparty for optional escrow lock */
   ownerAddress?: string;
 };
 
@@ -468,7 +468,7 @@ export function HireWizard({
         </div>
         <div className="text-right">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-            L0 · no charge
+            Plan · no charge
           </div>
           <div className="text-lg font-bold tabular-nums tracking-tight text-white">
             {priceLabel ||
@@ -554,7 +554,7 @@ export function HireWizard({
           href="/genesis/range-keeper?escrow=1#buy"
           className="mt-2 flex w-full items-center justify-center rounded-full border border-amber-400/35 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-400/70"
         >
-          L2 on-chain escrow → RangeKeeper
+          On-chain escrow → RangeKeeper
         </Link>
       )}
       <p className="mt-2 text-center text-[10px] text-white/40">
@@ -562,13 +562,13 @@ export function HireWizard({
       </p>
       <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-[10px] leading-relaxed text-white/50 sm:grid-cols-2">
         <p>
-          <span className="font-semibold text-white/75">L0 Soft hire</span>
+          <span className="font-semibold text-white/75">Plan</span>
           {" — "}
-          plan only · you keep the keys · no custody. Listed $ is a SKU, not a
+          you keep the keys · no custody. Listed $ is a SKU, not a
           charge.
         </p>
         <p>
-          <span className="font-semibold text-white/75">L2 Escrow</span>
+          <span className="font-semibold text-white/75">Escrow</span>
           {" — "}
           on-chain lock in $U · settle after deliverable · never a transfer to
           the seller.
@@ -625,7 +625,7 @@ export function HireWizard({
           </button>
         ) : null}
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
-          {ESCROW_LINE}. {escrowOk ? "Use L2 or Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
+          {ESCROW_LINE}. {escrowOk ? "Use Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
           Notes on{" "}
           <Link
             href="/genesis/range-keeper?escrow=1#buy"

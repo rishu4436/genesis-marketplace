@@ -165,7 +165,7 @@ export default async function GenesisAgentPage({ params }: Props) {
                   Get plan
                 </a>
                 <span className="text-xs text-white/45">
-                  ~{agent.etaMinutes}m · SKU ${agent.basePriceUsd} · L0 no charge
+                  ~{agent.etaMinutes}m · SKU ${agent.basePriceUsd} · plan · no charge
                 </span>
               </div>
             </div>

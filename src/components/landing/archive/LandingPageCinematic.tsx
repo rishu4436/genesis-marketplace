@@ -58,12 +58,12 @@ const STEPS = [
   {
     n: "03",
     t: "Plan",
-    d: "L0 Plan-only: one click, structured plan, you keep the keys.",
+    d: "Get plan: one click, structured plan, you keep the keys.",
   },
   {
     n: "04",
     t: "Escrow · prove · rank",
-    d: "Optional L2 ERC-8183. Hashed receipt. Rank follows paid delivery.",
+    d: "Optional escrow (ERC-8183). Hashed receipt. Rank follows paid delivery.",
   },
 ];
 

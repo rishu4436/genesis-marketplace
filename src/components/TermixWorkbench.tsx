@@ -282,7 +282,7 @@ export function TermixWorkbench() {
               <ArmEditor
                 title="With agent"
                 arm={t.withAgent}
-                emptyHint="No with-agent run yet. Click Run with agent for a live L0 hire, or Load sample receipt from a sealed proof job. Empty rows are not a TermiX score."
+                emptyHint="No with-agent run yet. Click Run with agent for a live plan hire, or Load sample receipt from a sealed proof job. Empty rows are not a TermiX score."
                 onChange={(p) => updateArm(t.id, "withAgent", p)}
               />
             </div>

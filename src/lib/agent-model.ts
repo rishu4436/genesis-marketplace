@@ -52,9 +52,9 @@ export function marketplaceTiers(opts?: {
     },
     {
       id: "full",
-      label: "L0 Plan-only",
-      short: "L0",
-      costLabel: "SKU $ · L0 no charge",
+      label: "Plan",
+      short: "Plan",
+      costLabel: "SKU $ · plan · no charge",
       settlement: "Plan-only · you keep the keys · no on-chain lock",
       speed: "~2–5s",
       includes: [
@@ -68,10 +68,10 @@ export function marketplaceTiers(opts?: {
     },
     {
       id: "escrow",
-      label: "L2 Escrow hire",
-      short: "L2",
+      label: "Escrow",
+      short: "Escrow",
       costLabel: "0.08+ U lock from the agent page",
-      settlement: "Optional ERC-8183 fund → deliver → 24h settle",
+      settlement: "Optional ERC-8183 fund → deliver → settle after dispute window",
       speed: "minutes + 24h settle",
       includes: [
         "Same full analysis payload",

@@ -24,15 +24,15 @@ export const DESK_RAILS: Record<
 > = {
   L0: {
     id: "L0",
-    name: "Plan-only",
-    short: "L0",
+    name: "Plan",
+    short: "Plan",
     meaning:
-      "Soft hire. Structured plan. You keep the keys. Free. The agent does not move funds.",
+      "Get plan. Structured plan. You keep the keys. Free. The agent does not move funds.",
   },
   L2: {
     id: "L2",
-    name: "Escrow hire",
-    short: "L2",
+    name: "Escrow",
+    short: "Escrow",
     meaning:
       "Optional BSC mainnet ERC-8183 lock from the agent page. Evaluator + refund on expiry. Not the default path.",
   },

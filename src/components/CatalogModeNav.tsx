@@ -25,7 +25,7 @@ export function CatalogModeNav({
         <p className="mt-1.5 text-[12px] leading-relaxed text-white/55">
           Hireable catalog. By Genesis specialists and live A2A we can
           complete a hire against. This is the desk — pick an agent and
-          Get plan (L0) or Hire with escrow (L2) on the listing.
+          Get plan or Hire with escrow on the listing.
         </p>
       </Link>
       <Link

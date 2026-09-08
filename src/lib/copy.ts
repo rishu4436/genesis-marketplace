@@ -5,7 +5,7 @@
  */
 
 export const SOFT_HIRE_LINE =
-  "Plan only · you keep the keys · no custody. L2 Escrow is optional BSC mainnet ERC-8183 from the agent page.";
+  "Plan only · you keep the keys · no custody. Escrow is optional BSC mainnet ERC-8183 from the agent page.";
 
 export const SOFT_HIRE_SHORT =
   "Plan only · you keep the keys · no custody";
@@ -20,10 +20,10 @@ export const NEVER_PAY_SELLER =
   "Do not send funds to seller addresses to hire.";
 
 export const CHECKOUT_LEGEND_L0 =
-  "L0 Soft hire — plan only · you keep the keys · no custody";
+  "Plan — you keep the keys · no custody";
 
 export const CHECKOUT_LEGEND_L2 =
-  "L2 Escrow — on-chain lock in $U · settle after deliverable";
+  "Escrow — on-chain lock in $U · settle after deliverable";
 
 export const INTELLIGENCE_LINE =
   "Hireable agents first. Unhireable ERC-8004 identities stay listed and are marked Unhireable — we do not hide the index.";
@@ -33,4 +33,4 @@ export const INTELLIGENCE_SHORT =
 
 /** One line for Browse, Compare, and hire panels. */
 export const PRICE_LEGEND =
-  "SKU $ is a label. L0 plan hire is no charge. $U only when the seller published it. Otherwise Quote on hire.";
+  "SKU $ is a label. Get plan is no charge. $U only when the seller published it. Otherwise Quote on hire.";

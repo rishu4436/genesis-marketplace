@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "Too many package runs. Wait a few minutes — L0 is still free.",
+          error: "Too many package runs. Wait a few minutes — plans are still free.",
         },
         {
           status: 429,
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         chargedUsd: 0,
         settlement: "none",
         tier: "full",
-        note: "L0 plan-only bundle. Listed $ is a SKU, not a charge.",
+        note: "Plan-only bundle. Listed $ is a SKU, not a charge.",
         jobs,
         jobIds: jobs.map((j) => j.id),
       },

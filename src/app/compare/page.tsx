@@ -44,9 +44,9 @@ function priceCell(agent: Agent): string {
   if (!list || hireClassForAgent(agent) === "indexed") {
     return "Not for sale";
   }
-  if (list.unit === "USD") return `${list.label} SKU · L0 no charge`;
-  if (list.unit === "U") return `${list.label} list · L0 no charge`;
-  return "Quote on hire · L0 no charge";
+  if (list.unit === "USD") return `${list.label} SKU · plan · no charge`;
+  if (list.unit === "U") return `${list.label} list · plan · no charge`;
+  return "Quote on hire · plan · no charge";
 }
 
 function escrowCell(agent: Agent): string {
@@ -186,11 +186,11 @@ export default async function ComparePage({ searchParams }: Props) {
     });
     rows.push({
       label: "List price",
-      hint: "SKU $ is a label. L0 plan hire is no charge. $U is only shown when the seller published it.",
+      hint: "SKU $ is a label. Get plan is no charge. $U is only shown when the seller published it.",
       values: agents.map(priceCell),
     });
     rows.push({
-      label: "L2 escrow",
+      label: "Escrow",
       hint: "Optional on-chain lock in $U. Never a transfer to the seller EOA.",
       values: agents.map(escrowCell),
     });
