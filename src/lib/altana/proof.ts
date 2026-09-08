@@ -14,6 +14,7 @@ export type AltanaLiveProof = {
   adminAddress: string;
   keystore: string;
   transactionHash?: string;
+  revokeTransactionHash?: string;
   faucetTxHash?: string;
   explorerUrl: string;
   keystoreExplorer: string;

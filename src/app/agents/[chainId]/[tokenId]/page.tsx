@@ -40,8 +40,9 @@ import {
   isHireableListing,
   matchingGenesisSlug,
 } from "@/lib/hire-class";
-import { hireableOwnerFor } from "@/lib/hireable-bsc";
+import { hireableBscAsAgents, hireableOwnerFor } from "@/lib/hireable-bsc";
 import { bscscanNftUrl } from "@/lib/proof-jobs";
+import { listingPriceForAgent } from "@/lib/listing-price";
 
 export const revalidate = 90;
 
@@ -65,8 +66,15 @@ export default async function AgentDetailPage({ params }: Props) {
   if (!Number.isFinite(cid)) notFound();
 
   const agentRes = await getAgentSafe(cid, tokenId);
-  const agent = resolveCatalogAgent(cid, tokenId, agentRes.data);
   const featured = getFeaturedByToken(cid, tokenId);
+  const fromHireable = hireableBscAsAgents().find(
+    (a) =>
+      Number(a.chain_id) === cid && String(a.token_id) === String(tokenId),
+  );
+  const agent =
+    resolveCatalogAgent(cid, tokenId, agentRes.data) ||
+    fromHireable ||
+    null;
 
   if (!agent) {
     return (
@@ -96,6 +104,7 @@ export default async function AgentDetailPage({ params }: Props) {
   const axes = computeAxes(agent);
   const composite = compositeFromAxes(axes);
   const pentId = `agent-${agent.chain_id}-${String(agent.token_id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const listing = listingPriceForAgent(agent);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -157,8 +166,13 @@ export default async function AgentDetailPage({ params }: Props) {
                 undefined
               }
               hireReady={isHireableListing(agent)}
-              priceUsd={
-                isFeaturedThirdParty(agent.chain_id, agent.token_id) ? 0.1 : 0
+              priceUsd={listing?.amount ?? 0}
+              priceLabel={
+                listing?.unit === "U"
+                  ? listing.label
+                  : listing?.unit === "quote"
+                    ? "Quote on hire"
+                    : undefined
               }
               etaMinutes={1}
               x402={Boolean(agent.x402_supported)}

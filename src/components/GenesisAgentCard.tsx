@@ -130,8 +130,11 @@ export function GenesisAgentCard({
             PancakeSwap
           </span>
         )}
-        <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
-          Ready
+        <span
+          className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300"
+          title="Marketplace APEX · structured plan. Not BNB Agent Studio-live."
+        >
+          Plan-ready · APEX
         </span>
         <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35">
           Unrated

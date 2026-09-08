@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { fundingAddresses } from "@/lib/onchain-hire";
-import { OnchainHirePanel } from "@/components/OnchainHirePanel";
 import { NEVER_PAY_SELLER, ESCROW_CTA, SOFT_HIRE_SHORT } from "@/lib/copy";
 import { ERC8183_MAINNET } from "@/lib/erc8183-escrow";
 
@@ -122,11 +121,9 @@ export default function FundPage() {
           CLI: <code>bag erc8183 buy --provider &lt;seller&gt;</code> then{" "}
           <code>notify_funded</code>. Settle:{" "}
           <code>bag erc8183 settle &lt;job_id&gt; --action approve|dispute</code>
-          . Approve only after the 24h window.
+          . Approve only after the 24h window. In-app checkout is the
+          RangeKeeper escrow wizard — do not send $U to seller addresses.
         </p>
-        <div className="mt-4">
-          <OnchainHirePanel />
-        </div>
       </details>
     </div>
   );

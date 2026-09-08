@@ -76,8 +76,9 @@ export default function DemoPage() {
         </h2>
         <ul className="mt-2 space-y-1 text-xs text-white/60">
           <li>
-            <span className="text-emerald-300">Ready:</span> soft hire (all
-            listings), specialists, scores, TermiX, demo path.
+            <span className="text-emerald-300">Ready:</span> Genesis L0
+            Get plan (APEX). Third-party: quote, plus their payload only
+            if they send one. Not Studio-live.
           </li>
           <li>
             <span className="text-amber-200">Optional:</span> on-chain

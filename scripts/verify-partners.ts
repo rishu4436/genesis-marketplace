@@ -25,6 +25,7 @@ import {
   FEATURED_THIRD_PARTY,
   LIVE_SELLERS,
   featuredAsAgent,
+  getFeaturedThirdParty,
   isPinnedLiveSeller,
 } from "../src/lib/third-party-sellers";
 import { siteUrl, PRODUCTION_SITE_URL } from "../src/lib/site-url";
@@ -44,6 +45,7 @@ import { NEVER_PAY_SELLER } from "../src/lib/copy";
 import { escrowJudgeProof, judgeDemoVideoUrl } from "../src/lib/judge-proof";
 import { hasLivePayload, jobOutcome } from "../src/lib/job-outcome";
 import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
+import { listingPriceForAgent } from "../src/lib/listing-price";
 import {
   buildExpertDeliverable,
   parseBrief,
@@ -134,6 +136,35 @@ function main() {
   check("live stats count 1 indexed", stats.indexed === 1);
   check("featured is hireable", isHireableListing(featured) === true);
   check("identity-only is not hireable", isHireableListing(indexed) === false);
+  check(
+    "featured LP has no invented 0.1 $U",
+    listingPriceForAgent(featured)?.cta === "Buy · quote",
+    listingPriceForAgent(featured)?.cta,
+  );
+  const brainGrid = featuredAsAgent(getFeaturedThirdParty("grid-trading"));
+  check(
+    "brain grid lists published 0.1 $U",
+    listingPriceForAgent(brainGrid)?.cta === "Buy · 0.1 $U",
+    listingPriceForAgent(brainGrid)?.cta,
+  );
+  check(
+    "chainhelix browse CTA is quote",
+    listingPriceForAgent(featuredAsAgent(EXTRA_LIVE_SELLERS[0]))?.cta ===
+      "Buy · quote",
+    listingPriceForAgent(featuredAsAgent(EXTRA_LIVE_SELLERS[0]))?.cta,
+  );
+  const rangeKeeper = getGenesisAgent("range-keeper");
+  check(
+    "range-keeper browse SKU is $8",
+    Boolean(rangeKeeper) &&
+      listingPriceForAgent(genesisToAgentCard(rangeKeeper!))?.cta ===
+        "Buy · $8",
+    listingPriceForAgent(genesisToAgentCard(rangeKeeper!))?.cta,
+  );
+  check(
+    "unhireable has no list price",
+    listingPriceForAgent(indexed) == null,
+  );
   check(
     "indexed class label is Unhireable",
     hireClassLabel("indexed") === "Unhireable",
@@ -415,6 +446,19 @@ function main() {
   check(
     "quote-only badge is not Ready",
     qOnly.kind === "quoted" && qOnly.label.includes("Quote only"),
+  );
+  const thirdLive = jobOutcome({
+    status: "delivered",
+    quote: { live: true },
+    deliverable: {
+      title: "Sample",
+      summary: "Public sample",
+      sections: [{}],
+    },
+  });
+  check(
+    "third-party sample is not Delivered",
+    thirdLive.kind === "quoted" && thirdLive.label.includes("live sample"),
   );
 
   const noHf = parseBrief(

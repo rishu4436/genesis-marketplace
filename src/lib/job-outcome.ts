@@ -74,11 +74,18 @@ export function jobOutcome(job: JobOutcomeInput): {
       hint: "Escrow funded · payload not in yet",
     };
   }
-  if (live && job.status === "delivered") {
+  if (live && job.status === "delivered" && job.genesisSlug) {
     return {
       kind: "ready",
       label: "Ready",
       hint: "Delivered · this is your receipt",
+    };
+  }
+  if (!job.genesisSlug && (job.quote?.live === true || live)) {
+    return {
+      kind: "quoted",
+      label: "Quoted · live sample",
+      hint: "Not Delivered. Their sample is not an escrowed plan.",
     };
   }
   if (job.quote?.live === false || (!live && !job.genesisSlug)) {

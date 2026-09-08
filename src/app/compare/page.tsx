@@ -1,34 +1,35 @@
 import Link from "next/link";
-import { getAgentSafe, parseAgentKey, shortAddress } from "@/lib/scan";
+import type { ReactNode } from "react";
+import { getAgentSafe, parseAgentKey } from "@/lib/scan";
 import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import {
   hireClassForAgent,
   hireClassLabel,
-  hireRailLabel,
+  isHireableListing,
   listingHref,
   matchingGenesisSlug,
 } from "@/lib/hire-class";
-import { formatOnchainRating } from "@/lib/feedback-score";
+import {
+  formatOnchainRating,
+  hasOnchainRating,
+} from "@/lib/feedback-score";
 import { compositeFromAxes, computeAxes } from "@/lib/marketplace-score";
 import {
   allGenesisAgents,
-  genesisHref,
   genesisToAgentCard,
-  getGenesisAgentsByCategory,
+  getGenesisAgent,
 } from "@/lib/genesis-agents";
+import { PRICE_LEGEND } from "@/lib/copy";
 import {
-  LIVE_SELLERS,
-  featuredAsAgent,
-  getFeaturedThirdParty,
-  thirdPartyHref,
+  getFeaturedByToken,
+  resolveCatalogAgent,
 } from "@/lib/third-party-sellers";
 import { CompareHireAll } from "@/components/CompareHireAll";
-import { detectCategory } from "@/lib/job-chips";
-import { rankGenesisForJob } from "@/lib/job-rank";
+import { listingPriceForAgent } from "@/lib/listing-price";
+import { budgetUFor } from "@/lib/erc8183-escrow";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
-import { listIncidents } from "@/lib/slash-store";
 
 export const metadata = {
   title: "Compare agents",
@@ -37,6 +38,128 @@ export const metadata = {
 type Props = {
   searchParams: Promise<{ ids?: string; task?: string }>;
 };
+
+function priceCell(agent: Agent): string {
+  const list = listingPriceForAgent(agent);
+  if (!list || hireClassForAgent(agent) === "indexed") {
+    return "Not for sale";
+  }
+  if (list.unit === "USD") return `${list.label} SKU · L0 no charge`;
+  if (list.unit === "U") return `${list.label} list · L0 no charge`;
+  return "Quote on hire · L0 no charge";
+}
+
+function escrowCell(agent: Agent): string {
+  const cls = hireClassForAgent(agent);
+  if (cls === "indexed") return "—";
+  const slug = matchingGenesisSlug(agent);
+  if (slug) return `${budgetUFor({ genesisSlug: slug })} $U optional`;
+  const list = listingPriceForAgent(agent);
+  if (list?.unit === "U") return `${list.label} optional`;
+  return "Optional · seller names $U";
+}
+
+function returnsCell(agent: Agent): string {
+  const c = hireClassForAgent(agent);
+  if (c === "genesis") return "Structured plan you execute";
+  if (c === "live") return "Their A2A quote + live payload";
+  return "Identity only — no hire we can complete";
+}
+
+function etaCell(agent: Agent): string {
+  const slug = matchingGenesisSlug(agent);
+  if (slug) {
+    const m = getGenesisAgent(slug)?.etaMinutes;
+    return m ? `~${m} min` : "—";
+  }
+  if (hireClassForAgent(agent) === "live") return "~1 min";
+  return "—";
+}
+
+function clip(text: string, n = 240): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  if (t.length <= n) return t;
+  return `${t.slice(0, n).replace(/\s+\S*$/, "")}…`;
+}
+
+function skillLabel(raw: string): string {
+  return raw.replace(/[_-]+/g, " ").trim();
+}
+
+/** Published tagline / description / skills only — never invented. */
+function capabilityCell(agent: Agent): ReactNode {
+  const slug = matchingGenesisSlug(agent);
+  const genesis = slug ? getGenesisAgent(slug) : undefined;
+  const pin = getFeaturedByToken(agent.chain_id, agent.token_id);
+  const blurb = clip(
+    genesis?.tagline ||
+      pin?.tagline ||
+      genesis?.description ||
+      pin?.description ||
+      agent.description ||
+      "",
+  );
+  const skills = (genesis?.skills || [])
+    .map(skillLabel)
+    .filter(Boolean)
+    .slice(0, 4);
+  if (skills.length === 0 && pin?.skillId) {
+    skills.push(skillLabel(pin.skillId));
+  }
+  if (!blurb && skills.length === 0) {
+    return <span className="text-white/35">No published description</span>;
+  }
+  return (
+    <div className="max-w-[22rem]">
+      {blurb ? (
+        <p className="text-[13px] leading-relaxed text-white/75">{blurb}</p>
+      ) : null}
+      {skills.length > 0 ? (
+        <ul className="mt-2 flex flex-wrap gap-1">
+          {skills.map((s) => (
+            <li
+              key={s}
+              className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] text-white/60"
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+async function loadCompared(raw: string[]): Promise<Agent[]> {
+  const agents: Agent[] = [];
+  const seen = new Set<string>();
+  for (const id of raw) {
+    const parsed = parseAgentKey(id);
+    if (!parsed) continue;
+    const key = `${parsed.chainId}:${parsed.tokenId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const genesis = allGenesisAgents().find(
+      (g) =>
+        Boolean(g.tokenId) &&
+        String(g.tokenId) === String(parsed.tokenId) &&
+        Number(g.chainId ?? 56) === parsed.chainId,
+    );
+    if (genesis) {
+      agents.push(genesisToAgentCard(genesis));
+      continue;
+    }
+    const res = await getAgentSafe(parsed.chainId, parsed.tokenId);
+    const agent = resolveCatalogAgent(
+      parsed.chainId,
+      parsed.tokenId,
+      res.data,
+    );
+    if (agent) agents.push(agent);
+  }
+  return agents;
+}
 
 export default async function ComparePage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -51,60 +174,52 @@ export default async function ComparePage({ searchParams }: Props) {
     .filter(Boolean)
     .slice(0, 3);
 
-  const agents: Agent[] = [];
-  for (const id of raw) {
-    const parsed = parseAgentKey(id);
-    if (!parsed) continue;
-    const res = await getAgentSafe(parsed.chainId, parsed.tokenId);
-    if (res.data) agents.push(res.data);
-  }
-  if (agents.length === 0 && raw.length === 0) {
-    const cat = task ? detectCategory(task) : null;
-    if (cat) {
-      const g = getGenesisAgentsByCategory(cat)[0];
-      if (g) agents.push(genesisToAgentCard(g));
-      const feat = getFeaturedThirdParty(cat);
-      if (feat) agents.push(featuredAsAgent(feat));
-    } else {
-      agents.push(
-        ...allGenesisAgents().slice(0, 3).map((g) => genesisToAgentCard(g)),
-      );
-    }
-  }
+  const agents = await loadCompared(raw);
 
-  const rows: { label: string; values: string[] }[] = [];
+  const rows: { label: string; hint?: string; values: ReactNode[] }[] = [];
 
   if (agents.length > 0) {
     rows.push({
-      label: "Name",
-      values: agents.map((a) => a.name || `#${a.token_id}`),
+      label: "What it does",
+      hint: "Published tagline, description, and skills. Blank means the seller did not publish any.",
+      values: agents.map(capabilityCell),
     });
     rows.push({
-      label: "Category fit",
+      label: "List price",
+      hint: "SKU $ is a label. L0 plan hire is no charge. $U is only shown when the seller published it.",
+      values: agents.map(priceCell),
+    });
+    rows.push({
+      label: "L2 escrow",
+      hint: "Optional on-chain lock in $U. Never a transfer to the seller EOA.",
+      values: agents.map(escrowCell),
+    });
+    rows.push({
+      label: "You get",
+      values: agents.map(returnsCell),
+    });
+    rows.push({
+      label: "Can hire",
+      values: agents.map((a) =>
+        isHireableListing(a)
+          ? `Yes · ${hireClassLabel(hireClassForAgent(a))}`
+          : "No · Unhireable",
+      ),
+    });
+    rows.push({
+      label: "Job",
       values: agents.map((a) => {
         const id = matchCategory(a.name || "", a.description || "");
         return id ? getCategory(id)?.name || id : "General";
       }),
     });
     rows.push({
-      label: "Hire class",
-      values: agents.map((a) => hireClassLabel(hireClassForAgent(a))),
-    });
-    rows.push({
-      label: "Hire rail",
-      values: agents.map((a) => hireRailLabel(hireClassForAgent(a))),
-    });
-    rows.push({
-      label: "What Buy returns",
-      values: agents.map((a) => {
-        const c = hireClassForAgent(a);
-        if (c === "genesis") return "Structured plan you execute";
-        if (c === "live") return "Their quote + live payload";
-        return "Identity only — not a live hire";
-      }),
+      label: "ETA",
+      values: agents.map(etaCell),
     });
     rows.push({
       label: "Receipt score",
+      hint: "Genesis sealed-hire track record. Blank is not a low score.",
       values: agents.map((a) => {
         const slug = matchingGenesisSlug(a);
         const n = slug ? receiptBySlug[slug] : null;
@@ -112,53 +227,28 @@ export default async function ComparePage({ searchParams }: Props) {
       }),
     });
     rows.push({
-      label: "Listing quality",
+      label: "Hire readiness",
+      hint: "Listing quality on this desk, not an on-chain rating.",
       values: agents.map((a) =>
         String(Math.round(compositeFromAxes(computeAxes(a)))),
       ),
     });
     rows.push({
       label: "Index rating",
-      values: agents.map((a) => {
-        const r = formatOnchainRating(a);
-        return r === "Unrated" ? "Unrated (8004scan)" : r;
-      }),
-    });
-    rows.push({
-      label: "Index ratings / stars",
-      values: agents.map(
-        (a) =>
-          `${a.total_feedbacks ?? 0} ratings · ${a.star_count ?? 0} stars`,
+      hint: "8004scan Unrated is an index label, not a failed hire.",
+      values: agents.map((a) =>
+        hasOnchainRating(a)
+          ? `${formatOnchainRating(a)}${
+              a.total_feedbacks ? ` · ${a.total_feedbacks}` : ""
+            }`
+          : "Unrated",
       ),
     });
     rows.push({
-      label: "Pay rail",
-      values: agents.map((a) => {
-        const c = hireClassForAgent(a);
-        if (c === "genesis") return "Genesis APEX · L0 plan hire · L2 optional";
-        if (a.x402_supported) return "x402 + A2A";
-        if (c === "live") return "A2A quote (0.1 $U typical)";
-        return "None";
-      }),
-    });
-    rows.push({
-      label: "Owner",
-      values: agents.map((a) => shortAddress(a.owner_address, 4)),
-    });
-    rows.push({
-      label: "Token",
-      values: agents.map((a) => `${a.chain_id}:${a.token_id}`),
+      label: "x402",
+      values: agents.map((a) => (a.x402_supported ? "Yes" : "No")),
     });
   }
-
-  const jobRank = task
-    ? rankGenesisForJob(
-        task,
-        receiptScores,
-        undefined,
-        await listIncidents(),
-      )
-    : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -166,138 +256,84 @@ export default async function ComparePage({ searchParams }: Props) {
         Compare agents
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-white/55">
-        Same job, then who can actually complete it. Receipt score is the
-        Genesis track record. 8004scan Unrated is an index label, not a
-        failed hire. Empty compare loads three specialists.
+        Side-by-side what each agent does, list price, and whether we can
+        complete a hire. Tap Compare on Browse cards, then load the tray.
+        Up to three agents.
+      </p>
+      <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-white/40">
+        {PRICE_LEGEND} SKU $ is not $U.
       </p>
 
-      {jobRank && (
-        <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-            Same job
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-white">
-            {jobRank.categoryName || "Job"}
-          </h2>
-          <p className="mt-1 text-sm text-white/55">{jobRank.task}</p>
-          <p className="mt-2 text-[11px] text-white/35">
-            Organic only · paid rank off
-          </p>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-3 py-2 text-xs text-white/40">Specialist</th>
-                  <th className="px-3 py-2 text-xs text-white/40">Eligible</th>
-                  <th className="px-3 py-2 text-xs text-white/40">Rank</th>
-                  <th className="px-3 py-2 text-xs text-white/40">Receipt</th>
-                  <th className="px-3 py-2 text-xs text-white/40">Why</th>
-                  <th className="px-3 py-2 text-xs text-white/40" />
-                </tr>
-              </thead>
-              <tbody>
-                {[...jobRank.organic, ...jobRank.excluded].map((row) => (
-                  <tr key={row.slug} className="border-b border-white/5">
-                    <td className="px-3 py-2 text-white">{row.name}</td>
-                    <td className="px-3 py-2">
-                      {row.eligible ? (
-                        <span className="text-emerald-300">Yes</span>
-                      ) : (
-                        <span className="text-white/40">No</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-white/70">
-                      {row.organicRank ?? "—"}
-                    </td>
-                    <td className="px-3 py-2 text-white/70">
-                      {row.receipt != null ? row.receipt : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-[11px] text-white/50">
-                      {(row.eligible ? row.why : row.blockers).join(" · ")}
-                    </td>
-                    <td className="px-3 py-2">
-                      <a
-                        href={row.buyHref}
-                        className="text-[11px] font-semibold text-amber-300 hover:underline"
-                      >
-                        Hire {row.name}
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-      <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        {allGenesisAgents().map((g) => (
-          <Link
-            key={g.slug}
-            href={genesisHref(g)}
-            className="rounded-full border border-white/10 px-3 py-1 text-white/60 hover:border-amber-400/40 hover:text-amber-200"
-          >
-            {g.name}
-          </Link>
-        ))}
-        {LIVE_SELLERS.map((s) => (
-          <Link
-            key={s.slug}
-            href={thirdPartyHref(s)}
-            className="rounded-full border border-sky-400/25 px-3 py-1 text-sky-300 hover:border-sky-400/50"
-          >
-            {s.name}
-          </Link>
-        ))}
-        <Link
-          href="/compare?task=Rebalance%20my%20PCS%20V3%20LP%20when%20out%20of%20range"
-          className="rounded-full border border-emerald-400/25 px-3 py-1 text-emerald-200 hover:border-emerald-400/50"
-        >
-          Same job · rebalance
-        </Link>
-        <Link
-          href="/compare?task=Protect%20health%20factor%20after%20a%20-15%25%20shock"
-          className="rounded-full border border-emerald-400/25 px-3 py-1 text-emerald-200 hover:border-emerald-400/50"
-        >
-          Same job · health
-        </Link>
-      </div>
-
-      {task && agents.length > 0 && (
-        <CompareHireAll task={task} agents={agents} />
-      )}
+      {task ? (
+        <p className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white/60">
+          Brief: <span className="text-white/85">{task}</span>
+        </p>
+      ) : null}
 
       <ComparePicker initialIds={raw} />
+
+      {raw.length < 3 ? (
+        <details className="mt-4 text-xs text-white/45">
+          <summary className="cursor-pointer select-none hover:text-white/70">
+            Add a By Genesis specialist
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {allGenesisAgents()
+              .filter((g) => g.tokenId && !raw.includes(`56:${g.tokenId}`))
+              .map((g) => {
+                const next = [...raw, `56:${g.tokenId}`].slice(0, 3);
+                return (
+                  <Link
+                    key={g.slug}
+                    href={`/compare?ids=${next.map(encodeURIComponent).join(",")}`}
+                    className="rounded-full border border-amber-400/25 px-3 py-1 text-amber-100 hover:border-amber-400/50"
+                  >
+                    + {g.name}
+                  </Link>
+                );
+              })}
+          </div>
+        </details>
+      ) : null}
 
       {agents.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-white/15 px-6 py-12 text-center">
           <p className="text-sm text-white/50">
-            No agents loaded. Browse the marketplace and tap Compare on cards.
+            Nothing loaded yet. Open Browse, tap Compare on two or three
+            cards, then Load from compare tray.
           </p>
           <Link
             href="/browse"
             className="mt-4 inline-block text-sm font-medium text-amber-300"
           >
-            Go to marketplace →
+            Go to Browse →
           </Link>
         </div>
       ) : (
         <>
+          {task ? <CompareHireAll task={task} agents={agents} /> : null}
+
           <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/[0.04]">
                   <th className="px-4 py-3 text-xs font-medium text-white/40">
-                    Attribute
+                    Compare
                   </th>
                   {agents.map((a) => (
-                    <th key={a.agent_id || a.token_id} className="px-4 py-3">
+                    <th
+                      key={a.agent_id || a.token_id}
+                      className="px-4 py-3 align-top"
+                    >
                       <Link
                         href={listingHref(a)}
                         className="font-semibold text-amber-200 hover:underline"
                       >
                         {a.name || `#${a.token_id}`}
                       </Link>
+                      <p className="mt-1 text-[11px] font-normal text-white/40">
+                        #{a.token_id}
+                      </p>
                     </th>
                   ))}
                 </tr>
@@ -308,13 +344,20 @@ export default async function ComparePage({ searchParams }: Props) {
                     key={row.label}
                     className="border-b border-white/5 odd:bg-white/[0.02]"
                   >
-                    <td className="px-4 py-3 text-xs text-white/40">
+                    <td
+                      className="px-4 py-3 text-xs text-white/40"
+                      title={row.hint}
+                    >
                       {row.label}
                     </td>
                     {row.values.map((v, i) => (
                       <td
                         key={`${row.label}-${i}`}
-                        className="px-4 py-3 text-white/80"
+                        className={`px-4 py-3 align-top ${
+                          row.label === "List price"
+                            ? "font-semibold tabular-nums text-amber-100"
+                            : "text-white/80"
+                        }`}
                       >
                         {v}
                       </td>
@@ -322,19 +365,33 @@ export default async function ComparePage({ searchParams }: Props) {
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="bg-white/[0.04]">
+                  <td className="px-4 py-4 text-xs text-white/40">Hire</td>
+                  {agents.map((a) => {
+                    const can = isHireableListing(a);
+                    const list = listingPriceForAgent(a);
+                    const label = can
+                      ? list?.cta || "Hire"
+                      : "View identity";
+                    return (
+                      <td key={`hire-${a.agent_id || a.token_id}`} className="px-4 py-4">
+                        <a
+                          href={can ? `${listingHref(a)}#buy` : listingHref(a)}
+                          className={`inline-flex rounded-full px-4 py-2 text-xs font-semibold ${
+                            can
+                              ? "bg-[#F0B90B] text-black hover:bg-amber-300"
+                              : "border border-white/15 bg-white/5 text-white/70 hover:border-white/25"
+                          }`}
+                        >
+                          {label}
+                        </a>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tfoot>
             </table>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            {agents.map((a) => (
-              <a
-                key={a.agent_id}
-                href={`${listingHref(a)}#buy`}
-                className="rounded-full bg-[#F0B90B] px-4 py-2 text-xs font-semibold text-black hover:bg-amber-300"
-              >
-                Hire {a.name?.slice(0, 18) || a.token_id} →
-              </a>
-            ))}
           </div>
         </>
       )}

@@ -20,8 +20,7 @@ export default function PackagesPage() {
 
       <div className="mt-10 space-y-5">
         {JOB_PACKAGES.map((pkg) => {
-          const { agents, subtotal, bundleDiscount, total, etaMax } =
-            packagePricing(pkg);
+          const { agents, subtotal, total, etaMax } = packagePricing(pkg);
           return (
             <article
               key={pkg.id}
@@ -45,8 +44,7 @@ export default function PackagesPage() {
                       SKU ${total}
                     </div>
                     <div className="text-[11px] text-white/40">
-                      <span className="line-through">${subtotal}</span>
-                      {" · "}−${bundleDiscount} listed bundle · ~{etaMax}m
+                      listed SKU ${subtotal} · ~{etaMax}m · not a charge
                     </div>
                   </div>
                 </div>

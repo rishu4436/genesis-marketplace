@@ -18,7 +18,12 @@ import {
   splitHireable,
   sortForDestination,
 } from "@/lib/hire-class";
-import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
+import {
+  allGenesisAgents,
+  genesisHref,
+  genesisToAgentCard,
+} from "@/lib/genesis-agents";
+import { PRICE_LEGEND } from "@/lib/copy";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
 import { getHireTally } from "@/lib/hire-tally";
@@ -258,9 +263,30 @@ export default async function BrowsePage({ searchParams }: Props) {
           <JobFloor perShelf={3} />
         </div>
       )}
+      {!showIndex && (q || safePage > 1) && (
+        <div className="mt-8">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+            By Genesis · always hireable
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {allGenesisAgents().map((g) => (
+              <a
+                key={g.slug}
+                href={`${genesisHref(g)}#buy`}
+                className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-100 hover:border-amber-400/50"
+              >
+                {g.name} · ${g.basePriceUsd}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6">
         <FilterBar filters={filters} surface="browse" />
+        <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+          {PRICE_LEGEND}
+        </p>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-white/45">
@@ -335,11 +361,19 @@ export default async function BrowsePage({ searchParams }: Props) {
         !pool.error && (
           <div className="mt-10">
             <EmptyState
-              title={q ? `No agents match “${q}”` : "No agents match"}
+              title={
+                filters.ratings === "1" || sortMode === "ratings"
+                  ? "No 8004scan ratings on this set"
+                  : q
+                    ? `No agents match “${q}”`
+                    : "No agents match"
+              }
               body={
-                q
-                  ? "That query is not in names, skills, or job keywords. Try yield, grid, rebalance, or health factor."
-                  : "Try clearing filters or a broader search."
+                filters.ratings === "1" || sortMode === "ratings"
+                  ? "Unrated is an index label, not a low score. Almost no hireable row carries on-chain feedback yet. Clear Rated only to see the catalog."
+                  : q
+                    ? "That query is not in names, skills, or job keywords. Try yield, grid, rebalance, or health factor."
+                    : "Try clearing filters or a broader search."
               }
               actionHref="/browse"
               actionLabel="Clear browse"

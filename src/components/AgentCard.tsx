@@ -25,6 +25,7 @@ import {
   hireClassLabel,
   listingHref,
 } from "@/lib/hire-class";
+import { listingPriceForAgent } from "@/lib/listing-price";
 import {
   formatOnchainRating,
   hasOnchainRating,
@@ -63,7 +64,10 @@ export function AgentCard({
             pinned ? sellerPayloadKind(pinned) : "quote",
           )
         : [];
-  const actionLabel = canHire ? ctaLabel : "View identity";
+  const listing = listingPriceForAgent(agent);
+  const actionLabel = canHire
+    ? listing?.cta || ctaLabel
+    : "View identity";
   const actionHref = canHire ? `${href}#buy` : href;
 
   return (
@@ -100,6 +104,19 @@ export function AgentCard({
             BSC · #{agent.token_id} · {shortAddress(agent.owner_address)}
             {cat && (
               <span className="text-white/30"> · {cat.shortName}</span>
+            )}
+            {listing && listing.unit !== "quote" && (
+              <span
+                className="text-amber-200/80"
+                title={
+                  listing.unit === "U"
+                    ? "Published list quote in $U. L0 plan hire is no charge."
+                    : "SKU label. L0 plan hire is no charge."
+                }
+              >
+                {" "}
+                · {listing.label}
+              </span>
             )}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -198,6 +215,15 @@ export function AgentCard({
           {showCompare && <CompareToggle agentKey={agentKey(agent)} />}
           <a
             href={actionHref}
+            title={
+              listing
+                ? listing.unit === "U"
+                  ? "Published list quote in $U. L0 plan hire is no charge."
+                  : listing.unit === "quote"
+                    ? "Seller quotes on hire. L0 plan hire is no charge."
+                    : "SKU label. L0 plan hire is no charge."
+                : undefined
+            }
             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
               canHire
                 ? "bg-amber-400 text-black hover:bg-amber-300"

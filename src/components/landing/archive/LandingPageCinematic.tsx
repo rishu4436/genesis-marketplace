@@ -258,10 +258,10 @@ function Hero({
             Hire an agent
           </Link>
           <Link
-            href="/compare"
+            href="/categories"
             className="btn-secondary !px-6 !py-3 !text-[0.95rem]"
           >
-            Compare
+            Four jobs
           </Link>
         </motion.div>
         <motion.div
@@ -667,12 +667,6 @@ export function LandingPageCinematic({
                 className="btn-primary !px-8 !py-3.5 !text-base"
               >
                 Hire an agent
-              </Link>
-              <Link
-                href="/compare"
-                className="btn-secondary !px-8 !py-3.5 !text-base"
-              >
-                Compare
               </Link>
             </div>
             <p className="mt-10 text-xs font-medium tracking-wide text-white/35">

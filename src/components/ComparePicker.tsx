@@ -26,6 +26,9 @@ export function ComparePicker({ initialIds }: { initialIds: string[] }) {
 
   return (
     <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-[11px] text-white/45">
+        Tray holds up to three agents from Browse.
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -43,21 +46,26 @@ export function ComparePicker({ initialIds }: { initialIds: string[] }) {
           Clear tray
         </button>
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          value={manual}
-          onChange={(e) => setManual(e.target.value)}
-          placeholder="56:12345, 56:67890"
-          className="flex-1 rounded-xl border border-white/15 bg-black/30 px-3 py-2 font-mono text-xs text-white outline-none focus:ring-2 focus:ring-amber-400/30"
-        />
-        <button
-          type="button"
-          onClick={applyManual}
-          className="rounded-xl border border-white/15 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/5"
-        >
-          Compare ids
-        </button>
-      </div>
+      <details className="text-xs text-white/45">
+        <summary className="cursor-pointer select-none hover:text-white/70">
+          Paste agent ids
+        </summary>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            value={manual}
+            onChange={(e) => setManual(e.target.value)}
+            placeholder="56:336622, 56:302258"
+            className="flex-1 rounded-xl border border-white/15 bg-black/30 px-3 py-2 font-mono text-xs text-white outline-none focus:ring-2 focus:ring-amber-400/30"
+          />
+          <button
+            type="button"
+            onClick={applyManual}
+            className="rounded-xl border border-white/15 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/5"
+          >
+            Compare ids
+          </button>
+        </div>
+      </details>
     </div>
   );
 }

@@ -275,3 +275,5 @@ export const SEED_JOBS: HireJob[] = [
     ],
   },
 ];
+
+export const SEED_JOB_IDS: readonly string[] = SEED_JOBS.map((j) => j.id);

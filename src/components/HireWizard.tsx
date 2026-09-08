@@ -16,7 +16,12 @@ import type { BuyerContext } from "@/lib/buyer-context";
 import { SignInForm } from "@/components/SignInForm";
 import { HirePartnerFollowup } from "@/components/HirePartnerFollowup";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
-import { ESCROW_CTA, ESCROW_LINE, SOFT_HIRE_SHORT } from "@/lib/copy";
+import {
+  ESCROW_CTA,
+  ESCROW_LINE,
+  PRICE_LEGEND,
+  SOFT_HIRE_SHORT,
+} from "@/lib/copy";
 import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
 import { skuQuotedLine } from "@/lib/sku-label";
 import { CopyClaimCode } from "@/components/CopyClaimCode";
@@ -31,6 +36,8 @@ type Props = {
   genesisSlug?: string;
   hireReady?: boolean;
   priceUsd?: number;
+  /** Override the SKU $ line (e.g. "0.1 $U" for live A2A). */
+  priceLabel?: string;
   etaMinutes?: number;
   /** Seller lists x402 */
   x402?: boolean;
@@ -60,6 +67,7 @@ export function HireWizard({
   genesisSlug,
   hireReady,
   priceUsd = 10,
+  priceLabel,
   etaMinutes = 2,
   x402 = false,
   ownerAddress,
@@ -91,6 +99,7 @@ export function HireWizard({
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [escrowOpen, setEscrowOpen] = useState(false);
+  const [moreTiers, setMoreTiers] = useState(false);
   const autobuyStarted = useRef(false);
   const escrowProvider = useMemo(
     () =>
@@ -462,7 +471,8 @@ export function HireWizard({
             L0 · no charge
           </div>
           <div className="text-lg font-bold tabular-nums tracking-tight text-white">
-            SKU ${displayPrice}
+            {priceLabel ||
+              (priceUsd > 0 ? `SKU $${priceUsd}` : "Quote on hire")}
           </div>
           <div className="text-[10px] font-medium text-white/40">
             ~{displayEta} min
@@ -564,6 +574,9 @@ export function HireWizard({
           the seller.
         </p>
       </div>
+      <p className="mt-2 text-[10px] leading-relaxed text-white/40">
+        {PRICE_LEGEND}
+      </p>
 
       <div className="mt-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
@@ -572,6 +585,7 @@ export function HireWizard({
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {modes
             .filter((m) => m.available)
+            .filter((m) => moreTiers || m.rail !== "free")
             .map((m) => {
               const active = rail === m.rail;
               const escrowChip = m.rail === "escrow";
@@ -601,11 +615,23 @@ export function HireWizard({
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
           {modes.find((m) => m.rail === rail)?.description}
         </p>
+        {!moreTiers && modes.some((m) => m.rail === "free" && m.available) ? (
+          <button
+            type="button"
+            className="mt-1.5 text-[10px] text-white/40 hover:text-white/70"
+            onClick={() => setMoreTiers(true)}
+          >
+            More · free scan
+          </button>
+        ) : null}
         <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
           {ESCROW_LINE}. {escrowOk ? "Use L2 or Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
           Notes on{" "}
-          <Link href="/fund" className="text-amber-300/80 hover:underline">
-            /fund
+          <Link
+            href="/genesis/range-keeper?escrow=1#buy"
+            className="text-amber-300/80 hover:underline"
+          >
+            RangeKeeper escrow
           </Link>
           .
         </p>

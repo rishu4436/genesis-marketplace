@@ -30,3 +30,7 @@ export const INTELLIGENCE_LINE =
 
 export const INTELLIGENCE_SHORT =
   "Hireable first · unhireable identities are marked, not hidden.";
+
+/** One line for Browse, Compare, and hire panels. */
+export const PRICE_LEGEND =
+  "SKU $ is a label. L0 plan hire is no charge. $U only when the seller published it. Otherwise Quote on hire.";

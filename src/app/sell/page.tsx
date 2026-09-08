@@ -19,7 +19,9 @@ export default async function SellPage() {
       <p className="lead mt-4 max-w-xl">
         Paste an A2A card URL to probe reachability, then claim the ERC-8004
         token. If we can negotiate it, buyers see it as live — otherwise it
-        stays indexed identity.
+        stays indexed identity. The $ you type here is a seller claim, not
+        a Browse stamp. Browse only shows a number when the seller
+        published $U or is a Genesis SKU.
       </p>
 
       <div className="mt-8">

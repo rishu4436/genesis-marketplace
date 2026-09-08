@@ -86,11 +86,11 @@ export async function DeskStrip({
           </p>
         </div>
         <Link
-          href="/fund"
+          href="/genesis/range-keeper?escrow=1#buy"
           className="flex flex-col justify-center rounded-xl border border-white/10 px-3 py-2 text-[11px] text-white/55 hover:border-amber-400/30 hover:text-amber-100"
         >
           <span className="font-semibold text-white/80">L2 rail</span>
-          Optional ERC-8183 on /fund
+          Optional ERC-8183 on RangeKeeper
         </Link>
       </div>
     </section>

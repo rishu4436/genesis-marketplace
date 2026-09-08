@@ -35,6 +35,7 @@ import {
   type JobSession,
 } from "./job-session";
 import { runIsolated } from "./job-isolation";
+import { parseDocumentedListU } from "./listing-price";
 
 export type HireStatus =
   | "negotiating"
@@ -602,7 +603,11 @@ async function fulfillCatalogHire(
 
   if (seller) {
     const result = await runThirdPartyHire(seller, input.task);
-    const priceUsd = result.quote.accepted ? 0.1 : 0;
+    const priceUsd = result.quote.accepted
+      ? (parseDocumentedListU(result.quote.priceDisplay) ??
+        priceToUsdHint(result.quote.price) ??
+        0)
+      : 0;
     const sellerName = seller.name || input.agentName;
     job = { ...job, agentName: sellerName };
     let next: HireJob = {
@@ -634,23 +639,13 @@ async function fulfillCatalogHire(
       if (result.live) {
         next = pushTimeline(
           next,
-          "funded",
-          "Routed to third-party seller (no Genesis custody)",
-        );
-        next = pushTimeline(
-          next,
-          "fulfilling",
-          "Fetching seller quote + live payload…",
-        );
-        next = pushTimeline(
-          next,
-          "delivered",
-          `Deliverable from ${sellerName}`,
+          "quoted",
+          `Live sample from ${sellerName} · not Delivered (not an escrowed plan)`,
         );
         next = settleSession(
           next,
           "consumed",
-          "third-party plan delivered · session revoked",
+          "third-party sample recorded · session revoked",
         );
       } else {
         next = pushTimeline(

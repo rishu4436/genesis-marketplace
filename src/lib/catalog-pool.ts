@@ -63,6 +63,30 @@ export async function fetchHireablePool(opts: {
   const jobs: Promise<SafeList>[] = [];
   const searching = Boolean(opts.q?.trim());
 
+  if (!searching) {
+    const cached = await kvCmd<string>("GET", CATALOG_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as {
+          agents?: Agent[];
+          apiTotal?: number | null;
+          savedAt?: number;
+          census?: CensusAliveStats | null;
+        };
+        if (parsed.agents?.length) {
+          return {
+            agents: parsed.agents,
+            error: null,
+            apiTotal: parsed.apiTotal ?? null,
+            census: parsed.census ?? null,
+          };
+        }
+      } catch {
+        /* rebuild */
+      }
+    }
+  }
+
   // Unfiltered top pages only when there is no search — a query must
   // not be padded with the same 300-agent dump as the empty catalog.
   if (!searching) {
@@ -172,7 +196,12 @@ export async function fetchHireablePool(opts: {
     await kvCmd(
       "SET",
       CATALOG_CACHE_KEY,
-      JSON.stringify({ agents, apiTotal, savedAt: Date.now() }),
+      JSON.stringify({
+        agents,
+        apiTotal,
+        savedAt: Date.now(),
+        census: census.stats,
+      }),
       "EX",
       900,
     );

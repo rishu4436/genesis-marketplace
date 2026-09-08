@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { allGenesisAgents } from "@/lib/genesis-agents";
 import { checkAllAgentHealth } from "@/lib/agent-health";
 import { listClaims } from "@/lib/seller-claims";
-import { LIVE_SELLERS } from "@/lib/third-party-sellers";
+import { LIVE_SELLERS, featuredAsAgent } from "@/lib/third-party-sellers";
 import { admitAllSpecialists } from "@/lib/admission";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
 import {
@@ -19,6 +19,7 @@ import { catalogRecordMatchesQuery } from "@/lib/catalog-search";
 import { fetchCensusAlive } from "@/lib/census-alive";
 import { isCloneBotName, isHireableListing } from "@/lib/hire-class";
 import { hireableBscAsAgents, loadHireableBsc } from "@/lib/hireable-bsc";
+import { listingPriceForAgent } from "@/lib/listing-price";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,7 +99,9 @@ export async function GET(req: Request) {
       : null,
   }));
 
-  const liveThird = LIVE_SELLERS.map((s) => ({
+  const liveThird = LIVE_SELLERS.map((s) => {
+    const list = listingPriceForAgent(featuredAsAgent(s));
+    return {
     type: "live_third_party" as const,
     hireClass: "live" as const,
     slug: s.slug,
@@ -117,6 +120,9 @@ export async function GET(req: Request) {
     a2a: s.a2aCardUrl || null,
     rest: s.restBase,
     featured: Boolean(s.featured),
+    ...(list?.unit === "U" && list.amount != null
+      ? { priceU: list.amount }
+      : {}),
     badges: thirdPartyTrustBadges(sellerPayloadKind(s))
       .filter((b) => b.on)
       .map((b) => b.id),
@@ -124,7 +130,8 @@ export async function GET(req: Request) {
       sellerPayloadKind(s) === "quote"
         ? "A2A quote only. Not a completed plan until they deliver on-chain."
         : "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
-  }));
+    };
+  });
 
   const claimed = claims.map((c) => ({
     type: "claimed_listing" as const,

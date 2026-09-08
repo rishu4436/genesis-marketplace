@@ -9,14 +9,12 @@ import { AuthNav } from "@/components/AuthNav";
 
 const PRIMARY = [
   { href: "/judge", label: "Judge" },
-  { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
 ];
 
 const MOBILE = [
   { href: "/browse", label: "Browse" },
   { href: "/judge", label: "Judge" },
-  { href: "/compare", label: "Compare" },
   { href: "/dashboard", label: "My hires" },
   { href: "/packages", label: "Packages" },
   { href: "/partners", label: "Partners" },

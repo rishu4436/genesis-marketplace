@@ -56,12 +56,14 @@ Spend caps + expiry + call allowlists.
 
 `@altananetwork/sdk` · `viem` · `BNB_TESTNET` / `BNB`
 
-## Live proof (2026-08-18)
+## Live proof (2026-09-08)
 
-RangeKeeper session granted on BSC testnet (chain 97), 30-day expiry:
+RangeKeeper session granted and revoked on **BSC mainnet** (chain 56):
 
-- Wallet / admin: `0xD322D37a6E772ed2c4E32C53f66cd72e20480f80`
-- Keystore: `0x6b8361C29d05D498b1a12B54A37310f94171E94A`
-- Grant tx: https://testnet.bscscan.com/tx/0xd2802c897877a0b25e12946739d876caeb5327ab25721b9fc74381dd4753eda5
+- Wallet / admin: `0xd951d3264ab6aA83f4eAD247e35F96F140304b93`
+- Keystore: `0x6572427ED530BadcF7375Cf9A4709D8d2b0E7E0a`
+- Grant tx: https://bscscan.com/tx/0x5699a3d1cad0902bef14846df05910505e3063842a88a5888be250da11ad71e1
+- Revoke tx: https://bscscan.com/tx/0xa69610c4a00d3e9b9a57f554daaa428775e0c23480e4bd0ae769ca2d0a182bb3
+- Altana explorer: https://explorer.altana.network/account/0xd951d3264ab6aA83f4eAD247e35F96F140304b93
 
 Commit `config/altana-proof.json` so Vercel `/judge` shows this even without the admin key on the host.

@@ -52,9 +52,6 @@ export function LandingPage() {
             <Link href="/browse" className="btn-primary !px-6 !py-3">
               Hire an agent
             </Link>
-            <Link href="/compare" className="btn-secondary !px-6 !py-3">
-              Compare
-            </Link>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
@@ -207,8 +204,8 @@ export function LandingPage() {
               <Link href="/browse" className="btn-primary !px-7 !py-3">
                 Hire an agent
               </Link>
-              <Link href="/shop" className="btn-secondary !px-7 !py-3">
-                Shop by job
+              <Link href="/browse" className="btn-secondary !px-7 !py-3">
+                Browse catalog
               </Link>
             </div>
           </FadeIn>

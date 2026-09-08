@@ -34,9 +34,9 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        This is the hire floor, not an explorer. Loop: discover → compare
-        → plan → escrow → prove → rank. Runtime is{" "}
-        <span className="text-white/75">Genesis APEX</span> (Ready, not
+        This is the hire floor, not an explorer. Loop: discover → plan →
+        optional escrow → prove → rank. Runtime is{" "}
+        <span className="text-white/75">Genesis APEX</span> (plan-ready, not
         Studio-live). Specialists are ERC-8004 on BSC{" "}
         <span className="text-white/75">#336622–#336625</span>. L0 is
         plan-only. L2 ERC-8183 is optional. Altana is a post-hire grant
@@ -105,8 +105,9 @@ export default async function JudgePage() {
             </a>
           )}
           <p className="mt-2 text-[11px] text-white/40">
-            Path: home → compare → soft hire → receipt → advantage → /judge.
-            Soft-hire receipts below are not ERC-8183 escrow proof.
+            Path: home → Browse → RangeKeeper → Get plan → receipt →
+            /advantage. Soft-hire receipts below are not ERC-8183 escrow
+            proof.
           </p>
         </div>
       ) : (
@@ -114,8 +115,8 @@ export default async function JudgePage() {
           60–90s walkthrough not uploaded yet. Set{" "}
           <code className="text-white/60">NEXT_PUBLIC_JUDGE_DEMO_URL</code> or
           <code className="text-white/60"> config/judge-proof.json demoVideoUrl</code>{" "}
-          after you record home → compare → soft hire → receipt → advantage →
-          /judge. Do not invent a link.
+          after you record home → Browse → RangeKeeper Get plan → receipt →
+          /advantage. Do not invent a link.
         </p>
       )}
       <ol className="mt-8 space-y-3 text-sm text-white/65">
@@ -295,7 +296,7 @@ export default async function JudgePage() {
           )}
           <p className="mt-1 text-sm text-white">
             {proof.chainId === 56
-              ? `${proof.agentName} Keystore grant on BSC mainnet — this is the Altana track proof.`
+              ? `${proof.agentName} Keystore grant${proof.revokeTransactionHash ? " + revoke" : ""} on BSC mainnet — this is the Altana track proof.`
               : `${proof.agentName} historical testnet grant — marketplace hire is BSC mainnet. A mainnet grant is the stronger Altana proof.`}
           </p>
           <p className="mt-1 font-mono text-[10px] text-white/45 break-all">
@@ -320,6 +321,16 @@ export default async function JudgePage() {
               Open wallet on BscScan ↗
             </a>
           )}
+          {proof.revokeTransactionHash ? (
+            <a
+              href={`https://bscscan.com/tx/${proof.revokeTransactionHash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+            >
+              Open revoke tx on BscScan ↗
+            </a>
+          ) : null}
         </div>
       ) : (
         <p className="mt-8 text-[11px] text-white/35">
@@ -370,8 +381,8 @@ export default async function JudgePage() {
           <Link href="/" className="text-amber-300">
             /
           </Link>{" "}
-          → hire → plan. No dead end. Soft hire is free; escrow is optional
-          mainnet ERC-8183.
+          → Browse → Get plan. No dead end. Soft hire is free; escrow is
+          optional mainnet ERC-8183.
         </li>
         <li>
           <span className="font-semibold text-white">Data quality</span> —

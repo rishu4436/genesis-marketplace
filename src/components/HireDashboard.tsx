@@ -7,6 +7,7 @@ import { jobOutcome } from "@/lib/job-outcome";
 import { BRAND } from "@/lib/brand";
 import { HireAccountBar } from "@/components/HireAccountBar";
 import { RecoverHireBox } from "@/components/RecoverHireBox";
+import { SEED_JOB_IDS } from "@/lib/seed-jobs";
 
 function statusStyle(job: HireJob) {
   const kind = jobOutcome(job).kind;
@@ -105,15 +106,25 @@ export function HireDashboard() {
     loadServerFirst().finally(() => setReady(true));
   }, []);
 
+  const seedSet = useMemo(() => new Set(SEED_JOB_IDS), []);
+  const mine = useMemo(
+    () => jobs.filter((j) => !seedSet.has(j.id)),
+    [jobs, seedSet],
+  );
+  const demo = useMemo(
+    () => jobs.filter((j) => seedSet.has(j.id)),
+    [jobs, seedSet],
+  );
+
   const stats = useMemo(() => {
-    const delivered = jobs.filter(
+    const delivered = mine.filter(
       (j) => jobOutcome(j).kind === "ready",
     ).length;
-    const active = jobs.filter(
+    const active = mine.filter(
       (j) => j.status !== "delivered" && j.status !== "failed",
     ).length;
-    return { total: jobs.length, delivered, active };
-  }, [jobs]);
+    return { total: mine.length, delivered, active };
+  }, [mine]);
 
   function clearAll() {
     localStorage.removeItem("genesis-hires");
@@ -210,7 +221,7 @@ export function HireDashboard() {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-white/45">
-          {jobs.length} hire{jobs.length === 1 ? "" : "s"}
+          {mine.length} hire{mine.length === 1 ? "" : "s"}
           {signedIn ? " on this account" : " on this device"}
         </p>
         {!signedIn && (
@@ -225,7 +236,7 @@ export function HireDashboard() {
       </div>
 
       <div className="space-y-3">
-        {jobs.map((h) => {
+        {mine.map((h) => {
           const expanded = openId === h.id;
           const href = h.genesisSlug
             ? `/genesis/${h.genesisSlug}`
@@ -345,6 +356,27 @@ export function HireDashboard() {
           );
         })}
       </div>
+
+      {demo.length > 0 ? (
+        <details className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <summary className="cursor-pointer text-sm font-medium text-white/55">
+            Demo receipts ({demo.length}) — not your hires
+          </summary>
+          <ul className="mt-3 space-y-2">
+            {demo.map((h) => (
+              <li key={h.id}>
+                <Link
+                  href={`/jobs/${encodeURIComponent(h.id)}`}
+                  className="text-xs text-amber-300 hover:underline"
+                >
+                  {h.agentName || h.id}
+                </Link>
+                <span className="ml-2 text-[11px] text-white/35">{h.id}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }

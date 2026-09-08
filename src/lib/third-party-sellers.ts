@@ -25,6 +25,8 @@ export type ThirdPartySeller = {
   exampleUrl?: string;
   ownerAddress: string;
   featured?: boolean;
+  /** Published ERC-8183 list quote in $U. Omit when the seller has not stated one. */
+  listPriceU?: number;
 };
 
 export const FEATURED_SELLERS: ThirdPartySeller[] = [
@@ -50,6 +52,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     tokenId: "302258",
     categoryId: "grid-trading",
     tagline: "Grid spacing from pool fees, impact, and transfer tax · 0.1 $U",
+    listPriceU: 0.1,
     description:
       "Grid levels for a BNB Chain pool with round-trip cost measured from the pool (fee, impact, transfer tax). Hireable over A2A + ERC-8183.",
     a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
@@ -66,6 +69,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     tokenId: "304493",
     categoryId: "yield-optimisation",
     tagline: "Venus core-pool APY ranked from on-chain rates · 0.1 $U",
+    listPriceU: 0.1,
     description:
       "Every Venus core-pool market ranked by supply APY from rate-per-block and measured block time. Hireable over A2A + ERC-8183.",
     a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
@@ -82,6 +86,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     tokenId: "302257",
     categoryId: "health-factor",
     tagline: "Venus HF and liquidation distance from Comptroller · 0.1 $U",
+    listPriceU: 0.1,
     description:
       "Health factor for a Venus position, computed market by market from the Comptroller, with a stress table. Hireable over A2A + ERC-8183.",
     a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
@@ -98,6 +103,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     tokenId: "304494",
     categoryId: "rebalancing",
     tagline: "Swap cost of a rebalance measured from the pools · 0.1 $U",
+    listPriceU: 0.1,
     description:
       "The swaps that move a BSC portfolio to target weights, each costed against its own pool (fee, impact, transfer tax). Hireable over A2A + ERC-8183.",
     a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",
@@ -114,6 +120,7 @@ export const FEATURED_SELLERS: ThirdPartySeller[] = [
     tokenId: "310460",
     categoryId: "yield-optimisation",
     tagline: "Which PCS fee tier actually paid LPs in the live window · 0.1 $U",
+    listPriceU: 0.1,
     description:
       "Measures PancakeSwap V2/V3 fee tiers over a live window: turnover, fees paid, and what your size would have earned. Hireable over A2A + ERC-8183.",
     a2aCardUrl: "https://agent.brainonbnb.com/.well-known/agent-card.json",

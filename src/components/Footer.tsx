@@ -7,7 +7,6 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/browse", label: "Browse (hireable catalog)" },
       { href: "/browse?index=1", label: "Index (raw ERC-8004)" },
-      { href: "/compare", label: "Compare" },
       { href: "/dashboard", label: "My hires" },
       { href: "/login", label: "Sign in / recover" },
       { href: "/categories", label: "Four jobs" },

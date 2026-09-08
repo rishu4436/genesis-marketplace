@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/hire", destination: "/browse", permanent: false },
+      { source: "/shop", destination: "/browse", permanent: false },
+      { source: "/profile", destination: "/dashboard", permanent: false },
     ];
   },
   async rewrites() {

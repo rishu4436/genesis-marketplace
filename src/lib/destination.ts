@@ -59,7 +59,7 @@ export const DESTINATION = {
     },
     {
       t: "Judges",
-      d: "90-second path: shop → Buy → third-party → advantage → Altana proof.",
+      d: "90-second path: Browse → RangeKeeper Get plan → receipt → advantage.",
       href: "/judge",
       cta: "Judge path",
     },
