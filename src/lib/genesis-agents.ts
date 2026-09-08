@@ -197,7 +197,7 @@ export function genesisHref(g: GenesisAgent) {
 
 /**
  * Query before hash so HireWizard can read task.
- * `buy=1` auto-starts a hire — judge cold path only. Recommendation CTAs
+ * `buy=1` auto-starts a hire in HireWizard. Recommendation and /judge CTAs
  * must omit it so Get plan / Soft hire is an explicit click.
  */
 export function genesisBuyHref(

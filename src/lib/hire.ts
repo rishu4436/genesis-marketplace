@@ -43,9 +43,9 @@ export const TASK_TEMPLATES: Record<CategoryId, string[]> = {
     "Compare PCS farm vs lending for USDT under medium risk; propose split and IL stops",
   ],
   "health-factor": [
-    "Venus HF ≈ 1.45 — simulate −15% collateral shock; repay vs add-collateral ladder",
-    "Health factor protection: soft alert 1.30, hard 1.20, −20% collateral stress test",
-    "Aave-style loan on BSC — HF plan after −10% and −15% collateral drops with sizing",
+    "Simulate −15% collateral shock on my Venus account; repay vs add-collateral ladder. Pass 0x wallet or HF in the brief.",
+    "Health factor protection: soft alert 1.30, hard 1.20, −20% collateral stress test. Include my Venus 0x address.",
+    "Aave-style loan on BSC — shock table after −10% and −15% collateral drops. Do not assume a baseline HF.",
   ],
 };
 

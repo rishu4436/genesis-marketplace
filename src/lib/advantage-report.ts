@@ -24,7 +24,10 @@ export type AdvantageTask = {
     genesisSlug: string;
     jobId: string;
     timeMin: number;
+    /** L0 charged amount — always 0 on Genesis soft hire. */
     costUsd: number;
+    /** Catalog SKU label only — not a charge. */
+    skuUsd: number;
     quality: number;
     method: string;
     outputTitle: string;
@@ -66,7 +69,8 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
       genesisSlug: "range-keeper",
       jobId: "job_mtphh1fs_hvnpd7",
       timeMin: 1,
-      costUsd: 8,
+      costUsd: 0,
+      skuUsd: 8,
       quality: 4.5,
       method: "Genesis hire 2026-09-06 · RangeKeeper full analysis · live receipt below",
       outputTitle: "LP rebalance full analysis · CAKE-USDT (PCS V3)",
@@ -107,7 +111,8 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
       genesisSlug: "gridwright",
       jobId: "job_mtphh262_191700",
       timeMin: 1,
-      costUsd: 10,
+      costUsd: 0,
+      skuUsd: 10,
       quality: 4.3,
       method: "Genesis hire 2026-09-06 · Gridwright full analysis · live receipt below",
       outputTitle: "Grid layout · BSC pair",
@@ -148,7 +153,8 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
       genesisSlug: "health-sentinel",
       jobId: "job_mtphh38g_l69uoy",
       timeMin: 1,
-      costUsd: 6,
+      costUsd: 0,
+      skuUsd: 6,
       quality: 4.6,
       method: "Genesis hire 2026-09-06 · HealthSentinel full analysis · live receipt below",
       outputTitle: "Health factor full analysis · Venus",
@@ -189,7 +195,8 @@ export const ADVANTAGE_TASKS: AdvantageTask[] = [
       genesisSlug: "yield-router",
       jobId: "job_mtphh2ss_6dken9",
       timeMin: 1,
-      costUsd: 7,
+      costUsd: 0,
+      skuUsd: 7,
       quality: 4.2,
       method: "Genesis hire 2026-09-06 · YieldRouter full analysis · live receipt below",
       outputTitle: "Yield route brief · USDT on BSC",
@@ -238,6 +245,10 @@ export function advantageTotals() {
     (s, t) => s + t.withAgent.costUsd,
     0,
   );
+  const skuUsd = ADVANTAGE_TASKS.reduce(
+    (s, t) => s + t.withAgent.skuUsd,
+    0,
+  );
   const withoutQ =
     ADVANTAGE_TASKS.reduce((s, t) => s + t.without.quality * t.weight, 0) /
     wsum;
@@ -251,6 +262,7 @@ export function advantageTotals() {
     timeSavedMin: withoutTime - withTime,
     withoutCost,
     withCost,
+    skuUsd,
     withoutQ: Number(withoutQ.toFixed(2)),
     withQ: Number(withQ.toFixed(2)),
     qualityLift: Number((withQ - withoutQ).toFixed(2)),

@@ -88,7 +88,7 @@ export function armFromJob(job: HireJob): TermixArm {
   return {
     label: "with_agent",
     timeMinutes: job.quote?.etaMinutes ?? 3,
-    costUsd: job.quote?.priceUsd ?? 0,
+    costUsd: 0,
     qualityScore: job.deliverable ? 4.5 : 3,
     outputSummary: text.slice(0, 2000),
     artifacts: job.id,

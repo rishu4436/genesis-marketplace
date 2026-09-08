@@ -19,6 +19,10 @@ export type ParsedBrief = {
   high?: number;
   protocol?: string;
   nftId?: string;
+  /** Buyer wallet if the brief contains a 0x address — never invented. */
+  wallet?: `0x${string}`;
+  /** Stated HF in the brief — never a default like 1.45. */
+  statedHf?: number;
   keywords: string[];
 };
 
@@ -161,6 +165,27 @@ export function parseBrief(task: string): ParsedBrief {
   );
   const nftId = nftM?.[1];
 
+  const walletM = raw.match(/\b(0x[a-fA-F0-9]{40})\b/);
+  const wallet = walletM
+    ? (walletM[1] as `0x${string}`)
+    : undefined;
+
+  const hfM = raw.match(
+    /\b(?:hf|health\s*factor)\s*[≈=~:]?\s*(\d+(?:\.\d+)?)/i,
+  );
+  const aboutHf = raw.match(
+    /\b(?:hf|health\s*factor)\s+(?:about|approx|~|≈)?\s*(\d+(?:\.\d+)?)/i,
+  );
+  const statedRaw = hfM
+    ? Number(hfM[1])
+    : aboutHf
+      ? Number(aboutHf[1])
+      : NaN;
+  const statedHf =
+    Number.isFinite(statedRaw) && statedRaw > 0 && statedRaw < 20
+      ? statedRaw
+      : undefined;
+
   // Levels: "12 levels", "12-level", "12 level geometric"
   const levelM = raw.match(/\b(\d{1,3})[-\s]*(?:levels?|rungs?)\b/i);
   const levels = levelM ? Number(levelM[1]) : undefined;
@@ -227,6 +252,8 @@ export function parseBrief(task: string): ParsedBrief {
     high,
     protocol,
     nftId,
+    wallet,
+    statedHf,
     keywords,
   };
 }
@@ -242,6 +269,8 @@ function conf(p: ParsedBrief): number {
   if (p.low != null && p.high != null) c += 10;
   if (p.protocol) c += 6;
   if (p.raw.length > 40) c += 5;
+  if (p.wallet) c += 8;
+  if (p.statedHf != null) c += 10;
   return Math.min(96, c);
 }
 
@@ -672,58 +701,73 @@ function expertHealth(
         15,
     ) || 15;
   const shockAbs = Math.abs(shock);
-  const hfM = job.task.match(
-    /\b(?:hf|health\s*factor)\s*[≈=~:]?\s*(\d+(?:\.\d+)?)/i,
-  );
-  const aboutHf = job.task.match(
-    /\b(?:hf|health\s*factor)\s+(?:about|approx|~|≈)?\s*(\d+(?:\.\d+)?)/i,
-  );
-  const baseline = hfM
-    ? Number(hfM[1])
-    : aboutHf
-      ? Number(aboutHf[1])
-      : 1.45;
-  const hf10 = +(baseline * (1 - 0.1 * 0.85)).toFixed(2);
-  const hfShock = +(baseline * (1 - (shockAbs / 100) * 0.9)).toFixed(2);
-  const hf20 = +(baseline * (1 - 0.2 * 0.9)).toFixed(2);
+  const baseline = p.statedHf;
+  const hasHf = baseline != null;
+  const confOut = hasHf || p.wallet ? confidence : Math.min(confidence, 48);
   const soft = 1.3;
   const hard = 1.2;
   const critical = 1.1;
-  const action =
-    hfShock < hard
+  const hf10 = hasHf ? +(baseline! * (1 - 0.1 * 0.85)).toFixed(2) : null;
+  const hfShock = hasHf
+    ? +(baseline! * (1 - (shockAbs / 100) * 0.9)).toFixed(2)
+    : null;
+  const hf20 = hasHf ? +(baseline! * (1 - 0.2 * 0.9)).toFixed(2) : null;
+  const action = !hasHf
+    ? "Read live HF in the protocol UI (or pass HF / 0x in the brief) before sizing repay"
+    : hfShock! < hard
       ? "Partial repay (priority) + optional collateral top-up"
-      : hfShock < soft
+      : hfShock! < soft
         ? "Prepare repay; add collateral if debt illiquid"
         : "Monitor; pre-stage repay path";
+  const baselineLabel = hasHf
+    ? `${baseline!.toFixed(2)} (stated in brief)`
+    : p.wallet
+      ? `unavailable — wallet ${p.wallet} is in the brief; Venus liquidity is read on-chain when RPC answers (not mapped to a fake HF)`
+      : "unavailable — not assumed. Pass HF ≈ x.xx or a 0x wallet. We do not invent a default HF.";
 
   return {
     title: `Health factor plan · ${protocol}`,
-    summary: `HealthSentinel modeled baseline HF ≈ ${baseline.toFixed(2)}. Under a −${shockAbs}% collateral shock, projected HF ≈ ${hfShock.toFixed(2)}. ${action}. Soft alert ${soft} · hard ${hard}. Confidence ${confidence}/100.`,
+    summary: hasHf
+      ? `HealthSentinel used the brief’s baseline HF ${baseline!.toFixed(2)}. Under a −${shockAbs}% collateral shock, linearized HF ≈ ${hfShock!.toFixed(2)}. ${action}. Soft alert ${soft} · hard ${hard}. Confidence ${confOut}/100.`
+      : `HealthSentinel did not invent a baseline HF. ${baselineLabel} Shock −${shockAbs}% is in the brief; shock-table numbers stay blank until HF or Venus account liquidity is known. ${action}. Confidence ${confOut}/100.`,
     sections: [
       {
         heading: "Brief intake",
         body: table([
           ["Task", job.task],
           ["Protocol frame", protocol],
-          ["Baseline HF (resolved)", baseline.toFixed(2)],
+          ["Baseline HF", baselineLabel],
+          ["Wallet in brief", p.wallet || "none"],
           ["Primary shock", `−${shockAbs}% collateral`],
           ["Emergency buffer context", `~$${Math.min(capital, 500)}`],
         ]),
       },
       {
         heading: "Shock table",
-        body: table([
-          ["Collateral −10%", `HF ≈ ${hf10.toFixed(2)}`],
-          [
-            `Collateral −${shockAbs}% (requested)`,
-            `HF ≈ ${hfShock.toFixed(2)}`,
-          ],
-          ["Collateral −20%", `HF ≈ ${hf20.toFixed(2)}`],
-          [
-            "Model note",
-            "Linearized collateral sensitivity — verify live UI",
-          ],
-        ]),
+        body: hasHf
+          ? table([
+              ["Collateral −10%", `HF ≈ ${hf10!.toFixed(2)}`],
+              [
+                `Collateral −${shockAbs}% (requested)`,
+                `HF ≈ ${hfShock!.toFixed(2)}`,
+              ],
+              ["Collateral −20%", `HF ≈ ${hf20!.toFixed(2)}`],
+              [
+                "Model note",
+                "Linearized sensitivity from the stated HF — verify live UI",
+              ],
+            ])
+          : table([
+              [
+                "Status",
+                "Not computed. A missing HF is left blank — we do not substitute a default.",
+              ],
+              [
+                "How to unlock",
+                "Retry with “HF ≈ 1.xx” or a Venus 0x account in the brief.",
+              ],
+              ["Soft / hard alerts (generic)", `${soft} / ${hard} / ${critical}`],
+            ]),
       },
       {
         heading: "Alert thresholds",
@@ -736,16 +780,18 @@ function expertHealth(
       {
         heading: "Action ladder (priority order)",
         body: checklist([
+          "Read live protocol HF (or Venus liquidity/shortfall) before sizing",
           "Repay highest-rate debt first if wallet has liquid stables",
           "Else add strongest collateral (stable or blue-chip) to restore HF > soft",
           "Avoid opening new borrow until HF > 1.40 after shock recovery",
-          "Enable protocol / bot alerts at soft and hard thresholds",
           "Never grant the agent repayment authority — you sign txs",
         ]),
       },
       {
         heading: "Sizing hint",
-        body: `If HF is near hard after −${shockAbs}%, a repay of roughly ${(8 + shockAbs / 2).toFixed(0)}–${(15 + shockAbs).toFixed(0)}% of debt often restores a full soft buffer (order-of-magnitude; compute exact on protocol UI). Keep a small gas/stable buffer offline for emergencies.`,
+        body: hasHf
+          ? `If HF is near hard after −${shockAbs}%, a repay of roughly ${(8 + shockAbs / 2).toFixed(0)}–${(15 + shockAbs).toFixed(0)}% of debt often restores a full soft buffer (order-of-magnitude; compute exact on protocol UI). Keep a small gas/stable buffer offline for emergencies.`
+          : "Sizing stays qualitative until HF or Venus account liquidity is known. Do not repay from this plan’s missing numbers.",
       },
       {
         heading: "Security notes",
@@ -757,15 +803,21 @@ function expertHealth(
       },
     ],
     metrics: [
-      { label: "Baseline HF", value: baseline.toFixed(2) },
-      { label: `HF @ −${shockAbs}%`, value: hfShock.toFixed(2) },
+      {
+        label: "Baseline HF",
+        value: hasHf ? baseline!.toFixed(2) : "unavailable",
+      },
+      {
+        label: `HF @ −${shockAbs}%`,
+        value: hasHf ? hfShock!.toFixed(2) : "unavailable",
+      },
       { label: "Soft / hard", value: `${soft} / ${hard}` },
       { label: "Primary action", value: action.split(" ")[0] + "…" },
-      { label: "Confidence", value: `${confidence}/100` },
+      { label: "Confidence", value: `${confOut}/100` },
       { label: "Agent", value: name },
     ],
     disclaimer:
-      "HealthSentinel: Venus rates are on-chain when RPC answers; shock HF is specialist math from your brief. Confirm live HF in the protocol UI before acting. Not financial advice.",
+      "HealthSentinel: Venus rates and account liquidity are on-chain when RPC answers. Shock HF is specialist math only when the brief states HF. We never invent a baseline HF. Confirm live HF in the protocol UI before acting. Not financial advice.",
   };
 }
 

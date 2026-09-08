@@ -9,6 +9,11 @@ export const BSC_CHAIN_ID = 56;
 
 /** Partner API timeout — never hang the UI forever */
 const FETCH_MS = 4_500;
+/** Stats probe is on the judge path — fail faster, reuse last-good. */
+const STATS_MS = 2_000;
+const STATS_STALE_MS = 30 * 60 * 1000;
+
+let lastGoodStats: { at: number; data: PlatformStats } | null = null;
 
 function headers(): HeadersInit {
   const h: HeadersInit = {
@@ -31,12 +36,15 @@ function abortSignal(ms: number): AbortSignal {
 
 async function getJson<T>(
   path: string,
-  init?: RequestInit,
+  init?: RequestInit & { timeoutMs?: number },
 ): Promise<ApiResponse<T>> {
+  const timeoutMs = init?.timeoutMs ?? FETCH_MS;
+  const rest = { ...init };
+  delete rest.timeoutMs;
   const res = await fetch(`${BASE}${path}`, {
-    ...init,
+    ...rest,
     headers: { ...headers(), ...init?.headers },
-    signal: init?.signal ?? abortSignal(FETCH_MS),
+    signal: init?.signal ?? abortSignal(timeoutMs),
     // Cache partner data briefly so pages don't re-hammer the API every click
     next: { revalidate: 180 },
   });
@@ -67,9 +75,10 @@ async function getJson<T>(
 /** Safe wrapper — returns null data instead of throwing */
 export async function safeGetJson<T>(
   path: string,
+  init?: RequestInit & { timeoutMs?: number },
 ): Promise<{ data: T | null; error: string | null; meta?: ApiResponse<T>["meta"] }> {
   try {
-    const res = await getJson<T>(path);
+    const res = await getJson<T>(path, init);
     return { data: res.data ?? null, error: null, meta: res.meta };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Request failed";
@@ -190,8 +199,27 @@ export async function getStats() {
   return getJson<PlatformStats>("/stats");
 }
 
-export async function getStatsSafe() {
-  return safeGetJson<PlatformStats>("/stats");
+export async function getStatsSafe(): Promise<{
+  data: PlatformStats | null;
+  error: string | null;
+  meta?: ApiResponse<PlatformStats>["meta"];
+  stale?: boolean;
+}> {
+  const fresh = await safeGetJson<PlatformStats>("/stats", {
+    timeoutMs: STATS_MS,
+  });
+  if (fresh.data) {
+    lastGoodStats = { at: Date.now(), data: fresh.data };
+    return fresh;
+  }
+  if (lastGoodStats && Date.now() - lastGoodStats.at < STATS_STALE_MS) {
+    return {
+      data: lastGoodStats.data,
+      error: null,
+      stale: true,
+    };
+  }
+  return fresh;
 }
 
 /** Dedupe agents by agent_id / chain+token */

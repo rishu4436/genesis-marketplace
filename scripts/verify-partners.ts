@@ -43,6 +43,11 @@ import { NEVER_PAY_SELLER } from "../src/lib/copy";
 import { escrowJudgeProof, judgeDemoVideoUrl } from "../src/lib/judge-proof";
 import { hasLivePayload, jobOutcome } from "../src/lib/job-outcome";
 import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
+import {
+  buildExpertDeliverable,
+  parseBrief,
+} from "../src/lib/agent-specialists";
+import type { HireJob } from "../src/lib/hire-engine";
 
 type Check = { name: string; ok: boolean; detail?: string };
 const checks: Check[] = [];
@@ -400,6 +405,44 @@ function main() {
   check(
     "quote-only badge is not Ready",
     qOnly.kind === "quoted" && qOnly.label.includes("Quote only"),
+  );
+
+  const noHf = parseBrief(
+    "Simulate −15% collateral shock on my Venus account; repay vs add-collateral ladder",
+  );
+  check("health brief without HF does not invent statedHf", noHf.statedHf == null);
+  const withHf = parseBrief("HF ≈ 1.38. Simulate −18% collateral.");
+  check("health brief with HF keeps the stated number", withHf.statedHf === 1.38);
+  const withWallet = parseBrief(
+    "Protect Venus HF for 0xD322D37a6E772ed2c4E32C53f66cd72e20480f80 after −15%",
+  );
+  check(
+    "health brief parses a 0x wallet",
+    withWallet.wallet?.toLowerCase() ===
+      "0xd322d37a6e772ed2c4e32c53f66cd72e20480f80",
+  );
+  const hfJob = {
+    id: "job_test_hf",
+    task: "Simulate −15% collateral shock. Do not assume a baseline HF.",
+    categoryId: "health-factor",
+    agentName: "HealthSentinel",
+    genesisSlug: "health-sentinel",
+    status: "quoted",
+    budgetUsd: "6",
+  } as HireJob;
+  const hfPlan = buildExpertDeliverable(
+    hfJob,
+    getGenesisAgent("health-sentinel"),
+  );
+  const blob = `${hfPlan.summary}\n${hfPlan.metrics.map((m) => m.value).join(" ")}`;
+  check(
+    "health plan without HF does not print 1.45",
+    !blob.includes("1.45") &&
+      hfPlan.metrics.some((m) => m.label === "Baseline HF" && m.value === "unavailable"),
+  );
+  check(
+    "advantage with-agent cost is L0 zero",
+    ADVANTAGE_TASKS.every((t) => t.withAgent.costUsd === 0),
   );
 
   const failed = checks.filter((c) => !c.ok);

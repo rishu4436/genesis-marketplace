@@ -41,7 +41,7 @@ export default function AdvantagePage() {
           {
             label: "Agent cost",
             value: `$${t.withCost}`,
-            sub: `vs $${t.withoutCost} cash (manual time free)`,
+            sub: `L0 no charge · SKU $${t.skuUsd} labeled only`,
           },
         ].map((s) => (
           <div key={s.label} className="panel px-5 py-4">
@@ -133,6 +133,9 @@ export default function AdvantagePage() {
                     <dt className="text-[10px] text-white/40">Cost</dt>
                     <dd className="text-sm font-semibold text-emerald-100">
                       ${task.withAgent.costUsd}
+                      <span className="mt-0.5 block text-[9px] font-normal text-white/40">
+                        SKU ${task.withAgent.skuUsd}
+                      </span>
                     </dd>
                   </div>
                   <div className="rounded-lg bg-black/25 py-2">
@@ -165,12 +168,20 @@ export default function AdvantagePage() {
                     Hire {task.withAgent.agentName}
                   </Link>
                   {task.withAgent.jobId && (
-                    <Link
-                      href={`/jobs/${task.withAgent.jobId}`}
-                      className="rounded-full border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200"
-                    >
-                      Open live result →
-                    </Link>
+                    <>
+                      <Link
+                        href={`/jobs/${task.withAgent.jobId}`}
+                        className="rounded-full border border-emerald-400/30 px-3 py-1.5 text-xs font-semibold text-emerald-200"
+                      >
+                        Open live result →
+                      </Link>
+                      <Link
+                        href={`/api/jobs/${task.withAgent.jobId}/receipt`}
+                        className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/70"
+                      >
+                        Machine receipt
+                      </Link>
+                    </>
                   )}
                 </div>
               </div>
@@ -183,8 +194,9 @@ export default function AdvantagePage() {
         <p className="font-semibold text-white/80">Method notes</p>
         <ul className="mt-2 list-inside list-disc space-y-1 text-xs leading-relaxed">
           <li>
-            With-agent runs are 2026-09-06 Genesis hires (soft purchase — plan
-            deliverables). Open the linked receipts.
+            With-agent runs are 2026-09-06 Genesis L0 hires (plan
+            deliverables, charged $0). SKU $ is labeling. Open the linked
+            receipts and machine JSON.
           </li>
           <li>
             Without-agent times are operator-timed baselines for the same

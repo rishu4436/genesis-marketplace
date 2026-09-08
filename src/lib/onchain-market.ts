@@ -12,6 +12,10 @@ export const PCS_V3_FACTORY = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865";
 export const VUSDT = "0xfD5840Cd36d94D7229439859C0112a4185BC0255";
 /** PancakeSwap V3 NonfungiblePositionManager (BSC) */
 export const PCS_V3_NPM = "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364";
+/** Venus Unitroller / Comptroller (BSC mainnet) */
+export const VENUS_COMPTROLLER =
+  "0xfD36E2c2a6789Db23113685031d7F163148AFc09";
+const GET_ACCOUNT_LIQUIDITY = "0x5ec88c79";
 
 const RPCS = [
   "https://bsc-dataseed.binance.org",
@@ -455,6 +459,88 @@ export function formatPcsNftSection(p: PcsNftPosition): string {
     `• fee ${p.feeBps}% · tickLower ${p.tickLower} · tickUpper ${p.tickUpper}`,
     `• liquidity ${p.liquidity}`,
     `• ${p.detail}`,
+  ].join("\n");
+}
+
+export type VenusAccount = {
+  wallet: string;
+  ok: boolean;
+  errorCode: string | null;
+  liquidityUsd: number | null;
+  shortfallUsd: number | null;
+  detail: string;
+};
+
+/**
+ * Venus getAccountLiquidity — excess / shortfall in USD 1e18.
+ * Not an Aave-style health factor. We do not map this to HF 1.45.
+ */
+export async function fetchVenusAccount(
+  wallet: string,
+): Promise<VenusAccount> {
+  const w = wallet.trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(w)) {
+    return {
+      wallet: w,
+      ok: false,
+      errorCode: null,
+      liquidityUsd: null,
+      shortfallUsd: null,
+      detail: "Not a 20-byte hex address",
+    };
+  }
+  const data = `${GET_ACCOUNT_LIQUIDITY}${padAddr(w)}`;
+  for (const rpc of RPCS) {
+    const hex = await ethCall(rpc, VENUS_COMPTROLLER, data);
+    if (!hex) continue;
+    const err = decodeUint(hex, 0);
+    const liq = decodeUint(hex, 1);
+    const short = decodeUint(hex, 2);
+    const liqUsd = Number(liq) / 1e18;
+    const shortUsd = Number(short) / 1e18;
+    if (err !== BigInt(0)) {
+      return {
+        wallet: w,
+        ok: false,
+        errorCode: err.toString(),
+        liquidityUsd: null,
+        shortfallUsd: null,
+        detail: `Venus comptroller error ${err}`,
+      };
+    }
+    return {
+      wallet: w,
+      ok: true,
+      errorCode: null,
+      liquidityUsd: Number.isFinite(liqUsd) ? liqUsd : null,
+      shortfallUsd: Number.isFinite(shortUsd) ? shortUsd : null,
+      detail:
+        shortUsd > 0
+          ? `shortfall ~$${shortUsd.toFixed(2)} (underwater — not a health factor)`
+          : `excess liquidity ~$${liqUsd.toFixed(2)} (not mapped to HF)`,
+    };
+  }
+  return {
+    wallet: w,
+    ok: false,
+    errorCode: null,
+    liquidityUsd: null,
+    shortfallUsd: null,
+    detail: "Venus getAccountLiquidity eth_call failed",
+  };
+}
+
+export function formatVenusAccountSection(a: VenusAccount): string {
+  return [
+    `Venus account ${a.wallet}`,
+    `• ${a.ok ? a.detail : `unavailable — ${a.detail}`}`,
+    a.liquidityUsd != null
+      ? `• excess liquidity USD: ${a.liquidityUsd.toFixed(4)}`
+      : "• excess liquidity USD: unavailable",
+    a.shortfallUsd != null
+      ? `• shortfall USD: ${a.shortfallUsd.toFixed(4)}`
+      : "• shortfall USD: unavailable",
+    "• This is Compound-style liquidity/shortfall, not an invented health factor.",
   ].join("\n");
 }
 

@@ -25,8 +25,10 @@ import { enrichDeliverableWithAi } from "./ai/intelligence";
 import {
   fetchOnchainMarket,
   fetchPcsNftPosition,
+  fetchVenusAccount,
   formatOnchainSection,
   formatPcsNftSection,
+  formatVenusAccountSection,
 } from "./onchain-market";
 import { hasXaiKey } from "./ai/xai-client";
 
@@ -127,6 +129,10 @@ export async function buildFullReport(
     if (p.nftId) {
       onchainBlock +=
         "\n\n" + formatPcsNftSection(await fetchPcsNftPosition(p.nftId));
+    }
+    if (p.wallet) {
+      onchainBlock +=
+        "\n\n" + formatVenusAccountSection(await fetchVenusAccount(p.wallet));
     }
   } catch {
     onchainBlock =

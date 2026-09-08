@@ -182,7 +182,7 @@ export function HireWizard({
     }
   }
 
-  // Prefill ?task=. ?buy=1 auto-starts hire — judge cold path only.
+  // Prefill ?task=. ?buy=1 auto-starts hire — unused by concierge / shop / /judge.
   useEffect(() => {
     try {
       const sp = new URLSearchParams(window.location.search);

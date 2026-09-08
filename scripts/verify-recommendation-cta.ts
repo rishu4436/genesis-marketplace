@@ -72,7 +72,7 @@ async function main() {
     buy: true,
   });
   check(
-    "judge cold path may still set buy=1",
+    "genesisBuyHref({buy:true}) still encodes buy=1 for HireWizard",
     hrefAutoHires(judgeCold),
     judgeCold,
   );

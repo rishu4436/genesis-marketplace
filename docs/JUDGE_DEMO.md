@@ -4,7 +4,7 @@ Public entry: **`/judge`** (footer). Canonical host: **https://genesis-marketpla
 
 ## Cold path
 
-1. **0:00** Open `/judge` → **Judge mode · Hire RangeKeeper** (one click, no account) → plan
+1. **0:00** Open `/judge` → **Judge mode · Open RangeKeeper** → click **Get plan** (no auto-hire)
 2. **0:20** Or open `/categories` → all 4 shelves equal depth
 3. **0:30** `/genesis/range-keeper` — Ready (Genesis APEX), ERC-8004 #336622, admission, receipt score
 4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
