@@ -10,8 +10,14 @@ import { kvCmd } from "./kv";
 import { fetchBrainFindCatalog, overlayA2a } from "./brain-find";
 import { featuredAsAgent, LIVE_SELLERS } from "./third-party-sellers";
 import { agentMatchesQuery } from "./agent-rank";
+import {
+  fetchCensusAlive,
+  type CensusAliveStats,
+} from "./census-alive";
+import { filterHireableCatalog } from "./catalog-quality";
+import { hireableBscAsAgents } from "./hireable-bsc";
 
-const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v1";
+const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v4";
 
 export type CatalogSortMode = "rank" | "score" | "newest" | "ratings";
 
@@ -46,7 +52,12 @@ export async function fetchHireablePool(opts: {
   x402?: boolean;
   verified?: boolean;
   live?: boolean;
-}): Promise<{ agents: Agent[]; error: string | null; apiTotal: number | null }> {
+}): Promise<{
+  agents: Agent[];
+  error: string | null;
+  apiTotal: number | null;
+  census: CensusAliveStats | null;
+}> {
   const collected: Agent[] = [];
   const apiSort = opts.sortMode === "newest" ? "created_at" : "total_score";
   const jobs: Promise<SafeList>[] = [];
@@ -62,6 +73,7 @@ export async function fetchHireablePool(opts: {
           chainId: 56,
           page,
           limit: 100,
+          protocol: "A2A",
           sortBy: apiSort as "total_score" | "created_at",
           sortOrder: "desc",
         }),
@@ -134,13 +146,24 @@ export async function fetchHireablePool(opts: {
     jobs.push(searchAgentsSafe({ q, limit: 80, chainId: 56 }));
   }
 
-  const [results, brain] = await Promise.all([
+  const [results, brain, census] = await Promise.all([
     Promise.all(jobs),
     fetchBrainFindCatalog(),
+    fetchCensusAlive(),
   ]);
   const { error, apiTotal } = collect(results, collected);
   const pinned = LIVE_SELLERS.map((s) => featuredAsAgent(s));
-  let agents = overlayA2a(dedupeAgents([...pinned, ...collected]), brain);
+  let agents = overlayA2a(
+    filterHireableCatalog(
+      dedupeAgents([
+        ...pinned,
+        ...hireableBscAsAgents(),
+        ...census.agents,
+        ...collected,
+      ]),
+    ),
+    brain,
+  );
   if (searching) {
     agents = agents.filter((a) => agentMatchesQuery(a, opts.q!));
   }
@@ -153,11 +176,16 @@ export async function fetchHireablePool(opts: {
       "EX",
       900,
     );
-    return { agents, error: null, apiTotal };
+    return { agents, error: null, apiTotal, census: census.stats };
   }
 
   if (searching) {
-    return { agents, error: agents.length ? null : error, apiTotal };
+    return {
+      agents,
+      error: agents.length ? null : error,
+      apiTotal,
+      census: census.stats,
+    };
   }
 
   const cached = await kvCmd<string>("GET", CATALOG_CACHE_KEY);
@@ -174,6 +202,7 @@ export async function fetchHireablePool(opts: {
             ? `${error} · showing last good catalog`
             : null,
           apiTotal: parsed.apiTotal ?? apiTotal,
+          census: census.stats,
         };
       }
     } catch {
@@ -185,5 +214,6 @@ export async function fetchHireablePool(opts: {
     agents,
     error: collected.length ? null : error,
     apiTotal,
+    census: census.stats,
   };
 }

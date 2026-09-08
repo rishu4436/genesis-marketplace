@@ -16,6 +16,9 @@ import {
 } from "@/lib/desk";
 import { deskWeek } from "@/lib/desk-metrics";
 import { catalogRecordMatchesQuery } from "@/lib/catalog-search";
+import { fetchCensusAlive } from "@/lib/census-alive";
+import { isCloneBotName, isHireableListing } from "@/lib/hire-class";
+import { hireableBscAsAgents, loadHireableBsc } from "@/lib/hireable-bsc";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +30,12 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const origin = new URL(req.url).origin;
   const q = new URL(req.url).searchParams.get("q")?.trim() || "";
-  const [health, claims, scores, week] = await Promise.all([
+  const [health, claims, scores, week, census] = await Promise.all([
     checkAllAgentHealth(origin),
     listClaims(20),
     scoreAllSpecialists(),
     deskWeek(),
+    fetchCensusAlive(),
   ]);
   const scoreBySlug = Object.fromEntries(scores.map((s) => [s.slug, s]));
   const healthBySlug = Object.fromEntries(health.map((h) => [h.slug, h]));
@@ -135,7 +139,46 @@ export async function GET(req: Request) {
     buyUrl: `${origin}/agents/${c.chainId}/${c.tokenId}#buy`,
   }));
 
-  let data = [...specialists, ...liveThird, ...claimed];
+  const alive = census.agents
+    .filter((a) => !isCloneBotName(a.name, a.description || ""))
+    .map((a) => ({
+    type: "census_alive" as const,
+    hireClass: isHireableListing(a) ? ("live" as const) : ("indexed" as const),
+    name: a.name,
+    chainId: a.chain_id,
+    tokenId: String(a.token_id),
+    tagline: a.description?.slice(0, 180) || null,
+    a2a: a.a2a_endpoint || null,
+    probeStatus: a.probe_status || "alive",
+    probeLatencyMs: a.probe_latency_ms ?? null,
+    censusCategory: a.census_category || null,
+    buyUrl: `${origin}/agents/${a.chain_id}/${a.token_id}`,
+    note: isHireableListing(a)
+      ? "Endpoint answered a public probe and exposes A2A we can call."
+      : "Endpoint answered a public probe. Not a Genesis hire until A2A is public.",
+  }));
+
+  const probedLive = hireableBscAsAgents().map((a) => ({
+    type: "probed_hireable" as const,
+    hireClass: "live" as const,
+    name: a.name,
+    chainId: a.chain_id,
+    tokenId: String(a.token_id),
+    categoryId: a.census_category || null,
+    tagline: a.description?.slice(0, 180) || null,
+    a2a: a.a2a_endpoint || null,
+    probeStatus: a.probe_status || "alive",
+    buyUrl: `${origin}/agents/${a.chain_id}/${a.token_id}#buy`,
+    note: "A2A answered a live probe. Not operated by Genesis.",
+  }));
+
+  let data = [
+    ...specialists,
+    ...liveThird,
+    ...claimed,
+    ...probedLive,
+    ...alive,
+  ];
   if (q) {
     data = data.filter((item) => {
       const rec = item as Record<string, unknown>;
@@ -166,11 +209,21 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
     marketplace: "Genesis Marketplace",
-    version: "1.1",
+    version: "1.2",
     desk: DESK,
     rails: DESK_RAILS,
     skus: JOB_SKUS,
     week,
+    economy: {
+      registered: census.stats.registered,
+      endpointAlive: census.stats.alive,
+      hireableProbed: hireableBscAsAgents().length,
+      byCategory: loadHireableBsc().byCategory,
+      hireableOnDesk: specialists.length + liveThird.length,
+      source: census.stats.source,
+      asOf: census.stats.asOf,
+      note: "endpointAlive is a public URL probe. hireableProbed answered A2A. Neither is a Genesis specialist count.",
+    },
     query: q || null,
     count: data.length,
     data,

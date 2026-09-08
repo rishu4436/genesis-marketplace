@@ -11,6 +11,11 @@ import { filterHireableCatalog } from "./catalog-quality";
 import { isHireableListing, splitHireable } from "./hire-class";
 import { featuredAsAgent, getLiveSellers } from "./third-party-sellers";
 import { fetchBrainFindForCategory, overlayA2a } from "./brain-find";
+import {
+  censusAgentsForCategory,
+  fetchCensusAlive,
+} from "./census-alive";
+import { hireableBscAsAgents } from "./hireable-bsc";
 import type { Agent } from "./types";
 
 function textMatch(agent: Agent, keywords: string[]): number {
@@ -73,7 +78,7 @@ export async function getAgentsForCategory(
   const kw1 = cat.keywords[0];
   const kw2 = cat.keywords[1] || cat.keywords[0];
 
-  const [semantic, listKw1, listKw2, top, brain] = await Promise.all([
+  const [semantic, listKw1, listKw2, top, brain, census] = await Promise.all([
     searchAgentsSafe({ q: primaryQ, limit: 40, chainId: BSC_CHAIN_ID }),
     kw1
       ? listAgentsSafe({
@@ -103,6 +108,7 @@ export async function getAgentsForCategory(
       sortOrder: "desc",
     }),
     fetchBrainFindForCategory(categoryId),
+    fetchCensusAlive(),
   ]);
 
   for (const r of [semantic, listKw1, listKw2, top]) {
@@ -110,7 +116,13 @@ export async function getAgentsForCategory(
     if (r.data) collected.push(...r.data);
   }
 
-  const pool = filterHireableCatalog(dedupeAgents(collected));
+  const pool = filterHireableCatalog(
+    dedupeAgents([
+      ...hireableBscAsAgents(categoryId),
+      ...censusAgentsForCategory(census.agents, categoryId),
+      ...collected,
+    ]),
+  );
 
   const withHits = pool
     .filter((a) => textMatch(a, cat.keywords) > 0)

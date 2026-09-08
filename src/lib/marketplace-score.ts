@@ -285,7 +285,7 @@ export async function getMarketplaceDashboardSnapshot(
 ): Promise<MarketplaceDashboardSnapshot> {
   const endpoint =
     process.env.SCAN_API_BASE?.replace(/\/$/, "") ||
-    "https://8004scan.io/api/v1/public";
+    "https://api.8004scan.io/api/v1";
 
   // One partner list + stats — keep dashboard fast
   const [stats, page1] = await Promise.all([

@@ -242,6 +242,12 @@ export default async function BrowsePage({ searchParams }: Props) {
           {pool.error && pageAgents.length === 0
             ? "—"
             : `${q ? "Search" : showIndex ? "Raw index" : "Catalog"} · ${liveSplit.hireable.length} hireable · ${liveSplit.identity.length} unhireable · page ${safePage}/${totalPages}`}
+          {pool.census?.alive ? (
+            <span className="ml-1 text-lime-200/80">
+              · {pool.census.alive.toLocaleString()} endpoint-alive of{" "}
+              {pool.census.registered.toLocaleString()} registered
+            </span>
+          ) : null}
           {relaxed && (
             <span className="ml-1 text-amber-200/70">
               · no exact filter match — showing closest listings

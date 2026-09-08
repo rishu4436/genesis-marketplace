@@ -44,10 +44,25 @@ const GENERIC_SLEEP_BOT =
 const GENERIC_BOT_NAME =
   /^(defibot|tradepilot|defimatrix)(\.agent)?$/i;
 
+/** Mass-minted clones — HTTP-alive A2A is not a DeFi job listing. */
+export function isCloneBotName(name: string, description: string): boolean {
+  const n = (name || "").trim();
+  const hay = `${n} ${description || ""}`.toLowerCase();
+  if (/singularry/.test(hay)) return true;
+  if (/autonomous trading agent \(simple-mode\)/.test(hay)) return true;
+  if (/clipx/.test(hay)) return true;
+  if (/\btest(ing)?\b/.test(n.toLowerCase())) return true;
+  if (/^agent$/.test(n.toLowerCase()) && /defai superapp/.test(hay)) {
+    return true;
+  }
+  return false;
+}
+
 export function isDirectoryLeak(agent: Agent): boolean {
   const name = (agent.name || "").trim();
   const desc = (agent.description || "").trim();
   if (!name) return true;
+  if (isCloneBotName(name, desc)) return true;
   if (JUNK_NAME.test(name)) return true;
   if (TEST_DEPLOYMENT.test(name) || TEST_DEPLOYMENT.test(desc)) return true;
   if (/^test\./i.test(name)) return true;
@@ -59,7 +74,7 @@ export function isDirectoryLeak(agent: Agent): boolean {
 
 /** Endpoints we cannot complete a hire against (IAM, object storage, stubs). */
 const UNHIREABLE_A2A =
-  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com|8004scan\.io\/api|agentscan|toly\.me/i;
+  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com|8004scan\.io\/api|agentscan|toly\.me|clipx\.app/i;
 
 export function isPublicHireableUrl(url: string): boolean {
   const u = url.trim();
@@ -147,6 +162,7 @@ export function destinationRank(agent: Agent): number {
   if (genesis) s += 2000;
   const cls = hireClassForAgent(agent);
   if (cls === "live") s += 400;
+  if (agent.probe_status === "alive") s += 80;
   if (isDefiJobAgent(agent)) s += 120;
   if (agent.x402_supported) s += 25;
   if (agent.is_verified) s += 20;

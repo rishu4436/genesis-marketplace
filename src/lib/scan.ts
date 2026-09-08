@@ -2,13 +2,13 @@ import type { Agent, ApiResponse, Feedback, PlatformStats } from "./types";
 
 const BASE =
   process.env.SCAN_API_BASE?.replace(/\/$/, "") ||
-  "https://8004scan.io/api/v1/public";
+  "https://api.8004scan.io/api/v1";
 
 /** BNB Smart Chain mainnet */
 export const BSC_CHAIN_ID = 56;
 
-/** Partner API timeout — never hang the UI forever */
-const FETCH_MS = 4_500;
+/** Partner API timeout — official A2A list often needs ~12s */
+const FETCH_MS = 12_000;
 /** Stats probe is on the judge path — fail faster, reuse last-good. */
 const STATS_MS = 2_000;
 const STATS_STALE_MS = 30 * 60 * 1000;
@@ -49,27 +49,65 @@ async function getJson<T>(
     next: { revalidate: 180 },
   });
 
-  const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+  const raw = (await res.json().catch(() => null)) as unknown;
 
   if (!res.ok) {
+    const errBody = raw as { error?: { message?: string } | string } | null;
     const msg =
-      body?.error?.message ||
+      (typeof errBody?.error === "object"
+        ? errBody.error?.message
+        : errBody?.error) ||
       res.statusText ||
       "request failed";
     throw new Error(`8004scan ${res.status}: ${msg} (${path})`);
   }
 
-  if (body && body.success === false) {
+  const body = normalizeScanBody<T>(raw);
+  if (!body) {
+    throw new Error(`8004scan: empty response (${path})`);
+  }
+
+  if (body.success === false) {
     throw new Error(
       `8004scan: ${body.error?.message || "backend error"} (${path})`,
     );
   }
 
-  if (!body) {
-    throw new Error(`8004scan: empty response (${path})`);
+  return body;
+}
+
+/** Official API returns `{ items, total }`; public proxy returns `{ success, data }`. */
+function normalizeScanBody<T>(raw: unknown): ApiResponse<T> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+
+  if (Array.isArray(o.items)) {
+    const limit = Number(o.limit ?? 20) || 20;
+    const offset = Number(o.offset ?? 0) || 0;
+    const total = Number(o.total ?? o.items.length) || o.items.length;
+    return {
+      success: true,
+      data: o.items as T,
+      meta: {
+        pagination: {
+          page: Math.floor(offset / limit) + 1,
+          limit,
+          total,
+          hasMore: offset + limit < total,
+        },
+      },
+    };
   }
 
-  return body;
+  if ("data" in o || "success" in o) {
+    return o as ApiResponse<T>;
+  }
+
+  if (o.token_id != null && o.name != null) {
+    return { success: true, data: raw as T };
+  }
+
+  return o as ApiResponse<T>;
 }
 
 /** Safe wrapper — returns null data instead of throwing */
@@ -105,15 +143,31 @@ export type ListAgentsParams = {
 
 function listQuery(params: ListAgentsParams = {}) {
   const q = new URLSearchParams();
-  q.set("page", String(params.page ?? 1));
-  q.set("limit", String(params.limit ?? 20));
-  q.set("chainId", String(params.chainId ?? BSC_CHAIN_ID));
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 20;
+  const chainId = params.chainId ?? BSC_CHAIN_ID;
+  q.set("page", String(page));
+  q.set("limit", String(limit));
+  q.set("offset", String((page - 1) * limit));
+  q.set("chainId", String(chainId));
+  q.set("chain_id", String(chainId));
   if (params.search) q.set("search", params.search);
-  if (params.protocol) q.set("protocol", params.protocol);
-  if (params.sortBy) q.set("sortBy", params.sortBy);
-  if (params.sortOrder) q.set("sortOrder", params.sortOrder);
-  if (params.isTestnet !== undefined)
+  if (params.protocol) {
+    q.set("protocol", params.protocol);
+    q.set("supported_protocol", params.protocol);
+  }
+  if (params.sortBy) {
+    q.set("sortBy", params.sortBy);
+    q.set("sort_by", params.sortBy);
+  }
+  if (params.sortOrder) {
+    q.set("sortOrder", params.sortOrder);
+    q.set("sort_order", params.sortOrder);
+  }
+  if (params.isTestnet !== undefined) {
     q.set("isTestnet", String(params.isTestnet));
+    q.set("is_testnet", String(params.isTestnet));
+  }
   return q.toString();
 }
 
@@ -139,14 +193,16 @@ export async function searchAgents(opts: {
   chainId?: number;
   semanticWeight?: number;
 }) {
-  const q = new URLSearchParams();
-  q.set("q", opts.q);
-  q.set("limit", String(opts.limit ?? 20));
-  q.set("chainId", String(opts.chainId ?? BSC_CHAIN_ID));
-  if (opts.semanticWeight !== undefined)
-    q.set("semanticWeight", String(opts.semanticWeight));
-
-  return getJson<Agent[]>(`/agents/search?${q.toString()}`);
+  return getJson<Agent[]>(
+    `/agents?${listQuery({
+      search: opts.q,
+      limit: opts.limit ?? 20,
+      chainId: opts.chainId ?? BSC_CHAIN_ID,
+      protocol: "A2A",
+      sortBy: "total_score",
+      sortOrder: "desc",
+    })}`,
+  );
 }
 
 export async function searchAgentsSafe(opts: {
@@ -155,14 +211,16 @@ export async function searchAgentsSafe(opts: {
   chainId?: number;
   semanticWeight?: number;
 }) {
-  const q = new URLSearchParams();
-  q.set("q", opts.q);
-  q.set("limit", String(opts.limit ?? 20));
-  q.set("chainId", String(opts.chainId ?? BSC_CHAIN_ID));
-  if (opts.semanticWeight !== undefined)
-    q.set("semanticWeight", String(opts.semanticWeight));
-
-  return safeGetJson<Agent[]>(`/agents/search?${q.toString()}`);
+  return safeGetJson<Agent[]>(
+    `/agents?${listQuery({
+      search: opts.q,
+      limit: opts.limit ?? 20,
+      chainId: opts.chainId ?? BSC_CHAIN_ID,
+      protocol: "A2A",
+      sortBy: "total_score",
+      sortOrder: "desc",
+    })}`,
+  );
 }
 
 export async function listFeedbacks(opts: {
@@ -196,7 +254,11 @@ export async function listFeedbacksSafe(opts: {
 }
 
 export async function getStats() {
-  return getJson<PlatformStats>("/stats");
+  try {
+    return await getJson<PlatformStats>("/stats");
+  } catch {
+    return getJson<PlatformStats>("/stats/global");
+  }
 }
 
 export async function getStatsSafe(): Promise<{

@@ -5,6 +5,7 @@
  */
 
 import type { Agent } from "./types";
+import { isCloneBotName } from "./hire-class";
 import { isPinnedLiveSeller } from "./third-party-sellers";
 
 export type CatalogDropReason =
@@ -68,8 +69,10 @@ export function isNameStutter(name: string, description: string): boolean {
 }
 
 export function catalogDropReason(agent: Agent): CatalogDropReason | null {
-  if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return null;
   const { name, desc } = hay(agent);
+  if (isCloneBotName(name, desc)) return "test-stub";
+  if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return null;
+  if (agent.probe_status === "alive") return null;
   if (!name) return "empty";
   if (name.length <= 2 && !agent.is_verified) return "empty";
   if (/^\d+$/.test(name) || /^[?¿\s._-]+$/.test(name)) return "empty";

@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { DESK, DESK_RAILS } from "@/lib/desk";
 import { deskWeek } from "@/lib/desk-metrics";
+import { fetchCensusAlive } from "@/lib/census-alive";
+import { loadHireableBsc } from "@/lib/hireable-bsc";
 
 export async function DeskStrip({
   compact = false,
 }: {
   compact?: boolean;
 }) {
-  const week = await deskWeek();
+  const [week, census] = await Promise.all([deskWeek(), fetchCensusAlive()]);
 
   return (
     <section
@@ -24,6 +26,19 @@ export async function DeskStrip({
         {DESK.loop}
       </p>
       <p className="mt-1 text-[11px] text-white/40">{DESK.northStar}</p>
+      {census.stats.alive > 0 && (
+        <p className="mt-1 text-[11px] text-white/45">
+          BSC register {census.stats.registered.toLocaleString()} ·{" "}
+          <span className="text-lime-200/90">
+            {census.stats.alive.toLocaleString()} endpoint-alive
+          </span>
+          {" · "}
+          {(() => {
+            const h = loadHireableBsc().byCategory;
+            return `hireable A2A · rebalance ${h.rebalancing} · grid ${h["grid-trading"]} · yield ${h["yield-optimisation"]} · health ${h["health-factor"]}`;
+          })()}
+        </p>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2">
           <p className="text-[9px] font-semibold uppercase tracking-wider text-amber-200/70">

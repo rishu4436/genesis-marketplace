@@ -108,6 +108,14 @@ export function AgentCard({
                 Registered
               </span>
             )}
+            {agent.probe_status === "alive" && (
+              <span
+                className="rounded-md bg-lime-500/15 px-1.5 py-0.5 text-[10px] font-medium text-lime-200"
+                title="Declared URL answered a public probe. Not a hire guarantee."
+              >
+                Endpoint alive
+              </span>
+            )}
             {cls === "genesis" ? (
               <span className="rounded-md bg-[#F0B90B] px-1.5 py-0.5 text-[10px] font-bold text-black">
                 By Genesis

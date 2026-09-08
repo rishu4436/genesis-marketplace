@@ -4,6 +4,7 @@ import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
 import { DeskStrip } from "@/components/DeskStrip";
 import { PROOF_JOBS, bscscanNftUrl, scanAgentUrl } from "@/lib/proof-jobs";
 import { allGenesisAgents } from "@/lib/genesis-agents";
+import { fetchCensusAlive } from "@/lib/census-alive";
 import {
   escrowProofExplorer,
   judgeDemoEmbed,
@@ -21,6 +22,7 @@ export const dynamic = "force-dynamic";
 export default async function JudgePage() {
   const proof = await readLiveProof();
   const specialists = allGenesisAgents();
+  const census = await fetchCensusAlive();
   const escrowProof = await resolveEscrowJudgeProof();
   const demoVideo = judgeDemoVideoUrl();
   const demoEmbed = demoVideo ? judgeDemoEmbed(demoVideo) : null;
@@ -43,6 +45,22 @@ export default async function JudgePage() {
       <div className="mt-6">
         <DeskStrip compact />
       </div>
+      {census.stats.alive > 0 && (
+        <p className="mt-3 text-[12px] leading-relaxed text-white/50">
+          BSC register {census.stats.registered.toLocaleString()} identities.
+          Public probe:{" "}
+          <span className="text-lime-200">
+            {census.stats.alive.toLocaleString()} endpoint-alive
+          </span>
+          . Alive means a declared URL answered — not that Genesis can
+          complete the hire. Hireable rows still require A2A we can call
+          or a Genesis specialist.{" "}
+          <Link href="/browse" className="text-amber-300 hover:underline">
+            Browse the alive set
+          </Link>
+          .
+        </p>
+      )}
       <div className="mt-4">
         <PartnerStatusStrip compact />
       </div>

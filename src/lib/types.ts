@@ -23,6 +23,10 @@ export type Agent = {
   average_score?: number;
   created_at?: string;
   updated_at?: string;
+  /** Public endpoint probe (Census) — not a hire guarantee. */
+  probe_status?: "alive" | "dead" | "degraded" | "never-probed";
+  probe_latency_ms?: number;
+  census_category?: string;
 };
 
 export type Feedback = {

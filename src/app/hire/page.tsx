@@ -339,6 +339,12 @@ export default async function HirePage({ searchParams }: Props) {
           {pool.error && pageAgents.length === 0
             ? "Index is slow — specialists above still hire"
             : `${q ? "Search" : "Hireable listings"} · ${totalFiltered} hireable · ${identitySorted.length} unhireable · page ${safePage}/${totalPages}`}
+          {pool.census?.alive ? (
+            <span className="ml-1 text-lime-200/80">
+              · {pool.census.alive.toLocaleString()} endpoint-alive of{" "}
+              {pool.census.registered.toLocaleString()} registered
+            </span>
+          ) : null}
           {sortMode === "score" && pageAgents.length > 0 && (
             <span className="ml-1 text-amber-200/70">
               · sorted by hire readiness · this page {pageMax.toFixed(0)}–

@@ -135,7 +135,7 @@ Product ready target: **31 Aug 2026**. Submit: **9 Sep 2026**.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SCAN_API_KEY` | No (rate limits apply) | 8004scan `X-API-Key` |
-| `SCAN_API_BASE` | No | Default `https://8004scan.io/api/v1/public` |
+| `SCAN_API_BASE` | No | Default `https://api.8004scan.io/api/v1` |
 
 Hackathon Pro tier: create a key at [8004scan Developer Hub](https://8004scan.io/developers), then [Pro upgrade form](https://forms.gle/jQevEPCAacBXaKG79).
 
