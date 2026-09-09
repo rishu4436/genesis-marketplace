@@ -176,7 +176,6 @@ export function SignInForm({
           <span className="font-semibold text-white">
             {me.email || me.wallet || "your account"}
           </span>
-          . Hires follow this account — not just this browser.
         </p>
         <button
           type="button"
