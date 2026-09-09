@@ -278,6 +278,14 @@ export async function getStatsSafe(): Promise<{
     void kvCmd("SET", STATS_KV, JSON.stringify(lastGoodStats));
     return fresh;
   }
+  const global = await safeGetJson<PlatformStats>("/stats/global", {
+    timeoutMs: STATS_MS,
+  });
+  if (global.data) {
+    lastGoodStats = { at: Date.now(), data: global.data };
+    void kvCmd("SET", STATS_KV, JSON.stringify(lastGoodStats));
+    return global;
+  }
   if (lastGoodStats && Date.now() - lastGoodStats.at < STATS_STALE_MS) {
     return {
       data: lastGoodStats.data,

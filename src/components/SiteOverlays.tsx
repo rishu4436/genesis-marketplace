@@ -11,10 +11,13 @@ import { AiConcierge } from "@/components/AiConcierge";
 export function SiteOverlays() {
   const pathname = usePathname() || "";
   if (pathname.startsWith("/jobs")) return null;
+  const onListing =
+    pathname.startsWith("/genesis/") ||
+    /^\/agents\/\d+\//.test(pathname);
   return (
     <>
       <CompareTray />
-      <AiConcierge />
+      {onListing ? null : <AiConcierge />}
     </>
   );
 }

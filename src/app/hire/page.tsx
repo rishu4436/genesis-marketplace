@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** /hire is retired. The hire floor is /browse. */
+/** /hire opens the Get plan CTA. Hash is client-only; the wizard is on the page. */
 export default function HireRedirect() {
-  redirect("/browse");
+  redirect("/genesis/range-keeper");
 }

@@ -191,7 +191,7 @@ export default async function BrowsePage({ searchParams }: Props) {
       : 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-10">
       <div className="max-w-2xl">
         <p className="section-label">
           {showIndex ? "Index" : "Browse"}
@@ -199,7 +199,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         <h1 className="display-section mt-3 text-white">
           {showIndex ? "Raw identity index" : "Hireable catalog"}
         </h1>
-        <p className="lead mt-3">
+        <p className="lead mt-3 line-clamp-2 sm:line-clamp-none">
           {showIndex
             ? "Every ERC-8004 name we loaded, including identity-only rows. Unhireable is marked on each card. This is not the hire floor."
             : "Landing Hire opens here. Specialists and live A2A we can complete. Unhireable identities are on Index and category pages — not this floor."}
@@ -210,18 +210,18 @@ export default async function BrowsePage({ searchParams }: Props) {
         <CatalogModeNav active={showIndex ? "index" : "browse"} />
       </div>
       {!showIndex && tally && (
-        <div className="mt-6">
+        <div className="mt-4 hidden sm:block sm:mt-6">
           <HireTallyBoard tally={tally} compact />
         </div>
       )}
 
-      <form className="mt-8 flex flex-col gap-3 sm:flex-row" action="/browse">
+      <form className="mt-4 flex flex-row gap-2 sm:mt-8 sm:gap-3" action="/browse">
         <input
           type="search"
           name="q"
           defaultValue={q}
           placeholder="Search skills or jobs… yield, grid, liquidation, PancakeSwap"
-          className="w-full flex-1 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none ring-amber-400/40 focus:ring-2"
+          className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/35 outline-none ring-amber-400/40 focus:ring-2 sm:text-sm"
         />
         {filters.sort && (
           <input type="hidden" name="sort" value={filters.sort} />
@@ -234,12 +234,15 @@ export default async function BrowsePage({ searchParams }: Props) {
         {filters.ratings === "1" && (
           <input type="hidden" name="ratings" value="1" />
         )}
-        <button type="submit" className="btn-primary !rounded-xl !py-3">
+        <button
+          type="submit"
+          className="btn-primary hidden shrink-0 !rounded-xl !px-4 !py-3 sm:inline-flex"
+        >
           Search
         </button>
       </form>
 
-      <div className="mt-4 flex flex-wrap gap-2 text-xs">
+      <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto pb-1 text-xs sm:mt-4 sm:flex-wrap sm:overflow-visible">
         {[
           "rebalancing",
           "grid trading",
@@ -254,7 +257,7 @@ export default async function BrowsePage({ searchParams }: Props) {
               { ...filters, q: chip, page: "1" },
               {},
             )}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60 transition hover:border-amber-400/40 hover:text-amber-200"
+            className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60 transition hover:border-amber-400/40 hover:text-amber-200"
           >
             {chip}
           </Link>
@@ -262,7 +265,7 @@ export default async function BrowsePage({ searchParams }: Props) {
       </div>
 
       {!showIndex && !q && safePage === 1 && (
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <JobFloor perShelf={3} />
         </div>
       )}

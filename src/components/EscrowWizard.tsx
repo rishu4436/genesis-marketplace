@@ -358,8 +358,8 @@ export function EscrowWizard({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center">
-      <div className="max-h-[92vh] w-full max-w-lg overflow-auto rounded-2xl border border-white/12 bg-[#121214] p-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center">
+      <div className="max-h-[min(92dvh,92vh)] w-full max-w-lg overflow-auto rounded-2xl border border-white/12 bg-[#121214] p-5 shadow-2xl">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">

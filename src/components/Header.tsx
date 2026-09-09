@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GenesisMark } from "@/components/brand/GenesisMark";
 import { AuthNav } from "@/components/AuthNav";
+import { HIRE_NOW_HREF } from "@/lib/genesis-agents";
 
 const PRIMARY = [
   { href: "/judge", label: "Judge" },
   { href: "/dashboard", label: "My hires" },
+  { href: "/browse", label: "Browse" },
 ];
 
 const MOBILE = [
@@ -89,7 +91,7 @@ export function Header() {
               </Link>
             );
           })}
-          <Link href="/browse" className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
+          <Link href={HIRE_NOW_HREF} className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
             Hire
           </Link>
           <span className="ml-1">
@@ -97,15 +99,11 @@ export function Header() {
           </span>
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 md:hidden">
-          <Link href="/browse" className="btn-solid !h-9 !px-3 !text-[0.75rem]">
-            Hire
-          </Link>
-          <AuthNav compact />
+        <div className="flex shrink-0 items-center md:hidden">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/[0.04] text-white"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
           >
@@ -134,6 +132,9 @@ export function Header() {
             className="border-t border-white/[0.06] bg-[#05060a] md:hidden"
           >
             <nav className="mx-auto flex max-w-[1160px] flex-col px-5 py-3 sm:px-8">
+              <Link href={HIRE_NOW_HREF} className="btn-solid mb-2 mt-1 !h-11 w-full !text-sm">
+                Get plan
+              </Link>
               {MOBILE.map((item) => (
                 <Link
                   key={item.href}
@@ -147,6 +148,9 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link href="/login?mode=login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
+                Sign in
+              </Link>
               <Link href="/login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
                 Create account
               </Link>

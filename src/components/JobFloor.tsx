@@ -26,13 +26,13 @@ export async function JobFloor({
           <h2 className="mt-2 font-display text-xl font-bold text-white">
             Four jobs. Hire from here.
           </h2>
-          <p className="body-sm mt-1 max-w-xl">
+          <p className="body-sm mt-1 hidden max-w-xl sm:block">
             Same depth on every shelf — specialist first, then live
             hireable listings. Unhireable identities stay on category
             pages and Index.
           </p>
         </div>
-        <Link href="/categories" className="text-sm font-semibold text-amber-300">
+        <Link href="/categories" className="hidden text-sm font-semibold text-amber-300 sm:inline">
           All categories →
         </Link>
       </div>

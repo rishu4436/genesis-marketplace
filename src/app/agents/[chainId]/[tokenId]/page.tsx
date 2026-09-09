@@ -107,7 +107,7 @@ export default async function AgentDetailPage({ params }: Props) {
   const listing = listingPriceForAgent(agent);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-5 pb-28 sm:px-6 lg:py-8 lg:pb-10">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link
           href="/browse"
@@ -118,40 +118,61 @@ export default async function AgentDetailPage({ params }: Props) {
         <CompareToggle agentKey={agentKey(agent)} />
       </div>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
-        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-white/50">
-            {isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
-              <>
-                <span className="font-semibold text-sky-300">
-                  Live third-party seller
-                </span>
-                {" — "}
-                not operated by Genesis. Hire negotiates their A2A endpoint
-                {featured?.restBase
-                  ? " and pulls their operator report."
-                  : " and returns their signed quote plus their public measured sample."}
-              </>
-            ) : isHireableListing(agent) ? (
-              <>
-                <span className="font-semibold text-sky-300">
-                  Live third-party
-                </span>
-                {" — "}
-                they have an A2A endpoint. Hire talks to them, not to us.
-              </>
-            ) : (
-              <>
-                <span className="font-semibold uppercase tracking-wide text-rose-200">
-                  Unhireable
-                </span>
-                {" — "}
-                on-chain identity only. No live hire we can complete. We
-                will not impersonate them. Hire a By Genesis specialist
-                instead.
-              </>
-            )}
+      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px] lg:grid-rows-[auto_1fr]">
+        <header className="lg:col-start-1 lg:row-start-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <AgentAvatar
+              src={agent.image_url}
+              name={agent.name || `Agent #${agent.token_id}`}
+              size="lg"
+              className="!h-14 !w-14 !rounded-2xl sm:!h-auto sm:!w-auto"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  {agent.name || `Agent #${agent.token_id}`}
+                </h1>
+                {isAgentRegistered(agent) && (
+                  <span className="rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-400/25">
+                    Registered
+                  </span>
+                )}
+                {agent.is_verified && (
+                  <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300">
+                    Verified
+                  </span>
+                )}
+                {hireClassForAgent(agent) === "indexed" && (
+                  <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-rose-200">
+                    Unhireable
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm text-white/50">
+                Chain {agent.chain_id}
+                {agent.is_testnet ? " (testnet)" : " · mainnet"} · Token #
+                {agent.token_id}
+                {category && (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <Link
+                      href={`/categories/${category.id}`}
+                      className="text-amber-300 hover:underline"
+                    >
+                      {category.name}
+                    </Link>
+                  </>
+                )}
+              </p>
+              <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/70 lg:line-clamp-none">
+                {agent.description ||
+                  "No description provided on-chain. Identity is still verifiable via ERC-8004."}
+              </p>
+            </div>
           </div>
+        </header>
+        <aside className="space-y-4 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start">
           {isHireableListing(agent) ? (
             <HireWizard
               chainId={agent.chain_id}
@@ -191,6 +212,38 @@ export default async function AgentDetailPage({ params }: Props) {
               </Link>
             </div>
           )}
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] leading-relaxed text-white/50 max-lg:line-clamp-2">
+            {isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
+              <>
+                <span className="font-semibold text-sky-300">
+                  Live third-party seller
+                </span>
+                {" — "}
+                not operated by Genesis. Hire negotiates their A2A endpoint
+                {featured?.restBase
+                  ? " and pulls their operator report."
+                  : " and returns their signed quote plus their public measured sample."}
+              </>
+            ) : isHireableListing(agent) ? (
+              <>
+                <span className="font-semibold text-sky-300">
+                  Live third-party
+                </span>
+                {" — "}
+                they have an A2A endpoint. Hire talks to them, not to us.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold uppercase tracking-wide text-rose-200">
+                  Unhireable
+                </span>
+                {" — "}
+                on-chain identity only. No live hire we can complete. We
+                will not impersonate them. Hire a By Genesis specialist
+                instead.
+              </>
+            )}
+          </div>
           <a
             href={bscscanNftUrl(String(agent.token_id))}
             target="_blank"
@@ -208,76 +261,7 @@ export default async function AgentDetailPage({ params }: Props) {
             8004scan index (may lag) ↗
           </a>
         </aside>
-        <div className="order-2 lg:order-1">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <AgentAvatar
-              src={agent.image_url}
-              name={agent.name || `Agent #${agent.token_id}`}
-              size="lg"
-              className="!rounded-2xl"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-white">
-                  {agent.name || `Agent #${agent.token_id}`}
-                </h1>
-                {isAgentRegistered(agent) && (
-                  <span className="rounded-full bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-400/25">
-                    Registered
-                  </span>
-                )}
-                {agent.is_verified && (
-                  <span className="rounded-full bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300">
-                    Verified
-                  </span>
-                )}
-                {hireClassForAgent(agent) === "indexed" && (
-                  <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-rose-200">
-                    Unhireable
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-sm text-white/50">
-                Chain {agent.chain_id}
-                {agent.is_testnet ? " (testnet)" : " · mainnet"} · Token #
-                {agent.token_id}
-                {category && (
-                  <>
-                    {" "}
-                    ·{" "}
-                    <Link
-                      href={`/categories/${category.id}`}
-                      className="text-amber-300 hover:underline"
-                    >
-                      {category.name}
-                    </Link>
-                  </>
-                )}
-              </p>
-              <p className="mt-4 text-sm leading-relaxed text-white/70">
-                {agent.description ||
-                  "No description provided on-chain. Identity is still verifiable via ERC-8004."}
-              </p>
-              {isHireableListing(agent) ? (
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <a
-                    href="#buy"
-                    className="btn-primary !px-4 !py-2 !text-sm lg:hidden"
-                  >
-                    Hire
-                  </a>
-                  <span className="text-xs text-white/40">
-                    One brief → their quote or a structured plan
-                  </span>
-                </div>
-              ) : (
-                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-rose-200">
-                  Unhireable · identity only
-                </p>
-              )}
-            </div>
-          </div>
-
+        <div className="lg:col-start-1 lg:row-start-2">
           {/* Per-agent Genesis pentagon */}
           <section
             id="score"

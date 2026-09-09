@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MarketplaceScorePanel } from "@/components/MarketplaceScorePanel";
 import { probePartners } from "@/lib/partner-status";
 import type { PartnerMode } from "@/lib/partner-status";
+import { HIRE_NOW_HREF } from "@/lib/genesis-agents";
 
 export const metadata = {
   title: "Partners",
@@ -15,6 +16,7 @@ function modeLabel(mode: PartnerMode, ok: boolean) {
   if (!ok || mode === "down") return "Down";
   if (mode === "live") return "Live";
   if (mode === "proof") return "On-chain proof";
+  if (mode === "stale") return "Cached index";
   return "In-product";
 }
 
@@ -110,8 +112,8 @@ export default async function PartnersPage() {
       </div>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <Link href="/browse" className="btn-solid">
-          Hire an agent
+        <Link href={HIRE_NOW_HREF} className="btn-solid">
+          Get plan
         </Link>
         <Link href="/judge" className="btn-line">
           Judge path

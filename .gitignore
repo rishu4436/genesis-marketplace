@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# local screenshot dumps (never commit)
+/tmp-hire-shots/
+
 # durable job store (local / runtime)
 /data/jobs/
 /data/claims/

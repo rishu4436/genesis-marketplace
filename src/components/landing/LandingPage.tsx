@@ -5,7 +5,7 @@ import { useReducedMotion } from "framer-motion";
 import { LandingBackground } from "@/components/landing/LandingBackground";
 import { FadeIn, useLenis } from "@/components/landing/ui";
 import { CATEGORIES } from "@/lib/categories";
-import { GENESIS_AGENTS, genesisHref } from "@/lib/genesis-agents";
+import { GENESIS_AGENTS, genesisHref, HIRE_NOW_HREF } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 
 const STEPS = [
@@ -49,8 +49,8 @@ export function LandingPage() {
             A plan you execute. Soft hire — no custody.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link href="/browse" className="btn-primary !px-6 !py-3">
-              Hire an agent
+            <Link href={HIRE_NOW_HREF} className="btn-primary !px-6 !py-3">
+              Get plan
             </Link>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -201,8 +201,8 @@ export function LandingPage() {
               Hire a specialist. Get a plan. You keep custody.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/browse" className="btn-primary !px-7 !py-3">
-                Hire an agent
+              <Link href={HIRE_NOW_HREF} className="btn-primary !px-7 !py-3">
+                Get plan
               </Link>
               <Link href="/browse" className="btn-secondary !px-7 !py-3">
                 Browse catalog

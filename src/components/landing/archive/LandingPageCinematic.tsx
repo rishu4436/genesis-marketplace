@@ -12,7 +12,7 @@ import {
 import Lenis from "lenis";
 import { LandingBackgroundCinematic } from "@/components/landing/archive/LandingBackgroundCinematic";
 import { CATEGORIES, getCategory, type CategoryId } from "@/lib/categories";
-import { GENESIS_AGENTS, genesisHref } from "@/lib/genesis-agents";
+import { GENESIS_AGENTS, genesisHref, HIRE_NOW_HREF } from "@/lib/genesis-agents";
 import { PartnerLiveBadges } from "@/components/PartnerLiveBadges";
 import { PARTNERS } from "@/lib/partners";
 import type { HireTally } from "@/lib/hire-tally-types";
@@ -254,8 +254,8 @@ function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <Link href="/browse" className="btn-primary !px-6 !py-3 !text-[0.95rem]">
-            Hire an agent
+          <Link href={HIRE_NOW_HREF} className="btn-primary !px-6 !py-3 !text-[0.95rem]">
+            Get plan
           </Link>
           <Link
             href="/categories"
@@ -662,10 +662,10 @@ export function LandingPageCinematic({
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/browse"
+                href={HIRE_NOW_HREF}
                 className="btn-primary !px-8 !py-3.5 !text-base"
               >
-                Hire an agent
+                Get plan
               </Link>
             </div>
             <p className="mt-10 text-xs font-medium tracking-wide text-white/35">

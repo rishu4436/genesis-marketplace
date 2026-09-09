@@ -59,7 +59,7 @@ async function probe8004scan(): Promise<Pick<PartnerProbe, "ok" | "mode" | "deta
     detail:
       agents != null
         ? stats.stale
-          ? "Public ERC-8004 index (last-good — live /stats failed)"
+          ? "Public ERC-8004 index · cached snapshot (live totals lag)"
           : "Public ERC-8004 index answering"
         : stats.error || "Index returned no totals",
     metric:

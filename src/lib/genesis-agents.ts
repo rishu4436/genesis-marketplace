@@ -195,6 +195,9 @@ export function genesisHref(g: GenesisAgent) {
   return `/genesis/${g.slug}`;
 }
 
+/** Header / landing Hire — opens Get plan. Does not auto-POST. */
+export const HIRE_NOW_HREF = "/genesis/range-keeper#buy";
+
 /**
  * Query before hash so HireWizard can read task.
  * `buy=1` auto-starts a hire in HireWizard. Recommendation and /judge CTAs

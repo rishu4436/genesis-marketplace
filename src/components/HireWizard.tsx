@@ -100,6 +100,7 @@ export function HireWizard({
   const [linkCopied, setLinkCopied] = useState(false);
   const [escrowOpen, setEscrowOpen] = useState(false);
   const [moreTiers, setMoreTiers] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const autobuyStarted = useRef(false);
   const escrowProvider = useMemo(
     () =>
@@ -112,6 +113,16 @@ export function HireWizard({
     [genesisSlug, chainId, tokenId, ownerAddress],
   );
   const escrowOk = ESCROW_STANCE.available && Boolean(escrowProvider);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      if (mq.matches) setExtrasOpen(true);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const canBuy = useMemo(() => task.trim().length > 8, [task]);
   const displayPrice = priceUsd > 0 ? priceUsd : 10;
@@ -256,7 +267,7 @@ export function HireWizard({
     const outcome = jobOutcome(job);
     const complete = outcome.kind === "ready";
     return (
-      <div id="buy" className="space-y-3 scroll-mt-28">
+      <div id="buy" className="space-y-3 scroll-mt-[calc(5.5rem+env(safe-area-inset-top,0px))]">
         <div
           className={`rounded-2xl border p-5 shadow-lg ${
             complete
@@ -395,24 +406,24 @@ export function HireWizard({
           tokenId={tokenId}
         />
 
-        <div className="relative z-[60] flex flex-wrap gap-2 pt-1">
-          <a href={path} className="btn-primary !px-4 !py-2 !text-xs">
+        <div className="relative z-[60] flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap">
+          <a href={path} className="btn-primary min-h-11 w-full !px-4 !py-2 !text-sm sm:w-auto !text-xs">
             Open result page
           </a>
-          <Link href="/dashboard" className="btn-secondary !px-4 !py-2 !text-xs">
+          <Link href="/dashboard" className="btn-secondary min-h-11 w-full !px-4 !py-2 !text-sm sm:w-auto !text-xs">
             My hires
           </Link>
           <button
             type="button"
             onClick={copyResult}
-            className="rounded-full border border-white/12 px-3 py-2 text-xs font-medium text-white/70 hover:text-white"
+            className="min-h-11 w-full rounded-full border border-white/12 px-3 py-2 text-sm font-medium text-white/70 hover:text-white sm:w-auto sm:text-xs"
           >
             {copied ? "Copied" : "Copy"}
           </button>
           <button
             type="button"
             onClick={copyShareLink}
-            className="rounded-full border border-white/12 px-3 py-2 text-xs font-medium text-white/70 hover:text-white"
+            className="min-h-11 w-full rounded-full border border-white/12 px-3 py-2 text-sm font-medium text-white/70 hover:text-white sm:w-auto sm:text-xs"
           >
             {linkCopied ? "Link copied" : "Share link"}
           </button>
@@ -455,22 +466,22 @@ export function HireWizard({
   return (
     <div
       id="buy"
-      className="scroll-mt-28 rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-400/10 to-white/[0.03] p-5 shadow-lg shadow-amber-900/5"
+      className="scroll-mt-[calc(5.5rem+env(safe-area-inset-top,0px))] rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-400/10 to-white/[0.03] p-4 shadow-lg shadow-amber-900/5 sm:p-5"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="text-xs font-medium uppercase tracking-wider text-amber-200/80">
             Hire {agentName}
           </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-            Structured plan at a link + claim code. Soft hire — no custody.
+          <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+            Structured plan + claim code. You keep the keys.
           </p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
             Plan · no charge
           </div>
-          <div className="text-lg font-bold tabular-nums tracking-tight text-white">
+          <div className="text-base font-bold tabular-nums tracking-tight text-white sm:text-lg">
             {priceLabel ||
               (priceUsd > 0 ? `SKU $${priceUsd}` : "Quote on hire")}
           </div>
@@ -517,11 +528,53 @@ export function HireWizard({
         </div>
       )}
 
+      {templates.length > 0 && (
+        <div className="mt-4">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
+            Brief
+          </div>
+          <div className="mt-1.5 flex flex-col gap-1.5 [&>button:nth-child(n+3)]:max-lg:hidden">
+            {templates.map((t) => {
+              const selected = task === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTask(t)}
+                  disabled={loading}
+                  className={`min-h-11 rounded-lg border px-3 py-2.5 text-left text-[13px] leading-snug transition touch-manipulation ${
+                    selected
+                      ? "border-amber-400/50 bg-amber-400/15 text-amber-50"
+                      : "border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white/75"
+                  } disabled:opacity-50`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <label className="mt-3 block">
+        <span className="text-xs font-medium text-white/55">
+          Or write your own brief
+        </span>
+        <textarea
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          rows={3}
+          disabled={loading}
+          placeholder="Describe what you need…"
+          className="mt-1.5 h-[4.75rem] w-full rounded-xl border border-white/15 bg-black/30 px-3 py-3 text-base text-white outline-none ring-amber-400/30 focus:ring-2 disabled:opacity-50 lg:h-auto"
+        />
+      </label>
+
       <button
         type="button"
         disabled={!canBuy || loading}
         onClick={() => startHire()}
-        className="btn-primary mt-4 w-full disabled:opacity-40"
+        className="btn-primary mt-4 min-h-12 w-full touch-manipulation disabled:opacity-40"
       >
         {loading
           ? phase === "working"
@@ -541,184 +594,141 @@ export function HireWizard({
               setRail("escrow");
               setEscrowOpen(true);
             }}
-            className="mt-2 w-full rounded-full border border-amber-400/50 bg-amber-400/15 px-4 py-2.5 text-sm font-semibold text-amber-50 transition hover:border-amber-400 hover:bg-amber-400/25 disabled:opacity-40"
+            className="mt-2 min-h-12 w-full touch-manipulation rounded-full border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-sm font-semibold text-amber-50 transition hover:border-amber-400 hover:bg-amber-400/25 disabled:opacity-40"
           >
             Hire with escrow (on-chain)
           </button>
-          <p className="mt-2 text-center text-[10px] leading-relaxed text-white/45">
+          <p className="mt-2 text-center text-[11px] leading-relaxed text-white/45">
             {ESCROW_CTA}
           </p>
         </>
       ) : (
         <Link
           href="/genesis/range-keeper?escrow=1#buy"
-          className="mt-2 flex w-full items-center justify-center rounded-full border border-amber-400/35 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-400/70"
+          className="mt-2 flex min-h-12 w-full items-center justify-center rounded-full border border-amber-400/35 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100 hover:border-amber-400/70"
         >
           On-chain escrow → RangeKeeper
         </Link>
       )}
-      <p className="mt-2 text-center text-[10px] text-white/40">
+      <p className="mt-2 text-center text-[11px] text-white/40">
         {SOFT_HIRE_SHORT}
       </p>
-      <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-[10px] leading-relaxed text-white/50 sm:grid-cols-2">
-        <p>
-          <span className="font-semibold text-white/75">Plan</span>
-          {" — "}
-          you keep the keys · no custody. Listed $ is a SKU, not a
-          charge.
-        </p>
-        <p>
-          <span className="font-semibold text-white/75">Escrow</span>
-          {" — "}
-          on-chain lock in $U · settle after deliverable · never a transfer to
-          the seller.
-        </p>
-      </div>
-      <p className="mt-2 text-[10px] leading-relaxed text-white/40">
-        {PRICE_LEGEND}
-      </p>
 
-      <div className="mt-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
-          Tier
-        </div>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {modes
-            .filter((m) => m.available)
-            .filter((m) => moreTiers || m.rail !== "free")
-            .map((m) => {
-              const active = rail === m.rail;
-              const escrowChip = m.rail === "escrow";
-              return (
-                <button
-                  key={m.rail}
-                  type="button"
-                  disabled={loading}
-                  title={m.description}
-                  onClick={() => {
-                    setRail(m.rail);
-                    if (escrowChip && escrowOk) setEscrowOpen(true);
-                  }}
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
-                    active
-                      ? "bg-amber-400 text-black"
-                      : escrowChip
-                        ? "border border-amber-400/40 bg-amber-400/10 text-amber-100 hover:border-amber-400/70"
-                        : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
-                  }`}
-                >
-                  {m.short}
-                </button>
-              );
-            })}
-        </div>
-        <p className="mt-1.5 text-[10px] leading-relaxed text-white/40">
-          {modes.find((m) => m.rail === rail)?.description}
-        </p>
-        {!moreTiers && modes.some((m) => m.rail === "free" && m.available) ? (
-          <button
-            type="button"
-            className="mt-1.5 text-[10px] text-white/40 hover:text-white/70"
-            onClick={() => setMoreTiers(true)}
-          >
-            More · free scan
-          </button>
-        ) : null}
-        <p className="mt-1.5 text-[10px] leading-relaxed text-white/35">
-          {ESCROW_LINE}. {escrowOk ? "Use Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
-          Notes on{" "}
-          <Link
-            href="/genesis/range-keeper?escrow=1#buy"
-            className="text-amber-300/80 hover:underline"
-          >
-            RangeKeeper escrow
-          </Link>
-          .
-        </p>
-      </div>
-
-      {rail !== "free" && (
-        <div className="mt-3">
-          <BuyerContextPanel compact onChange={setBuyerCtx} />
-        </div>
-      )}
-
-      <ul className="mt-3 space-y-1.5 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-[11px] text-white/55">
-        <li className="flex gap-2">
-          <span className="text-emerald-400">✓</span>
-          {rail === "free"
-            ? "Quick multi-source scan · metrics only"
-            : "Multi-source analysis · thesis · checklist"}
-        </li>
-        <li className="flex gap-2">
-          <span className="text-emerald-400">✓</span>
-          {rail === "free"
-            ? "0 cost · upgrade anytime"
-            : "Buyer-context aware · shareable result"}
-        </li>
-        <li className="flex gap-2">
-          <span className="text-emerald-400">✓</span>
-          Agent never moves your funds
-        </li>
-      </ul>
-
-      {sample && (
-        <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-            Sample style
-          </div>
-          <p className="mt-1 text-[11px] leading-snug text-white/50 line-clamp-2">
-            {sample.sampleOutputBody}
+      <details
+        className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+        open={extrasOpen}
+        onToggle={(e) => setExtrasOpen(e.currentTarget.open)}
+      >
+        <summary className="cursor-pointer select-none py-1 text-[12px] font-medium text-white/55">
+          Plan vs escrow · tiers
+        </summary>
+        <div className="mt-2 grid gap-2 text-[11px] leading-relaxed text-white/50 sm:grid-cols-2">
+          <p>
+            <span className="font-semibold text-white/75">Plan</span>
+            {" — "}
+            you keep the keys · no custody. Listed $ is a SKU, not a
+            charge.
+          </p>
+          <p>
+            <span className="font-semibold text-white/75">Escrow</span>
+            {" — "}
+            on-chain lock in $U · settle after deliverable · never a transfer to
+            the seller.
           </p>
         </div>
-      )}
-
-      {templates.length > 0 && (
-        <div className="mt-4">
+        <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+          {PRICE_LEGEND}
+        </p>
+        <div className="mt-3">
           <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
-            Quick jobs
+            Tier
           </div>
-          <div className="mt-1.5 flex flex-col gap-1.5">
-            {templates.map((t) => {
-              const selected = task === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTask(t)}
-                  disabled={loading}
-                  className={`rounded-lg border px-2.5 py-2 text-left text-[11px] leading-snug transition ${
-                    selected
-                      ? "border-amber-400/50 bg-amber-400/15 text-amber-50"
-                      : "border-white/10 bg-white/[0.03] text-white/55 hover:border-white/20 hover:text-white/75"
-                  } disabled:opacity-50`}
-                >
-                  {t}
-                </button>
-              );
-            })}
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {modes
+              .filter((m) => m.available)
+              .filter((m) => moreTiers || m.rail !== "free")
+              .map((m) => {
+                const active = rail === m.rail;
+                const escrowChip = m.rail === "escrow";
+                return (
+                  <button
+                    key={m.rail}
+                    type="button"
+                    disabled={loading}
+                    title={m.description}
+                    onClick={() => {
+                      setRail(m.rail);
+                      if (escrowChip && escrowOk) setEscrowOpen(true);
+                    }}
+                    className={`min-h-9 rounded-full px-3 py-1.5 text-[12px] font-semibold transition touch-manipulation ${
+                      active
+                        ? "bg-amber-400 text-black"
+                        : escrowChip
+                          ? "border border-amber-400/40 bg-amber-400/10 text-amber-100 hover:border-amber-400/70"
+                          : "border border-white/15 bg-white/5 text-white/65 hover:border-white/25"
+                    }`}
+                  >
+                    {m.short}
+                  </button>
+                );
+              })}
           </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-white/40">
+            {modes.find((m) => m.rail === rail)?.description}
+          </p>
+          {!moreTiers && modes.some((m) => m.rail === "free" && m.available) ? (
+            <button
+              type="button"
+              className="mt-1.5 min-h-9 text-[12px] text-white/40 hover:text-white/70"
+              onClick={() => setMoreTiers(true)}
+            >
+              More · free scan
+            </button>
+          ) : null}
+          <p className="mt-1.5 text-[11px] leading-relaxed text-white/35">
+            {ESCROW_LINE}. {escrowOk ? "Use Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
+            Notes on{" "}
+            <Link
+              href="/genesis/range-keeper?escrow=1#buy"
+              className="text-amber-300/80 hover:underline"
+            >
+              RangeKeeper escrow
+            </Link>
+            .
+          </p>
         </div>
-      )}
-
-      <label className="mt-4 block">
-        <span className="text-xs font-medium text-white/55">
-          Or write your own brief
-        </span>
-        <textarea
-          value={task}
-          onChange={(e) => setTask(e.target.value)}
-          rows={3}
-          disabled={loading}
-          placeholder="Describe what you need…"
-          className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none ring-amber-400/30 focus:ring-2 disabled:opacity-50"
-        />
-      </label>
-
-      <p className="mt-3 text-center text-[10px] leading-relaxed text-white/35">
-        You get a result page + claim code. Save it to an account, then hire
-        again anytime with the same brief.
-      </p>
+        {rail !== "free" && (
+          <div className="mt-3">
+            <BuyerContextPanel compact onChange={setBuyerCtx} />
+          </div>
+        )}
+        <ul className="mt-3 space-y-1.5 text-[12px] text-white/55">
+          <li className="flex gap-2">
+            <span className="text-emerald-400">✓</span>
+            {rail === "free"
+              ? "Quick multi-source scan · metrics only"
+              : "Multi-source analysis · thesis · checklist"}
+          </li>
+          <li className="flex gap-2">
+            <span className="text-emerald-400">✓</span>
+            Agent never moves your funds
+          </li>
+        </ul>
+        {sample && (
+          <div className="mt-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+              Sample style
+            </div>
+            <p className="mt-1 text-[12px] leading-snug text-white/50 line-clamp-2">
+              {sample.sampleOutputBody}
+            </p>
+          </div>
+        )}
+        <p className="mt-3 text-[11px] leading-relaxed text-white/35">
+          You get a result page + claim code. Save it to an account, then hire
+          again anytime with the same brief.
+        </p>
+      </details>
 
       <EscrowWizard
         open={escrowOpen}

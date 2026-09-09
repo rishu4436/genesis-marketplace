@@ -101,7 +101,7 @@ export default async function GenesisAgentPage({ params }: Props) {
   const composite = compositeFromAxes(axes);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-5 pb-28 sm:px-6 lg:py-8 lg:pb-10">
       <Link
         href={`/categories/${agent.categoryId}`}
         className="text-xs font-medium text-white/45 hover:text-amber-300"
@@ -109,40 +109,17 @@ export default async function GenesisAgentPage({ params }: Props) {
         ← {cat?.name || "Category"}
       </Link>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
-        <aside className="order-1 space-y-3 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-50/90">
-            <span className="font-bold text-[#F0B90B]">Hire-ready</span>
-            {" — "}
-            {BRAND.byBadge} seller we operate. Hire returns a structured
-            plan in about {agent.etaMinutes}m.
-          </div>
-          <SoftHireNote compact />
-          <TaskFitBadge fit={fit} />
-          <HireWizard
-            chainId={agent.chainId ?? 56}
-            tokenId={agent.tokenId || `genesis:${agent.slug}`}
-            agentName={agent.name}
-            categoryId={agent.categoryId}
-            genesisSlug={agent.slug}
-            ownerAddress={getPin(agent.slug).walletAddress}
-            hireReady
-            priceUsd={agent.basePriceUsd}
-            etaMinutes={agent.etaMinutes}
-            x402={agent.x402}
-          />
-          <AltanaPanel defaultAgent={agent.slug} compact />
-        </aside>
-        <div className="order-2 lg:order-1">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px] lg:grid-rows-[auto_1fr]">
+        <header className="lg:col-start-1 lg:row-start-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
             <div
-              className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${agent.accent} text-3xl font-bold text-black/80`}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl font-bold text-black/80 sm:h-20 sm:w-20 sm:text-3xl ${agent.accent}`}
             >
               {agent.icon}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
                   {agent.name}
                 </h1>
                 <span className="rounded-full bg-[#F0B90B] px-2.5 py-0.5 text-[11px] font-bold text-black">
@@ -155,25 +132,46 @@ export default async function GenesisAgentPage({ params }: Props) {
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-sm font-medium text-white/50">
+              <p className="mt-1 hidden text-sm font-medium text-white/50 lg:block">
                 {BRAND.specialistLabel} · built & operated by {BRAND.name}
               </p>
               <p className="mt-1 text-sm text-amber-100/80">{agent.tagline}</p>
-              <p className="body mt-3 max-w-2xl">{agent.description}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <a href="#buy" className="btn-solid !px-4 !text-sm">
-                  Get plan
-                </a>
-                <span className="text-xs text-white/45">
-                  ~{agent.etaMinutes}m · SKU ${agent.basePriceUsd} · plan · no charge
-                </span>
-              </div>
+              <p className="body mt-2 line-clamp-2 max-w-2xl lg:line-clamp-none">
+                {agent.description}
+              </p>
+              <p className="mt-2 hidden text-xs text-white/45 lg:block">
+                ~{agent.etaMinutes}m · SKU ${agent.basePriceUsd} · plan · no charge
+              </p>
             </div>
           </div>
-
-          <div className="mt-8">
-            <CategoryDepthPanel categoryId={agent.categoryId} />
+        </header>
+        <aside className="space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start">
+          <HireWizard
+            chainId={agent.chainId ?? 56}
+            tokenId={agent.tokenId || `genesis:${agent.slug}`}
+            agentName={agent.name}
+            categoryId={agent.categoryId}
+            genesisSlug={agent.slug}
+            ownerAddress={getPin(agent.slug).walletAddress}
+            hireReady
+            priceUsd={agent.basePriceUsd}
+            etaMinutes={agent.etaMinutes}
+            x402={agent.x402}
+          />
+          <div className="hidden space-y-3 lg:block">
+            <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2.5 text-[12px] leading-relaxed text-amber-50/90">
+              <span className="font-bold text-[#F0B90B]">Hire-ready</span>
+              {" — "}
+              {BRAND.byBadge} seller we operate. Hire returns a structured
+              plan in about {agent.etaMinutes}m.
+            </div>
+            <SoftHireNote compact />
+            <TaskFitBadge fit={fit} />
+            <AltanaPanel defaultAgent={agent.slug} compact />
           </div>
+        </aside>
+        <div className="lg:col-start-1 lg:row-start-2">
+          <CategoryDepthPanel categoryId={agent.categoryId} />
 
           {receiptScore && <ReceiptScorePanel score={receiptScore} />}
 

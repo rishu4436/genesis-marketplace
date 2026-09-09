@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HireDashboard } from "@/components/HireDashboard";
 import { SoftHireNote } from "@/components/SoftHireNote";
-import { PartnerStatusStrip } from "@/components/PartnerStatusStrip";
+import { HIRE_NOW_HREF } from "@/lib/genesis-agents";
 
 export const metadata = {
   title: "My hires",
@@ -23,13 +23,9 @@ export default function DashboardPage() {
           </p>
           <SoftHireNote className="mt-5 max-w-xl" />
         </div>
-        <Link href="/browse" className="btn-solid">
-          Hire
+        <Link href={HIRE_NOW_HREF} className="btn-solid">
+          Get plan
         </Link>
-      </div>
-
-      <div className="mt-8">
-        <PartnerStatusStrip compact />
       </div>
 
       <div className="mt-10">

@@ -77,17 +77,18 @@ export function AiConcierge() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-[#F0B90B] px-4 text-sm font-semibold text-black shadow-lg shadow-amber-900/30 transition hover:bg-amber-300"
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0B90B] text-sm font-semibold text-black shadow-lg shadow-amber-900/30 transition hover:bg-amber-300 2xl:bottom-6 2xl:right-6 2xl:w-auto 2xl:gap-2 2xl:px-4"
+        aria-label="AI Concierge"
       >
         <span className="text-base">✦</span>
-        AI Concierge
+        <span className="hidden 2xl:inline">AI Concierge</span>
         {aiOn === false && (
-          <span className="rounded-full bg-black/15 px-1.5 text-[9px]">off</span>
+          <span className="hidden rounded-full bg-black/15 px-1.5 text-[9px] 2xl:inline">off</span>
         )}
       </button>
 
       {open && (
-        <div className="fixed bottom-20 right-5 z-40 flex h-[min(28rem,70vh)] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0c12] shadow-2xl">
+        <div className="fixed inset-x-4 z-40 flex h-[min(28rem,calc(100dvh-8rem))] w-auto flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0c12] shadow-2xl max-md:bottom-[4.75rem] md:inset-x-auto md:right-5 md:bottom-20 md:h-[min(28rem,70vh)] md:w-[min(24rem,calc(100vw-2rem))]">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-white">Genesis AI</p>
@@ -159,7 +160,7 @@ export function AiConcierge() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder="Ask the marketplace…"
-              className="min-w-0 flex-1 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:ring-1 focus:ring-amber-400/40"
+              className="min-w-0 flex-1 rounded-full border border-white/15 bg-black/40 px-3 py-2 text-base text-white outline-none focus:ring-1 focus:ring-amber-400/40 md:text-xs"
             />
             <button
               type="button"

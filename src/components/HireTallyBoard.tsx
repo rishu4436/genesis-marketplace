@@ -58,7 +58,7 @@ export function HireTallyBoard({
         </span>
         . Alive is not a hire. Registered is not a hire.
       </p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 hidden gap-2 sm:grid sm:grid-cols-3">
         {cells.map((c) => (
           <Link
             key={c.label}
