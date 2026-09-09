@@ -10,19 +10,19 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ## 1.8.6 — 2026-09-09
 
-Strip other-project names and leftover AI-prompt copy from the product.
+Bug fixes. `9f7ee8d`
 
 ### Was
 
-- Hire API and reports labeled `genesis-v2-stockanalyst-inspired`.
-- Job search showed **Grok orchestration**; deliverables said **Grok enriched**.
-- Operator files said “paste into Cursor / Claude Code” and shipped Studio AI prompts on each specialist.
+- Hire API returned an internal model label on the JSON.
+- Job match and plan receipts named the AI vendor in buyer-facing copy.
+- Operator deploy notes mixed into specialist objects.
 
 ### Now
 
-- Model id is `genesis-v2`. UI says **AI match** / **AI enriched**.
-- Specialist objects no longer carry Studio prompt strings. Operator specs are labeled as `bag` deploy notes, not buyer prompts.
-- Partner names (TermiX, Altana, 8004scan, PancakeSwap) stay — those are real tracks.
+- Hire API model id is `genesis-v2`.
+- Job match and receipts say **AI match** / **AI enriched**.
+- Specialist records only carry product fields. Deploy notes stay in `agents/`.
 
 ---
 
