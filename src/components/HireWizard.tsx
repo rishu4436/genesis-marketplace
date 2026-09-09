@@ -354,8 +354,9 @@ export function HireWizard({
             <SignInForm
               jobId={job.id}
               defaultMode="signup"
-              title="Keep this agent on your account"
-              hint="Create an account so My hires shows this plan on any phone. Guest copy stays in this browser."
+              compact
+              title="Save this hire"
+              hint="Create an account (or sign in) so My hires shows this plan on any phone."
             />
           </div>
 

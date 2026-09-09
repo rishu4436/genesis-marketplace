@@ -8,6 +8,24 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.5 — 2026-09-09
+
+Sign in and create account are separate, easier paths.
+
+### Was
+
+- Header **Sign in** opened `/login` in **create account** mode.
+- Login and signup were the same two fields with a tiny toggle next to Wallet.
+- No confirm-password, no Show password, wallet mixed into the submit row.
+
+### Now
+
+- Header has **Sign in** and **Create account**. Tabs on `/login` match the URL (`?mode=login` / `?mode=signup`).
+- Signup asks to confirm the password. Wallet is a separate “or” path (signs in or creates).
+- Existing email → “Go to sign in”. Wrong password → “Create an account”. Guest claim code still sits under the form.
+
+---
+
 ## 1.8.4 — 2026-09-09
 
 Escrow lock matches the listing. `9301a61`
