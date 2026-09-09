@@ -10,6 +10,8 @@ Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, g
 
 **Judge path:** https://genesis-marketplace-one.vercel.app/judge  
 
+**Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md) — where we are, what’s missing, phases 0–6.
+
 ## Product deadline
 
 - **Product ready:** 31 August 2026  
@@ -99,8 +101,7 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 ### Next
 
-1. AWS login → `bag deploy agent` when AgentCore quota lands. Hire already works on APEX.
-2. Optional: mainnet Altana grant + one ERC-8183 lock. Soft-hire does not need them.
+See **[docs/ROADMAP.md](docs/ROADMAP.md)**. Immediate: new escrow fund → operator submit (job 56748 is FUNDED but `SubmissionTooLate`). AgentCore stays skipped while quota is 0.
 
 ### Live Studio sellers (BSC mainnet)
 
