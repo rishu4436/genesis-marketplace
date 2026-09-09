@@ -41,7 +41,13 @@ import type { Agent } from "../src/lib/types";
 import { catalogDropReason } from "../src/lib/catalog-quality";
 import { classifyHealth, type HealthChecks } from "../src/lib/agent-health-model";
 import { marketplaceTiers } from "../src/lib/agent-model";
-import { ERC8183_MAINNET, resolveEscrowProvider } from "../src/lib/erc8183-escrow";
+import {
+  ERC8183_MAINNET,
+  budgetUFor,
+  listedLockU,
+  resolveEscrowProvider,
+  skuUsdToLockU,
+} from "../src/lib/erc8183-escrow";
 import { NEVER_PAY_SELLER } from "../src/lib/copy";
 import { escrowJudgeProof, judgeDemoVideoUrl } from "../src/lib/judge-proof";
 import { hasLivePayload, jobOutcome } from "../src/lib/job-outcome";
@@ -427,6 +433,28 @@ function main() {
     marketplaceTiers({ escrowAvailable: false }).filter((t) => t.available).every(
       (t) => t.id !== "escrow",
     ),
+  );
+  check("SKU $6 locks 0.06 $U", skuUsdToLockU(6) === "0.06");
+  check("SKU $8 locks 0.08 $U", skuUsdToLockU(8) === "0.08");
+  check(
+    "health-sentinel lock matches SKU $6",
+    budgetUFor({ genesisSlug: "health-sentinel" }) === "0.06",
+  );
+  check(
+    "range-keeper lock stays 0.08 $U",
+    budgetUFor({ genesisSlug: "range-keeper" }) === "0.08",
+  );
+  check(
+    "gridwright lock is 0.10 $U",
+    budgetUFor({ genesisSlug: "gridwright" }) === "0.10",
+  );
+  check(
+    "brain grid lock is the published 0.10 $U",
+    listedLockU({ chainId: 56, tokenId: "302258" }) === "0.10",
+  );
+  check(
+    "quote-only third-party has no invented $U lock",
+    listedLockU({ chainId: 56, tokenId: "269223" }) == null,
   );
   check(
     "RangeKeeper has an ERC-8183 provider identity",

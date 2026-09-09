@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  budgetUFor,
   budgetWeiFor,
+  listedLockU,
   deadlineSecondsFor,
   encodeApprove,
   encodeCreateJob,
@@ -70,9 +70,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const budgetU = body.budgetU || budgetUFor({ genesisSlug: body.genesisSlug });
+    const budgetU = listedLockU({
+      genesisSlug: body.genesisSlug,
+      chainId: body.chainId,
+      tokenId: body.tokenId,
+    });
+    if (!budgetU) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "This seller has not published a $U lock. Get plan is free and does not need $U.",
+        },
+        { status: 400 },
+      );
+    }
     const budgetWei = budgetWeiFor({
       genesisSlug: body.genesisSlug,
+      chainId: body.chainId,
+      tokenId: body.tokenId,
       budgetU,
     });
 

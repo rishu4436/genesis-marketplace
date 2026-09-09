@@ -70,7 +70,7 @@ export function marketplaceTiers(opts?: {
       id: "escrow",
       label: "Escrow",
       short: "Escrow",
-      costLabel: "0.08+ U lock from the agent page",
+      costLabel: "Listed $U lock from the agent page (SKU ÷ 100 on Genesis)",
       settlement: "Optional ERC-8183 fund → deliver → settle after dispute window",
       speed: "minutes + 24h settle",
       includes: [

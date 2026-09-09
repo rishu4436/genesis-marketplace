@@ -25,7 +25,10 @@ import {
 import { hasLivePayload, jobOutcome } from "@/lib/job-outcome";
 import { skuQuotedLine } from "@/lib/sku-label";
 import { CopyClaimCode } from "@/components/CopyClaimCode";
-import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
+import {
+  listedLockU,
+  resolveEscrowProvider,
+} from "@/lib/erc8183-escrow";
 import { EscrowWizard } from "@/components/EscrowWizard";
 import { deskRail } from "@/lib/network-choice";
 
@@ -114,7 +117,19 @@ export function HireWizard({
       }),
     [genesisSlug, chainId, tokenId, ownerAddress],
   );
-  const escrowOk = ESCROW_STANCE.available && Boolean(escrowProvider);
+  const lockU = useMemo(
+    () =>
+      listedLockU({
+        genesisSlug,
+        chainId,
+        tokenId,
+      }),
+    [genesisSlug, chainId, tokenId],
+  );
+  const escrowOk =
+    ESCROW_STANCE.available && Boolean(escrowProvider) && Boolean(lockU);
+  const listLabel =
+    priceLabel || (priceUsd > 0 ? `SKU $${priceUsd}` : undefined);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -461,6 +476,7 @@ export function HireWizard({
           ownerAddress={ownerAddress}
           task={job.task || task}
           escrowChainId={56}
+          listLabel={listLabel}
         />
       </div>
     );
@@ -746,6 +762,7 @@ export function HireWizard({
         ownerAddress={ownerAddress}
         task={task}
         escrowChainId={56}
+        listLabel={listLabel}
       />
     </div>
   );

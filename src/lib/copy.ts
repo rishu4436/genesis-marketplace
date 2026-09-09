@@ -33,4 +33,4 @@ export const INTELLIGENCE_SHORT =
 
 /** One line for Browse, Compare, and hire panels. */
 export const PRICE_LEGEND =
-  "SKU $ is a label. Get plan is no charge. $U only when the seller published it. Otherwise Quote on hire.";
+  "SKU $ labels Get plan (no charge). Genesis escrow lock is that SKU ÷ 100 in $U ($6 → 0.06 $U). Third-party $U is only the seller’s published quote.";

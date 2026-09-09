@@ -82,6 +82,8 @@ type Props = {
   task: string;
   /** Listing chainId stays 56 for ERC-8004 identity. Escrow is always BSC 56. */
   escrowChainId?: number;
+  /** Card price line, e.g. "SKU $6" or "0.1 $U". */
+  listLabel?: string;
 };
 
 function explain(
@@ -149,6 +151,7 @@ export function EscrowWizard({
   ownerAddress,
   task,
   escrowChainId,
+  listLabel,
 }: Props) {
   const router = useRouter();
   void escrowChainId;
@@ -640,13 +643,23 @@ export function EscrowWizard({
         {quote && (
           <div className="mt-4 space-y-3 text-[12px] text-white/60">
             <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2">
-              <p>
-                Lock{" "}
-                <span className="font-semibold text-white">
-                  {quote.budgetU} {quote.tokenSymbol}
-                </span>{" "}
-                in the ERC-8183 kernel.
-              </p>
+              {listLabel ? (
+                <p className="text-[11px] leading-relaxed text-white/55">
+                  {listLabel} is Get plan (no charge). Optional escrow locks{" "}
+                  <span className="font-semibold text-white">
+                    {quote.budgetU} $U
+                  </span>{" "}
+                  in the kernel.
+                </p>
+              ) : (
+                <p>
+                  Lock{" "}
+                  <span className="font-semibold text-white">
+                    {quote.budgetU} {quote.tokenSymbol}
+                  </span>{" "}
+                  in the ERC-8183 kernel.
+                </p>
+              )}
               <p className="mt-1 font-mono text-[10px] text-white/40 break-all">
                 Kernel {quote.addresses.commerce}
               </p>

@@ -9,6 +9,7 @@ import { encodeFunctionData, parseEther, formatUnits, stringToHex } from "viem";
 import { getPin } from "./pins";
 import { getFeaturedByToken } from "./third-party-sellers";
 import { GENESIS_AGENTS, getGenesisAgent } from "./genesis-agents";
+import { parseDocumentedListU } from "./listing-price";
 
 export const ERC8183_CHAIN_ID = 56;
 export const ERC8183_CHAIN_HEX = "0x38";
@@ -267,14 +268,50 @@ export const ERC20_ABI = [
   },
 ] as const;
 
-/** List prices from studio.toml [payments.erc8183].price (18 decimals). */
-const GENESIS_BUDGET_U: Record<string, string> = {
-  "range-keeper": "0.08",
-  gridwright: "0.10",
-  "yield-router": "0.07",
-  "health-sentinel": "0.08",
+/**
+ * Genesis SKU $ → kernel $U. $8 list locks 0.08 $U (RangeKeeper 56754).
+ * HealthSentinel SKU $6 must lock 0.06 $U, not the old flat 0.08.
+ */
+export function skuUsdToLockU(usd: number): string {
+  if (!Number.isFinite(usd) || usd <= 0) return "";
+  return (usd / 100).toFixed(2);
+}
+
+export function formatLockU(amount: number): string {
+  if (!Number.isFinite(amount) || amount <= 0) return "";
+  return amount.toFixed(2);
+}
+
+export type LockUOpts = {
+  genesisSlug?: string;
+  chainId?: number;
+  tokenId?: string;
 };
 
+/** Published lock only. Null = seller has not named a $U amount. */
+export function listedLockU(opts: LockUOpts): string | null {
+  if (opts.genesisSlug) {
+    const g = getGenesisAgent(opts.genesisSlug);
+    if (g && g.basePriceUsd > 0) {
+      const u = skuUsdToLockU(g.basePriceUsd);
+      if (u) return u;
+    }
+  }
+  if (opts.chainId != null && opts.tokenId) {
+    const pin = getFeaturedByToken(opts.chainId, opts.tokenId);
+    if (typeof pin?.listPriceU === "number" && pin.listPriceU > 0) {
+      return formatLockU(pin.listPriceU);
+    }
+    const documented = parseDocumentedListU(
+      pin?.tagline,
+      pin?.description,
+    );
+    if (documented != null) return formatLockU(documented);
+  }
+  return null;
+}
+
+/** Fallback only for callers that still need a string. Prefer listedLockU. */
 export const DEFAULT_BUDGET_U = "0.08";
 /**
  * Extra seconds after the dispute window on create/fund.
@@ -399,14 +436,11 @@ export function resolveEscrowProvider(opts: {
   return null;
 }
 
-export function budgetUFor(opts: { genesisSlug?: string }): string {
-  if (opts.genesisSlug && GENESIS_BUDGET_U[opts.genesisSlug]) {
-    return GENESIS_BUDGET_U[opts.genesisSlug];
-  }
-  return DEFAULT_BUDGET_U;
+export function budgetUFor(opts: LockUOpts = {}): string {
+  return listedLockU(opts) || DEFAULT_BUDGET_U;
 }
 
-export function budgetWeiFor(opts: { genesisSlug?: string; budgetU?: string }): bigint {
+export function budgetWeiFor(opts: LockUOpts & { budgetU?: string }): bigint {
   const u = opts.budgetU || budgetUFor(opts);
   return parseEther(u);
 }
