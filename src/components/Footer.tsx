@@ -12,6 +12,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/categories", label: "Four jobs" },
       { href: "/for-agents", label: "Machine API" },
       { href: "/partners", label: "Partners" },
+      { href: "/roadmap", label: "Roadmap" },
     ],
   },
   {
@@ -81,6 +82,12 @@ export function Footer() {
               />
               Hire path ready
             </span>
+            <Link
+              href="/roadmap"
+              className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"
+            >
+              Roadmap
+            </Link>
             <Link
               href="/partners"
               className="font-mono text-[11.5px] text-white/30 transition-colors hover:text-white/55"

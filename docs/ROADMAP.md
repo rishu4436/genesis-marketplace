@@ -8,6 +8,8 @@ Repo: https://github.com/rishu4436/genesis-marketplace
 
 **North star (desk contract):** completed escrowed jobs with payment-tied feedback per week — not agents listed, not pageviews.
 
+**Public phases:** `/roadmap` — Phase 0–6. This file is the operator companion (current desk, 56754, never-do).
+
 **Constraint for every phase:** plan stays free and default. Escrow stays optional. Never invent a tx, rating, APR, or mainnet hash. Never mark Ready/Settled because money moved. Seller EOAs are identity/counterparties only — never pay them directly.
 
 ---
@@ -25,7 +27,7 @@ Genesis is a working **hire floor**, not a deck.
 | Submit rail | Built. Provider-only submit of the sealed plan hash. Approve refused until SUBMITTED + 7-day window |
 | Demo | https://youtu.be/5f-jZZgEx-c on `/judge` |
 | Runtime | Genesis APEX. Studio trial expired. AgentCore quota 0 |
-| Nav | **Hire** → RangeKeeper Get plan. **Browse** = catalog |
+| Nav | **Hire** → `/hire` (four desks). **Browse** = catalog |
 | Git | Public. `.env.local`, job stores, screenshot dumps stay out of git |
 
 **Counters:** plans delivered (tens per 7d) · escrow funded **2** · submitted **1** · settled **0** · unique payers **0**.

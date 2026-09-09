@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/browse",
     "/hire",
+    "/roadmap",
     "/categories",
     "/browse?index=1",
     "/packages",

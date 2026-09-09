@@ -10,7 +10,7 @@ Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, g
 
 **Judge path:** https://genesis-marketplace-one.vercel.app/judge  
 
-**Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md) — where we are, what’s missing, phases 0–6.
+**Roadmap:** https://genesis-marketplace-one.vercel.app/roadmap — phases 0–6. Operator notes: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Product deadline
 

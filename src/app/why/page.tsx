@@ -76,8 +76,8 @@ export default function WhyPage() {
         <Link href="/browse" className="btn-primary">
           Buy a specialist
         </Link>
-        <Link href="/judge" className="btn-secondary">
-          Judge path
+        <Link href="/roadmap" className="btn-secondary">
+          Roadmap
         </Link>
       </div>
     </div>
