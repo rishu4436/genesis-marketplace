@@ -4,7 +4,7 @@
  *
  * Capabilities:
  *  1. Orchestrate — intent → ranked agents + plan of attack + brief rewrite
- *  2. Enrich report — elevate full analysis with Grok synthesis
+ *  2. Enrich report — elevate full analysis with AI synthesis
  *  3. Concierge — multi-step hire advice grounded in catalog + buyer context
  *
  * Always falls back to deterministic engines when XAI_API_KEY is missing.
@@ -307,11 +307,11 @@ Tone: precise, institutional, no hype. Plan-only — never claim you moved funds
       sections: [...aiSections, ...opts.deliverable.sections],
       metrics: [
         ...opts.deliverable.metrics,
-        { label: "AI layer", value: "Grok enriched" },
+        { label: "AI layer", value: "AI enriched" },
       ],
       disclaimer:
         opts.deliverable.disclaimer +
-        " AI layer via SpaceXAI/xAI synthesizes the specialist plan — verify live venues before capital moves.",
+        " AI layer synthesizes the specialist plan — verify live venues before capital moves.",
     },
   };
 }

@@ -1,25 +1,22 @@
 # Genesis Agent Model v2
 
-Inspired by [bnb-chain/stockanalyst-agent-demo](https://github.com/bnb-chain/stockanalyst-agent-demo), improved for a **multi-agent marketplace**.
+Commerce and report model for the four DeFi job SKUs on Genesis.
 
-## What we took from StockAnalyst
+## Tiers
 
-| StockAnalyst | Genesis v2 |
-|--------------|------------|
-| Free x402 quote | **Free scan** tier (~1s metrics + rec) |
-| Paid full analysis | **Full analysis** multi-source report |
-| ERC-8183 escrow | **Escrow** tier (analysis now + `/fund` path) |
-| UOMP portfolio context | **Buyer context** panel (risk + positions) |
-| Multi-source data + thesis | CoinGecko + specialist math + bull/bear + hard rec |
-| Buyer + seller commerce | Same hire API, marketplace discovery on top |
+| Tier | What the buyer gets |
+|------|---------------------|
+| Free scan | ~1s metrics + recommendation |
+| Full plan | Multi-source structured report (default, no charge) |
+| Escrow | Same plan plus optional ERC-8183 lock on BSC 56 |
 
-## What is better for a marketplace
+## Marketplace shape
 
-1. **Job-first discovery** across 4 DeFi categories (not one stock agent)
+1. **Job-first discovery** across rebalancing, grid, yield, health factor
 2. **Specialist matching** + scores + packages
 3. **Shareable jobs** + outcomes ledger
-4. Free scan never blocks; full analysis is default
-5. Escrow never dead-ends — full report always, on-chain when policy allows
+4. Free scan never blocks; Get plan is default
+5. Escrow never dead-ends — plan always, on-chain lock when the buyer chooses
 
 ## API
 

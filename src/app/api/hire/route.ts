@@ -119,7 +119,7 @@ export async function POST(req: Request) {
       claimCode: job.claimCode,
       sessionId: job.session?.id ?? null,
       escrow: ESCROW_STANCE,
-      model: "genesis-v2-stockanalyst-inspired",
+      model: "genesis-v2",
       tier,
     });
   } catch (e) {

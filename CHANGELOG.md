@@ -8,6 +8,24 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.6 — 2026-09-09
+
+Strip other-project names and leftover AI-prompt copy from the product.
+
+### Was
+
+- Hire API and reports labeled `genesis-v2-stockanalyst-inspired`.
+- Job search showed **Grok orchestration**; deliverables said **Grok enriched**.
+- Operator files said “paste into Cursor / Claude Code” and shipped Studio AI prompts on each specialist.
+
+### Now
+
+- Model id is `genesis-v2`. UI says **AI match** / **AI enriched**.
+- Specialist objects no longer carry Studio prompt strings. Operator specs are labeled as `bag` deploy notes, not buyer prompts.
+- Partner names (TermiX, Altana, 8004scan, PancakeSwap) stay — those are real tracks.
+
+---
+
 ## 1.8.5 — 2026-09-09
 
 Sign in and create account are separate, easier paths.

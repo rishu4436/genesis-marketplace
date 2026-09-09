@@ -1,19 +1,10 @@
 /**
- * Genesis Agent Model v2 — inspired by bnb-chain/stockanalyst-agent-demo,
- * improved for a multi-category marketplace.
+ * Genesis Agent Model v2 — commerce and reports for four DeFi job SKUs.
  *
- * StockAnalyst demo strengths we adopt:
- *  - Free vs paid commerce tiers
- *  - Buyer context (portfolio / risk) like UOMP Guard
+ *  - Free scan / full plan / optional escrow
+ *  - Buyer context (risk)
  *  - Multi-source analysis + structured report
- *  - Clear recommendation + metrics
- *  - Escrow path (ERC-8183) as top tier when protocol allows
- *
- * Marketplace improvements over the single-agent demo:
- *  - Job-first discovery across 4 DeFi categories
- *  - Specialist matching + scores
- *  - Shareable jobs + outcomes ledger
- *  - Packages (multi-agent)
+ *  - Job-first discovery, specialist matching, shareable jobs
  */
 
 export type CommerceTier = "free" | "full" | "escrow";
@@ -86,4 +77,4 @@ export function marketplaceTiers(opts?: {
   ];
 }
 
-export const AGENT_MODEL_VERSION = "genesis-v2-stockanalyst-inspired";
+export const AGENT_MODEL_VERSION = "genesis-v2";

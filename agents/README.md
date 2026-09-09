@@ -25,9 +25,8 @@ bag skills install --target both --scope user
 ### Commands (example: RangeKeeper)
 
 ```bash
-# Empty folder, then in Cursor/Claude paste STUDIO_PROMPT.md
-# or:
-bag init range-keeper --network bsc-testnet --llm-provider pieverse-llm --no-onboard
+# Empty folder, then:
+bag init range-keeper --network bsc-mainnet --llm-provider pieverse-llm --no-onboard
 
 # In a private terminal (password never in chat):
 # set WALLET_PASSWORD=...

@@ -1,5 +1,5 @@
 /**
- * Commerce rails / tiers — aligned with stockanalyst free / paid / escrow.
+ * Commerce rails / tiers — free scan, full plan, optional escrow.
  */
 
 import {

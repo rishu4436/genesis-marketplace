@@ -1,5 +1,5 @@
 /**
- * Full report engine — stockanalyst-quality structure for Genesis specialists.
+ * Full report engine for Genesis specialists.
  * Combines: brief parse + market sources + buyer context + expert plan.
  */
 
@@ -245,7 +245,7 @@ export async function buildFullReport(
       " Multi-source snapshot may lag; verify live venues before capital moves.",
   };
 
-  // AI enrichment layer (SpaceXAI / Grok) when key present
+  // AI enrichment layer when XAI_API_KEY is present
   if (hasXaiKey()) {
     try {
       const enriched = await enrichDeliverableWithAi({

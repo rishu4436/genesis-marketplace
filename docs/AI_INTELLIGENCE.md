@@ -1,6 +1,6 @@
 # Genesis AI Intelligence
 
-Marketplace brain powered by **SpaceXAI / xAI (Grok)** when `XAI_API_KEY` is set.
+Marketplace brain powered by **xAI** when `XAI_API_KEY` is set.
 Deterministic engines always work as fallback.
 
 ## Why not a simple chatbot
@@ -20,7 +20,7 @@ Genesis AI does **orchestration + enrichment + concierge hire routing**.
 |---------|----------|--------|
 | Orchestrate | `POST /api/ai/orchestrate` | Intent, rewritten brief, ranked specialists, plan of attack |
 | Concierge | `POST /api/ai/concierge` | Hire advisor with CTAs |
-| Report enrich | inside Full analysis | Grok executive brief + hard rec on specialist plan |
+| Report enrich | inside Full analysis | AI executive brief + hard rec on specialist plan |
 | Status | `GET /api/ai/status` | Whether AI is live |
 
 ## Setup

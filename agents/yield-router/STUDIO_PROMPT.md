@@ -1,6 +1,8 @@
-# YieldRouter — Studio prompt
+# YieldRouter — BNB Agent Studio spec
 
-Create a BNB Agent Studio seller named **YieldRouter** on **bsc-testnet** (ERC-8183 + x402 + ERC-8004 ready).
+Operator notes for `bag init` / deploy. Not a buyer-facing prompt.
+
+**Seller:** YieldRouter on **bsc-mainnet** (ERC-8183 + x402 + ERC-8004).
 
 **Product:** Sells **yield reallocation briefs** for BSC assets, including PancakeSwap farm awareness. No custody.
 

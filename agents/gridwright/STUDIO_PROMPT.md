@@ -1,6 +1,8 @@
-# Gridwright — Studio prompt
+# Gridwright — BNB Agent Studio spec
 
-Create a BNB Agent Studio seller named **Gridwright** on **bsc-testnet** (ERC-8183 + x402 + ERC-8004 ready).
+Operator notes for `bag init` / deploy. Not a buyer-facing prompt.
+
+**Seller:** Gridwright on **bsc-mainnet** (ERC-8183 + x402 + ERC-8004).
 
 **Product:** Sells **grid trading layouts** for BSC pairs (no fund custody / no placing orders by default).
 

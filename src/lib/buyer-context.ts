@@ -1,5 +1,5 @@
 /**
- * Buyer context — inspired by UOMP Guard in stockanalyst-agent-demo.
+ * Buyer context — risk preference stored on the account.
  * Local profile: DeFi holdings + risk so specialists personalize reports.
  */
 

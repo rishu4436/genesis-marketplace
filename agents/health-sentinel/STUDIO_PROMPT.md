@@ -1,6 +1,8 @@
-# HealthSentinel — Studio prompt
+# HealthSentinel — BNB Agent Studio spec
 
-Create a BNB Agent Studio seller named **HealthSentinel** on **bsc-testnet** (ERC-8183 + x402 + ERC-8004 ready).
+Operator notes for `bag init` / deploy. Not a buyer-facing prompt.
+
+**Seller:** HealthSentinel on **bsc-mainnet** (ERC-8183 + x402 + ERC-8004).
 
 **Product:** Sells **health-factor protection plans** for Venus/Aave-style positions on BSC. Advisory only — no custody.
 

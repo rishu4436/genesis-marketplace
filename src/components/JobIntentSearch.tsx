@@ -134,7 +134,7 @@ export function JobIntentSearch({ variant = "hero" }: Props) {
         <div className="mt-5 space-y-3">
           {orch?.ai && (
             <p className="text-xs text-emerald-300/90">
-              Grok orchestration ·{" "}
+              AI match ·{" "}
               {orch.intent?.urgency || "medium"} urgency
               {orch.intent?.capitalAtRisk
                 ? ` · capital ${orch.intent.capitalAtRisk}`

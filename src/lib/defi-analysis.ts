@@ -1,5 +1,5 @@
 /**
- * Multi-source DeFi analysis layer — stockanalyst-inspired.
+ * Multi-source DeFi analysis layer for Genesis specialists.
  * Pulls public market snapshots when possible; always returns labeled sources.
  */
 

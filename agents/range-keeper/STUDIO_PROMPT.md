@@ -1,10 +1,8 @@
-# RangeKeeper — Studio prompt
+# RangeKeeper — BNB Agent Studio spec
 
-Paste into Cursor / Claude Code after `bag skills install`:
+Operator notes for `bag init` / deploy. Not a buyer-facing prompt.
 
----
-
-Create a new BNB Agent Studio seller named **RangeKeeper** on **bsc-testnet** with ERC-8183, ERC-8004-ready identity, and x402 (pieverse-llm).
+**Seller:** RangeKeeper on **bsc-mainnet** with ERC-8183, ERC-8004 identity, and x402.
 
 **Product:** Sells PancakeSwap V3 LP **rebalance plans** (no fund custody).
 

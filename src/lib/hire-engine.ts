@@ -115,7 +115,7 @@ export type HireJob = {
   notes?: string;
   /** holdout jobs are shadow-book evidence, never buyer commerce */
   purpose?: "hire" | "holdout";
-  /** free | full | escrow — stockanalyst-inspired */
+  /** free | full | escrow */
   tier?: CommerceTier;
   buyerContext?: BuyerContext | null;
   quote?: HireQuote;

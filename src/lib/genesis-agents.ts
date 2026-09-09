@@ -25,7 +25,6 @@ export type GenesisAgent = {
   serviceUrl?: string;
   accent: string;
   icon: string;
-  studioPrompt: string;
 };
 
 export const GENESIS_AGENTS: GenesisAgent[] = [
@@ -50,8 +49,6 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "medium",
     accent: "from-amber-400 to-orange-500",
     icon: "◎",
-    studioPrompt:
-      "Create a BNB Agent Studio seller named RangeKeeper on bsc-mainnet that sells PancakeSwap V3 LP rebalance plans. On fulfill, analyze range health, propose new bands, fee APR vs IL notes. No fund custody. ERC-8183 commerce + x402 for LLM. min/max price around $5–$20.",
   },
   {
     slug: "gridwright",
@@ -74,8 +71,6 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "medium",
     accent: "from-sky-400 to-blue-600",
     icon: "▦",
-    studioPrompt:
-      "Create a BNB Agent Studio seller named Gridwright on bsc-mainnet that sells grid trading layouts for BSC pairs. On fulfill, return N-level grid, spacing, pause DD rules, and 24h fill simulation. No custody. ERC-8183 + x402.",
   },
   {
     slug: "yield-router",
@@ -98,8 +93,6 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "low",
     accent: "from-emerald-400 to-teal-600",
     icon: "▲",
-    studioPrompt:
-      "Create a BNB Agent Studio seller named YieldRouter on bsc-mainnet that sells yield reallocation briefs for BSC (including PancakeSwap farms). Rank venues by risk-adjusted APR, propose splits under gas budget. No custody. ERC-8183 + x402.",
   },
   {
     slug: "health-sentinel",
@@ -122,8 +115,6 @@ export const GENESIS_AGENTS: GenesisAgent[] = [
     riskDefault: "low",
     accent: "from-rose-400 to-red-600",
     icon: "✚",
-    studioPrompt:
-      "Create a BNB Agent Studio seller named HealthSentinel on bsc-mainnet that sells lending health-factor protection plans (Venus/Aave-style on BSC). Simulate shocks, alert thresholds, repay vs collateral options. No custody. ERC-8183 + x402.",
   },
 ];
 
