@@ -195,8 +195,8 @@ export function genesisHref(g: GenesisAgent) {
   return `/genesis/${g.slug}`;
 }
 
-/** Header / landing Hire — opens Get plan. Does not auto-POST. */
-export const HIRE_NOW_HREF = "/genesis/range-keeper#buy";
+/** Header / landing Hire — four-desk floor. Does not pin one specialist. */
+export const HIRE_NOW_HREF = "/hire";
 
 /**
  * Query before hash so HireWizard can read task.

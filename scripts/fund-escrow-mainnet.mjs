@@ -40,7 +40,8 @@ const POLICY = "0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5";
 const U_TOKEN = "0xcE24439F2D9C6a2289F741120FE202248B666666";
 const BUDGET = parseEther("0.08");
 const MIN_BNB = parseEther("0.007");
-const DEADLINE_SECONDS = 1800n;
+/** Must cover OptimisticPolicy disputeWindow (7d). 1800s made 56748 un-submittable. */
+const DEADLINE_SECONDS = 7n * 24n * 3600n;
 const TASK =
   "Rebalance my PCS V3 BNB/USDT LP when out of range. Propose new bands, fee APR vs IL, and whether to reset now. Plan only — I keep the keys.";
 const SITE = "https://genesis-marketplace-one.vercel.app";
@@ -292,6 +293,25 @@ if (allowance < BUDGET) {
 
 const expiredAt =
   BigInt(Math.floor(Date.now() / 1000)) + BigInt(window) + DEADLINE_SECONDS;
+const nowSec = BigInt(Math.floor(Date.now() / 1000));
+if (expiredAt < nowSec + BigInt(window) + 24n * 3600n) {
+  console.error(
+    "FAIL  expiredAt would not leave a 7d submit window — refusing to fund another un-submittable lock.",
+  );
+  process.exit(2);
+}
+console.log(
+  JSON.stringify(
+    {
+      expiredAt: expiredAt.toString(),
+      expiredISO: new Date(Number(expiredAt) * 1000).toISOString(),
+      deadlineSeconds: Number(DEADLINE_SECONDS),
+      submitWindowOkAtFund: true,
+    },
+    null,
+    2,
+  ),
+);
 
 const created = await send("Create escrow job", {
   address: COMMERCE,

@@ -3,7 +3,12 @@
  * Run: npx --yes tsx scripts/verify-recommendation-cta.ts
  */
 
-import { allGenesisAgents, genesisBuyHref, hrefAutoHires } from "../src/lib/genesis-agents";
+import {
+  allGenesisAgents,
+  genesisBuyHref,
+  hrefAutoHires,
+  HIRE_NOW_HREF,
+} from "../src/lib/genesis-agents";
 import { matchAgentsForJob } from "../src/lib/intent-match";
 import { listingToMatchShape, rankGenesisForJob } from "../src/lib/job-rank";
 import { allFeaturedSlots, featuredSlotsForJob } from "../src/lib/featured-slots";
@@ -66,6 +71,17 @@ async function main() {
   if (concierge.cta?.href) {
     assertNoAutoHire("concierge Open CTA", concierge.cta.href);
   }
+
+  check(
+    "Hire CTA is the four-desk floor, not RangeKeeper",
+    HIRE_NOW_HREF === "/hire",
+    HIRE_NOW_HREF,
+  );
+  check(
+    "Hire CTA does not pin a specialist",
+    !HIRE_NOW_HREF.includes("range-keeper") && !hrefAutoHires(HIRE_NOW_HREF),
+    HIRE_NOW_HREF,
+  );
 
   const judgeCold = genesisBuyHref(allGenesisAgents()[0], {
     task,

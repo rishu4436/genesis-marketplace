@@ -1,6 +1,6 @@
 # Genesis Marketplace roadmap
 
-Living plan after `88634c3`. Facts below are what the desk actually is — not a pitch.
+Living plan after Phase 1 submit on job **56754**. Facts below are what the desk actually is — not a pitch.
 
 Live: https://genesis-marketplace-one.vercel.app  
 Judge: https://genesis-marketplace-one.vercel.app/judge  
@@ -21,31 +21,38 @@ Genesis is a working **hire floor**, not a deck.
 | Product | 4 job SKUs · 21 hireable (4 By Genesis + 17 live A2A) · ~341k identities marked Unhireable |
 | Buyer loop | Discover → Compare → **Get plan** → hashed receipt → optional escrow |
 | Plan hire | Live. RangeKeeper / HealthSentinel deliver structured plans. Featured LP #265375 returns a real **quoted** A2A result |
-| Escrow | Mainnet job **56748 FUNDED** (0.08 $U, seller $U stayed 0). `submitTx` = null. `settleTx` = null |
-| Submit rail | Built. Provider-only `POST /api/escrow/submit`. Approve refused until SUBMITTED + 7-day window |
+| Escrow | Mainnet job **56754 SUBMITTED** (0.08 $U in kernel, seller $U = 0). `settleTx` = null. Approve after **2026-09-16 04:25 UTC** |
+| Submit rail | Built. Provider-only submit of the sealed plan hash. Approve refused until SUBMITTED + 7-day window |
 | Demo | https://youtu.be/5f-jZZgEx-c on `/judge` |
 | Runtime | Genesis APEX. Studio trial expired. AgentCore quota 0 |
 | Nav | **Hire** → RangeKeeper Get plan. **Browse** = catalog |
 | Git | Public. `.env.local`, job stores, screenshot dumps stay out of git |
 
-**Counters:** plans delivered (tens per 7d) · escrow funded **1** · settled **0** · unique payers **0**.
+**Counters:** plans delivered (tens per 7d) · escrow funded **2** · submitted **1** · settled **0** · unique payers **0**.
 
-So: hackathon-ready hire demo. Not yet “rank follows paid delivery.”
+So: hire demo plus one honest SUBMITTED lock. Not yet “rank follows paid delivery.”
 
-### 56748 — honest status
+### 56754 — honest status (current proof)
 
-On-chain job 56748 is **FUNDED** until `expiredAt` **2026-09-15 16:35 UTC**. OptimisticPolicy reverts `submit()` with **`SubmissionTooLate()`** unless `expiredAt ≥ now + disputeWindow` (7 days). This lock was created with only ~30 minutes of submit slack, so the kernel will not accept submit on 56748.
+On-chain job **56754** is **SUBMITTED**. $U is still in the kernel. Not Ready. Not Settled.
 
-- Receipt: `/jobs/job_mtsv2f9d_9yjpwg`
-- Fund tx: `0x9a9f3f4531668c4760b5a36a93c005ed0fb0adb93f1caca99334d97bcee7cdbe`
-- After expiry the **buyer** can claim refund
-- To finish the cycle: fund a **new** lock (now 7-day submit window), then submit from the RangeKeeper **operator** wallet `0xa17E5B37b8987DF7aACd00Fe37A64Ce9dccD0133`. The buyer who funded (`0xd951…0b93`) cannot submit.
+- Receipt: `/jobs/job_mttldo5y_1x953q`
+- Fund tx: `0x665ac9334b89bd9b9a9b09b08795cb6a6f97711b8acb1c3fefdb64d1a200fb97`
+- Submit tx: `0xbb7818981997cf1c7e955c5414f924ff7d36c5b4f9edac41e22934bd15b7835e`
+- Plan hash on-chain: `0x0f5ec751bfc370d2c668d6b0355697eefd35280009b13bf401107580dfae002a`
+- Buyer `0xd951…0b93` · provider RangeKeeper `0xa17E…0133`
+- Dispute window ends **2026-09-16T04:25:13Z**. Then buyer can approve.
+- Seller $U stayed 0.
+
+### 56748 — leftover un-submittable lock
+
+On-chain job 56748 is still **FUNDED** until `expiredAt` **2026-09-15 16:35 UTC**. OptimisticPolicy reverts `submit()` with **`SubmissionTooLate()`**. After expiry the **buyer** can claim refund. Do not call it settled.
 
 ---
 
 ## Missing pieces
 
-1. **Escrow cycle incomplete.** FUNDED ≠ paid. Kernel: OPEN → FUNDED → **SUBMITTED** → 7-day window → COMPLETED. No on-chain submit yet. APEX is plan-only; on-chain “deliverable” is the sealed plan hash.
+1. **Escrow cycle waiting on the 7-day window.** 56754 is SUBMITTED. Kernel: OPEN → FUNDED → **SUBMITTED** → 7-day window → COMPLETED. Approve on 16 Sep. APEX is plan-only; on-chain “deliverable” is the sealed plan hash.
 2. **Rank is a claim.** Receipt score exists from sealed **plans**. Rank from **paid** jobs cannot exist until `settleTx` exists.
 3. **Job page is a receipt, not a live desk.** Slot0 / tick / Venus can appear when RPC answers on that hire. No updating APR / HF / grid dashboard. Inventing one would be worse than looking static.
 4. **Supply side is thin.** `/sell` can probe A2A and claim a token. No community claims. No seller dispute desk.
@@ -64,9 +71,9 @@ On-chain job 56748 is **FUNDED** until `expiredAt` **2026-09-15 16:35 UTC**. Opt
 | Do | Don’t |
 |---|---|
 | Watch Vercel after `88634c3` | Restyle the landing mid-judging |
-| Cold run: home → Hire → Get plan → receipt → `/advantage` → `/judge` | Call 56748 settled |
-| Keep 56748 labeled **FUNDED, not Ready** | Approve payout early |
-| If a judge asks “real hire?” → receipt + BscScan fund tx | Invent a submit/settle hash |
+| Cold run: home → Hire → Get plan → receipt → `/advantage` → `/judge` | Call 56754 settled |
+| Keep 56754 labeled **SUBMITTED, not Ready / not Settled** | Approve payout early |
+| If a judge asks “real hire?” → receipt + fund tx + submit tx | Invent a settle hash |
 
 **Exit:** a stranger’s phone, no wallet, Hire → Get plan → receipt in &lt;90s.
 
@@ -74,16 +81,16 @@ On-chain job 56748 is **FUNDED** until `expiredAt` **2026-09-15 16:35 UTC**. Opt
 
 ### Phase 1 — Close one honest escrow cycle (highest leverage)
 
-This is the only item that moves the north star from 0. **Submit rail is in the product.** Remaining work is operator, not code.
+This is the only item that moves the north star from 0. **Submit is on-chain for 56754.** Remaining work is wait + buyer approve.
 
 **Sequence (RangeKeeper only):**
 
 1. Get plan (works).
-2. Hire with escrow → fund (56748 done; **new lock required** for submit).
-3. **On-chain SUBMIT** of the sealed plan hash from the **provider** wallet. Status becomes SUBMITTED, not Ready.
-4. Wait **7 days** (604800s). UI: “settle unlocks at …”.
-5. Buyer **settle/approve**. Record real `settleTx`. Desk: funded 1 → **settled 1**.
-6. Pin settle hash on `/judge` the same way fund is pinned.
+2. Hire with escrow → fund (**56754 FUNDED**).
+3. **On-chain SUBMIT** of the sealed plan hash from the **provider** wallet (**done** — SUBMITTED, not Ready).
+4. Wait **7 days** (604800s) until **2026-09-16T04:25:13Z**.
+5. Buyer **settle/approve**. Record real `settleTx`. Desk: submitted 1 → **settled 1**.
+6. Pin settle hash on `/judge` the same way fund + submit are pinned.
 
 **Already shipped**
 
@@ -93,11 +100,11 @@ This is the only item that moves the north star from 0. **Submit rail is in the 
 - New funds: `DEADLINE_SECONDS` = 7 days so submit is possible
 - Status surfaces `SubmissionTooLate` instead of a silent revert
 
-**Operator steps**
+**Operator steps left**
 
-1. Open `/genesis/range-keeper?escrow=1#buy` and fund with the **buyer** wallet.
-2. On the receipt, **Submit plan hash on-chain** with RangeKeeper operator `0xa17E…0133`.
-3. Wait 7 days, then **Approve payout** with the buyer wallet.
+1. Do nothing until **2026-09-16T04:25:13Z**.
+2. **Approve payout** with the buyer wallet `0xd951…0b93`.
+3. Pin `settleTx` on `/judge`. Do not approve early — the kernel reverts.
 
 **Exit:** one BscScan story: create → fund → submit → wait → settle. Seller EOA $U stays 0 until kernel settle.
 
@@ -173,8 +180,8 @@ Only after 1–3. None of this saves the hackathon.
 
 ```
 NOW (judging)     Phase 0 freeze + one cold demo pass
-THIS WEEK         Phase 1: new fund → operator submit (56748 cannot submit)
-+7 DAYS           Phase 1 settle → pin settleTx
+DONE              Phase 1 fund + submit (56754 SUBMITTED)
+2026-09-16        Phase 1 settle → pin settleTx
 PARALLEL          Phase 2 receipt strip + identity gate
 IF TIME           Phase 3 camera advantage + one manual PCS tx
 AFTER WINNERS     Phase 4 sell loop, then Phase 5 rank

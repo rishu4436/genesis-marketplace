@@ -91,7 +91,12 @@ export function Header() {
               </Link>
             );
           })}
-          <Link href={HIRE_NOW_HREF} className="btn-solid ml-2 !h-9 !px-4 !text-[0.8rem]">
+          <Link
+            href={HIRE_NOW_HREF}
+            className={`btn-solid ml-2 !h-9 !px-4 !text-[0.8rem] ${
+              navActive(pathname, "/hire") ? "ring-1 ring-white/20" : ""
+            }`}
+          >
             Hire
           </Link>
           <span className="ml-1">
@@ -133,7 +138,7 @@ export function Header() {
           >
             <nav className="mx-auto flex max-w-[1160px] flex-col px-5 py-3 sm:px-8">
               <Link href={HIRE_NOW_HREF} className="btn-solid mb-2 mt-1 !h-11 w-full !text-sm">
-                Get plan
+                Hire
               </Link>
               {MOBILE.map((item) => (
                 <Link
