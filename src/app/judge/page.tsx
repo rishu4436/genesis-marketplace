@@ -105,7 +105,7 @@ export default async function JudgePage() {
             </a>
           )}
           <p className="mt-2 text-[11px] text-white/40">
-            Path: home → Browse → RangeKeeper → Get plan → receipt →
+            Path: home → Hire → RangeKeeper → Get plan → receipt →
             /advantage. Soft-hire receipts below are not ERC-8183 escrow
             proof.
           </p>
@@ -122,10 +122,10 @@ export default async function JudgePage() {
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
-          <Link href="/browse" className="text-amber-300 hover:underline">
+          <Link href="/hire" className="text-amber-300 hover:underline">
             Hire
           </Link>{" "}
-          — pick RangeKeeper
+          — four desks, then RangeKeeper for the 90s plan
         </li>
         <li>
           <span className="font-semibold text-white">2.</span>{" "}

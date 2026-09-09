@@ -33,7 +33,7 @@ export default function CategoriesPage() {
         </Link>{" "}
         or{" "}
         <Link
-          href="/browse"
+          href="/hire"
           className="font-semibold text-amber-300 hover:text-amber-200"
         >
           hire a By Genesis specialist

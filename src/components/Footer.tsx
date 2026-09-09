@@ -107,7 +107,7 @@ export function Footer() {
               Judge
             </Link>
             <Link
-              href="/browse"
+              href="/hire"
               className="text-[13.5px] font-medium text-white/55 transition-colors hover:text-[#F0B90B]"
             >
               Hire →
