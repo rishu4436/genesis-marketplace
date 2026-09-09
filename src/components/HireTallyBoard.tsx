@@ -22,7 +22,7 @@ export function HireTallyBoard({
       tone: "hire" as const,
     },
     {
-      href: "/browse",
+      href: "/browse?index=1",
       value: formatCount(tally.aliveNotHireable),
       label: "Alive, not hireable",
       hint: "URL answered HTTP 200. No hire we can complete.",

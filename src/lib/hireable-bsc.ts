@@ -25,6 +25,8 @@ export type HireableBscRow = {
 export type HireableBscFile = {
   asOf: string;
   registered: number;
+  /** Last census endpoint-alive count. Alive HTTP ≠ hireable. */
+  endpointAlive?: number;
   candidates: number;
   probedEndpoints: number;
   hireable: HireableBscRow[];
@@ -89,6 +91,7 @@ export function loadHireableBsc(): HireableBscFile {
   const empty: HireableBscFile = {
     asOf: "",
     registered: 0,
+    endpointAlive: 0,
     candidates: 0,
     probedEndpoints: 0,
     hireable: [],

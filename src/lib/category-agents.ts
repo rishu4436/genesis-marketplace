@@ -10,6 +10,7 @@ import { compareByScore } from "./agent-score";
 import { filterHireableCatalog } from "./catalog-quality";
 import { isHireableListing, splitHireable } from "./hire-class";
 import { featuredAsAgent, getLiveSellers } from "./third-party-sellers";
+import { deskFloorAgents } from "./desk-floor";
 import { fetchBrainFindForCategory, overlayA2a } from "./brain-find";
 import {
   censusAgentsForCategory,
@@ -210,6 +211,17 @@ export async function getRelatedAgents(
   agent: Agent,
   limit = 4,
 ): Promise<Agent[]> {
+  const floor = deskFloorAgents()
+    .filter(isHireableListing)
+    .filter(
+      (a) =>
+        !(
+          a.chain_id === agent.chain_id &&
+          String(a.token_id) === String(agent.token_id)
+        ),
+    );
+  if (floor.length) return floor.slice(0, limit);
+
   const fromName = agent.name?.split(/\s+/).slice(0, 3).join(" ") || "trading";
   const [search, list] = await Promise.all([
     searchAgentsSafe({

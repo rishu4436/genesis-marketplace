@@ -29,7 +29,8 @@ function tallyFrom(census: {
   );
 
   const registered = census?.stats.registered || file.registered || 0;
-  const endpointAlive = census?.stats.alive || 0;
+  const endpointAlive =
+    census?.stats.alive || file.endpointAlive || 0;
   const aliveNotHireable = census?.agents.length
     ? census.agents.filter((a) => !hireableIds.has(String(a.token_id))).length
     : Math.max(0, endpointAlive - hireableIds.size);

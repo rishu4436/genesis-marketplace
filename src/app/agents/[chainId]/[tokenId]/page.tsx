@@ -31,6 +31,7 @@ import {
   formatOnchainRating,
 } from "@/lib/feedback-score";
 import {
+  featuredAsAgent,
   getFeaturedByToken,
   isFeaturedThirdParty,
   resolveCatalogAgent,
@@ -52,8 +53,23 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { chainId, tokenId } = await params;
-  const res = await getAgentSafe(Number(chainId), tokenId);
-  const agent = resolveCatalogAgent(Number(chainId), tokenId, res.data);
+  const cid = Number(chainId);
+  const featured = getFeaturedByToken(cid, tokenId);
+  if (featured) {
+    return { title: featured.name, description: featured.description };
+  }
+  const fromHireable = hireableBscAsAgents().find(
+    (a) =>
+      Number(a.chain_id) === cid && String(a.token_id) === String(tokenId),
+  );
+  if (fromHireable) {
+    return {
+      title: fromHireable.name || `Agent #${tokenId}`,
+      description: fromHireable.description,
+    };
+  }
+  const res = await getAgentSafe(cid, tokenId);
+  const agent = resolveCatalogAgent(cid, tokenId, res.data);
   return {
     title: agent?.name || `Agent #${tokenId}`,
     description: agent?.description,
@@ -65,15 +81,20 @@ export default async function AgentDetailPage({ params }: Props) {
   const cid = Number(chainId);
   if (!Number.isFinite(cid)) notFound();
 
-  const agentRes = await getAgentSafe(cid, tokenId);
   const featured = getFeaturedByToken(cid, tokenId);
   const fromHireable = hireableBscAsAgents().find(
     (a) =>
       Number(a.chain_id) === cid && String(a.token_id) === String(tokenId),
   );
+  const pinned = featured
+    ? featuredAsAgent(featured)
+    : fromHireable || null;
+  const agentRes = pinned
+    ? { data: null, error: null }
+    : await getAgentSafe(cid, tokenId);
   const agent =
     resolveCatalogAgent(cid, tokenId, agentRes.data) ||
-    fromHireable ||
+    pinned ||
     null;
 
   if (!agent) {
@@ -90,7 +111,9 @@ export default async function AgentDetailPage({ params }: Props) {
   }
 
   const [fbRes, related] = await Promise.all([
-    listFeedbacksSafe({ chainId: cid, tokenId, limit: 10 }),
+    pinned
+      ? Promise.resolve({ data: [] as Awaited<ReturnType<typeof listFeedbacksSafe>>["data"], error: null })
+      : listFeedbacksSafe({ chainId: cid, tokenId, limit: 10 }),
     getRelatedAgents(agent, 4),
   ]);
   const feedbacks = (fbRes.data || []).filter((f) =>

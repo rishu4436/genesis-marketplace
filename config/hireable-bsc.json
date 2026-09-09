@@ -1,6 +1,7 @@
 {
   "asOf": "2026-09-08T09:33:10.203Z",
   "registered": 340948,
+  "endpointAlive": 323,
   "candidates": 364,
   "probedEndpoints": 22,
   "hireable": [

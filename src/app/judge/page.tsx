@@ -59,8 +59,11 @@ export default async function JudgePage() {
           . Alive means a declared URL answered — not that Genesis can
           complete the hire. Hireable rows still require A2A we can call
           or a Genesis specialist.{" "}
-          <Link href="/browse" className="text-amber-300 hover:underline">
-            Browse the alive set
+          <Link
+            href="/browse?index=1"
+            className="text-amber-300 hover:underline"
+          >
+            Open the raw index
           </Link>
           .
         </p>
