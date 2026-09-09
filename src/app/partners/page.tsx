@@ -35,9 +35,10 @@ export default async function PartnersPage() {
       <p className="section-label">Partners</p>
       <h1 className="display-section mt-3 text-white">On the hire floor</h1>
       <p className="lead mt-4 max-w-2xl">
-        These integrations feed catalog, ratings, live ticks, session keys, and
-        advantage proof. They are not a slide — each one has a probe and a
-        product surface.
+        These integrations feed the catalog, ratings, live ticks, session keys,
+        and advantage proof. They are not a slide — each one has a probe and a
+        product surface. Browse is the catalog. Optional escrow is ERC-8183 on
+        BSC mainnet.
       </p>
       <p className="mt-3 text-[12px] text-white/40">
         {snap.liveCount}/{snap.total} answering · updated{" "}
@@ -113,7 +114,7 @@ export default async function PartnersPage() {
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Link href={HIRE_NOW_HREF} className="btn-solid">
-          Get plan
+          Browse
         </Link>
         <Link href="/judge" className="btn-line">
           Judge path

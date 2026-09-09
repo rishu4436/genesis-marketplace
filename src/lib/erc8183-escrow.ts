@@ -1,7 +1,8 @@
 /**
- * BSC mainnet ERC-8183 stack used by in-app escrow checkout.
- * Addresses match @altananetwork/sdk ERC8183_ADDRESSES[56], apex-contracts,
- * and bnbagent BNB_CHAIN_ADDRESSES — not a new deployment.
+ * ERC-8183 stacks used by in-app escrow checkout.
+ * Mainnet (56) matches @altananetwork/sdk ERC8183_ADDRESSES[56], apex-contracts,
+ * and bnbagent BNB_CHAIN_ADDRESSES. Testnet (97) uses the live kernel — not
+ * the stale SDK 0.7.1 policy (that address is not whitelisted).
  */
 
 import { encodeFunctionData, parseEther, formatUnits, stringToHex } from "viem";
@@ -11,15 +12,48 @@ import { GENESIS_AGENTS, getGenesisAgent } from "./genesis-agents";
 
 export const ERC8183_CHAIN_ID = 56;
 export const ERC8183_CHAIN_HEX = "0x38";
+export const ERC8183_TESTNET_CHAIN_ID = 97;
+export const ERC8183_TESTNET_CHAIN_HEX = "0x61";
 
-export const ERC8183_MAINNET = {
-  chainId: ERC8183_CHAIN_ID,
-  commerce: "0xEa4DAa3100A767e86FDed867729ae7446476EBA6" as `0x${string}`,
-  router: "0x51895229E12F9876011789B04f8698af06cCD6DA" as `0x${string}`,
-  policy: "0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5" as `0x${string}`,
-  registry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" as `0x${string}`,
-  paymentToken: "0xcE24439F2D9C6a2289F741120FE202248B666666" as `0x${string}`,
-} as const;
+export type Erc8183Addresses = {
+  chainId: 56 | 97;
+  commerce: `0x${string}`;
+  router: `0x${string}`;
+  policy: `0x${string}`;
+  registry: `0x${string}`;
+  paymentToken: `0x${string}`;
+};
+
+export const ERC8183_MAINNET: Erc8183Addresses = {
+  chainId: 56,
+  commerce: "0xEa4DAa3100A767e86FDed867729ae7446476EBA6",
+  router: "0x51895229E12F9876011789B04f8698af06cCD6DA",
+  policy: "0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5",
+  registry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+  paymentToken: "0xcE24439F2D9C6a2289F741120FE202248B666666",
+};
+
+/**
+ * BSC testnet kernel. SDK 0.7.1 still lists policy 0x4F46…78A6 — that
+ * address is NOT whitelisted (PolicyNotWhitelisted). Live OptimisticPolicy
+ * on the testnet router is 0xd6a4…1cEA with a 900s dispute window.
+ */
+export const ERC8183_TESTNET: Erc8183Addresses = {
+  chainId: 97,
+  commerce: "0xa206c0517B6371C6638CD9e4a42Cc9f02A33B0DE",
+  router: "0xD7d36D66d2F1B608A0F943f722D27e3744f66F25",
+  policy: "0xd6a4217588F6B1F5657a92A3e94E6422aD771cEA",
+  registry: "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  paymentToken: "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565",
+};
+
+export function isEscrowChainId(n: number): n is 56 | 97 {
+  return n === 56 || n === 97;
+}
+
+export function erc8183Stack(chainId: number = 56): Erc8183Addresses {
+  return chainId === 97 ? ERC8183_TESTNET : ERC8183_MAINNET;
+}
 
 export const JOB_STATUS = [
   "OPEN",
@@ -221,6 +255,16 @@ export const ERC20_ABI = [
     inputs: [],
     outputs: [{ type: "string" }],
   },
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
 ] as const;
 
 /** List prices from studio.toml [payments.erc8183].price (18 decimals). */
@@ -239,9 +283,34 @@ export const DEFAULT_BUDGET_U = "0.08";
  * time-to-submit after fund — 30 minutes was too short.
  */
 export const DEADLINE_SECONDS = 7 * 24 * 60 * 60;
+/** Extra seconds after the dispute window on testnet (window is 900s). */
+export const TESTNET_DEADLINE_SECONDS = 2 * 60 * 60;
+
+export function deadlineSecondsFor(chainId: number): number {
+  return chainId === 97 ? TESTNET_DEADLINE_SECONDS : DEADLINE_SECONDS;
+}
 /** Typical 4–5 self-paid txs on BSC. */
 export const ESTIMATED_GAS_BNB = "0.004";
 export const MIN_BNB_BNB = "0.007";
+/** Testnet gas is cheap; keep a small tBNB floor so fund/settle can sign. */
+export const ESTIMATED_GAS_BNB_TESTNET = "0.001";
+export const MIN_BNB_TESTNET = "0.002";
+
+export function minBnbFor(chainId: number): string {
+  return chainId === 97 ? MIN_BNB_TESTNET : MIN_BNB_BNB;
+}
+
+export function estimatedGasFor(chainId: number): string {
+  return chainId === 97 ? ESTIMATED_GAS_BNB_TESTNET : ESTIMATED_GAS_BNB;
+}
+
+export function nativeSymbolFor(chainId: number): string {
+  return chainId === 97 ? "tBNB" : "BNB";
+}
+
+export function escrowNetworkLabel(chainId: number): string {
+  return chainId === 97 ? "BSC testnet (historical)" : "On-chain · BSC 56";
+}
 
 /** True when the policy will accept submit() on a FUNDED job. */
 export function canSubmitOnchain(opts: {
@@ -346,13 +415,14 @@ export function formatU(wei: bigint, decimals = 18): string {
   return formatUnits(wei, decimals);
 }
 
-export function encodeApprove(amount: bigint): EncodedCall {
+export function encodeApprove(amount: bigint, chainId: number = 56): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.paymentToken,
+    to: a.paymentToken,
     data: encodeFunctionData({
       abi: ERC20_ABI,
       functionName: "approve",
-      args: [ERC8183_MAINNET.commerce, amount],
+      args: [a.commerce, amount],
     }),
   };
 }
@@ -361,37 +431,39 @@ export function encodeCreateJob(opts: {
   provider: `0x${string}`;
   expiredAt: bigint;
   description: string;
+  chainId?: number;
 }): EncodedCall {
+  const a = erc8183Stack(opts.chainId ?? 56);
   return {
-    to: ERC8183_MAINNET.commerce,
+    to: a.commerce,
     data: encodeFunctionData({
       abi: COMMERCE_ABI,
       functionName: "createJob",
-      args: [
-        opts.provider,
-        ERC8183_MAINNET.router,
-        opts.expiredAt,
-        opts.description,
-        ERC8183_MAINNET.router,
-      ],
+      args: [opts.provider, a.router, opts.expiredAt, opts.description, a.router],
     }),
   };
 }
 
-export function encodeRegisterJob(jobId: bigint): EncodedCall {
+export function encodeRegisterJob(jobId: bigint, chainId: number = 56): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.router,
+    to: a.router,
     data: encodeFunctionData({
       abi: ROUTER_ABI,
       functionName: "registerJob",
-      args: [jobId, ERC8183_MAINNET.policy],
+      args: [jobId, a.policy],
     }),
   };
 }
 
-export function encodeSetBudget(jobId: bigint, amount: bigint): EncodedCall {
+export function encodeSetBudget(
+  jobId: bigint,
+  amount: bigint,
+  chainId: number = 56,
+): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.commerce,
+    to: a.commerce,
     data: encodeFunctionData({
       abi: COMMERCE_ABI,
       functionName: "setBudget",
@@ -400,9 +472,14 @@ export function encodeSetBudget(jobId: bigint, amount: bigint): EncodedCall {
   };
 }
 
-export function encodeFund(jobId: bigint, amount: bigint): EncodedCall {
+export function encodeFund(
+  jobId: bigint,
+  amount: bigint,
+  chainId: number = 56,
+): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.commerce,
+    to: a.commerce,
     data: encodeFunctionData({
       abi: COMMERCE_ABI,
       functionName: "fund",
@@ -427,12 +504,14 @@ export function encodeSubmit(opts: {
   jobId: bigint;
   deliverable: `0x${string}`;
   receiptUrl?: string;
+  chainId?: number;
 }): EncodedCall {
+  const a = erc8183Stack(opts.chainId ?? 56);
   const optParams = opts.receiptUrl
     ? stringToHex(JSON.stringify({ deliverable_url: opts.receiptUrl }))
     : "0x";
   return {
-    to: ERC8183_MAINNET.commerce,
+    to: a.commerce,
     data: encodeFunctionData({
       abi: COMMERCE_ABI,
       functionName: "submit",
@@ -441,9 +520,10 @@ export function encodeSubmit(opts: {
   };
 }
 
-export function encodeSettleApprove(jobId: bigint): EncodedCall {
+export function encodeSettleApprove(jobId: bigint, chainId: number = 56): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.router,
+    to: a.router,
     data: encodeFunctionData({
       abi: ROUTER_ABI,
       functionName: "settle",
@@ -452,9 +532,10 @@ export function encodeSettleApprove(jobId: bigint): EncodedCall {
   };
 }
 
-export function encodeDispute(jobId: bigint): EncodedCall {
+export function encodeDispute(jobId: bigint, chainId: number = 56): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.policy,
+    to: a.policy,
     data: encodeFunctionData({
       abi: POLICY_ABI,
       functionName: "dispute",
@@ -463,9 +544,10 @@ export function encodeDispute(jobId: bigint): EncodedCall {
   };
 }
 
-export function encodeClaimRefund(jobId: bigint): EncodedCall {
+export function encodeClaimRefund(jobId: bigint, chainId: number = 56): EncodedCall {
+  const a = erc8183Stack(chainId);
   return {
-    to: ERC8183_MAINNET.commerce,
+    to: a.commerce,
     data: encodeFunctionData({
       abi: COMMERCE_ABI,
       functionName: "claimRefund",
@@ -478,15 +560,23 @@ export function statusName(status: number): JobStatusName | "UNKNOWN" {
   return JOB_STATUS[status] ?? "UNKNOWN";
 }
 
-export function bscscanTx(hash: string): string {
-  return `https://bscscan.com/tx/${hash}`;
+export function bscscanTx(hash: string, chainId: number = 56): string {
+  const host = chainId === 97 ? "https://testnet.bscscan.com" : "https://bscscan.com";
+  return `${host}/tx/${hash}`;
 }
 
-export function bscscanAddress(addr: string): string {
-  return `https://bscscan.com/address/${addr}`;
+export function bscscanAddress(addr: string, chainId: number = 56): string {
+  const host = chainId === 97 ? "https://testnet.bscscan.com" : "https://bscscan.com";
+  return `${host}/address/${addr}`;
 }
 
-export function bscRpcUrl(): string {
+export function bscRpcUrl(chainId: number = 56): string {
+  if (chainId === 97) {
+    return (
+      process.env.BSC_TESTNET_RPC_URL?.trim() ||
+      "https://bsc-testnet-rpc.publicnode.com"
+    );
+  }
   return (
     process.env.BSC_RPC_URL?.trim() ||
     process.env.RPC_URL_BSC_MAINNET?.trim() ||

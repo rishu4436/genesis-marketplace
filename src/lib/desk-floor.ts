@@ -20,9 +20,27 @@ export function deskFloorAgents(): Agent[] {
   const genesis = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const probed = hireableBscAsAgents();
   const live = LIVE_SELLERS.map((s) => featuredAsAgent(s));
-  return dedupeAgents([...genesis, ...probed, ...live]).filter(
+  return dedupeAgents([...genesis, ...live, ...probed]).filter(
     isHireableListing,
   );
+}
+
+/** Third-party hireable rows for one job shelf (Genesis is passed separately). */
+export function deskFloorForCategory(categoryId: CategoryId): Agent[] {
+  const seen = new Set<string>();
+  const out: Agent[] = [];
+  for (const a of deskFloorAgents()) {
+    if (isGenesisListing(a) || matchingGenesisSlug(a)) continue;
+    const id = String(a.token_id || "");
+    if (!id || seen.has(id)) continue;
+    const cat =
+      (a.census_category as CategoryId | undefined) ||
+      categorizeHireable(a.name || "", a.description || "");
+    if (cat !== categoryId) continue;
+    seen.add(id);
+    out.push(a);
+  }
+  return out;
 }
 
 export function deskFloorByCategory(): Record<CategoryId, number> {

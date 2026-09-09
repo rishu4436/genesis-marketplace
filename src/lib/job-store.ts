@@ -19,6 +19,8 @@ const memory = new Map<string, HireJob>();
 const claims = new Map<string, string>();
 const walletJobs = new Map<string, string[]>();
 let seedsLoaded = false;
+let diskScanDone = false;
+let listCache: { at: number; limit: number; jobs: HireJob[] } | null = null;
 
 function normWallet(addr: string) {
   return addr.trim().toLowerCase();
@@ -168,6 +170,7 @@ function hydrateEvidence(job: HireJob): HireJob {
 
 export async function saveJob(job: HireJob): Promise<HireJob> {
   ensureSeeds();
+  listCache = null;
   const sealed = sealJob(job, { resign: true });
   memory.set(sealed.id, sealed);
   indexClaim(sealed);
@@ -280,22 +283,28 @@ async function indexJobId(id: string) {
 
 export async function listJobs(limit = 50): Promise<HireJob[]> {
   ensureSeeds();
+  if (listCache && Date.now() - listCache.at < 20_000) {
+    return listCache.jobs.slice(0, limit);
+  }
   try {
-    await ensureDir();
-    const files = await fs.readdir(jobsDir());
-    for (const f of files) {
-      if (!f.endsWith(".json")) continue;
-      const id = f.replace(/\.json$/, "");
-      if (!memory.has(id)) {
-        try {
-          const raw = await fs.readFile(path.join(jobsDir(), f), "utf8");
-          const job = JSON.parse(raw) as HireJob;
-          memory.set(job.id, job);
-          indexClaim(job);
-        } catch {
-          /* skip */
+    if (!diskScanDone) {
+      await ensureDir();
+      const files = await fs.readdir(jobsDir());
+      for (const f of files) {
+        if (!f.endsWith(".json")) continue;
+        const id = f.replace(/\.json$/, "");
+        if (!memory.has(id)) {
+          try {
+            const raw = await fs.readFile(path.join(jobsDir(), f), "utf8");
+            const job = JSON.parse(raw) as HireJob;
+            memory.set(job.id, job);
+            indexClaim(job);
+          } catch {
+            /* skip */
+          }
         }
       }
+      diskScanDone = true;
     }
   } catch {
     /* disk unavailable */
@@ -307,7 +316,7 @@ export async function listJobs(limit = 50): Promise<HireJob[]> {
     try {
       const parsed = JSON.parse(fromKv) as unknown;
       if (Array.isArray(parsed)) {
-        for (const id of parsed) extraIds.add(String(id));
+        for (const id of parsed.slice(0, 80)) extraIds.add(String(id));
       }
     } catch {
       /* ignore */
@@ -315,11 +324,12 @@ export async function listJobs(limit = 50): Promise<HireJob[]> {
   }
   await Promise.all([...extraIds].map((id) => getJob(id)));
 
-  return [...memory.values()]
-    .map(hydrateEvidence)
+  const jobs = [...memory.values()]
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
-    .slice(0, limit);
+    .map(hydrateEvidence);
+  listCache = { at: Date.now(), limit: jobs.length, jobs };
+  return jobs.slice(0, limit);
 }

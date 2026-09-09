@@ -6,6 +6,8 @@ Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, g
 
 ## Live URL
 
+**Version:** 1.8.2  
+
 **Production:** https://genesis-marketplace-one.vercel.app  
 
 **Judge path:** https://genesis-marketplace-one.vercel.app/judge  
@@ -62,7 +64,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/api/hire` | Negotiate → quote → deliver (ERC-8183-sim) |
 | `/compare` | Side-by-side compare (up to 3 agents) |
 | `/dashboard` | Hire jobs + deliverables (“My hires”) |
-| `/hire` | Buy specialists |
+| `/hire` | Redirects to `/browse` |
 | `/advantage` | Agent Advantage Report (TermiX) |
 | `/jobs/[id]` | Shareable job result |
 | `/api/agents/health` | Live specialist health |
@@ -101,7 +103,7 @@ Hire path: brief → `POST /api/hire` → live `serviceUrl/negotiate` (APEX) →
 
 ### Next
 
-See **[docs/ROADMAP.md](docs/ROADMAP.md)**. Immediate: new escrow fund → operator submit (job 56748 is FUNDED but `SubmissionTooLate`). AgentCore stays skipped while quota is 0.
+See **[docs/ROADMAP.md](docs/ROADMAP.md)**. Mainnet job **56754** is SUBMITTED (approve after 16 Sep 2026). Job 56748 stays FUNDED (`SubmissionTooLate`). AgentCore stays skipped while quota is 0.
 
 ### Live Studio sellers (BSC mainnet)
 
@@ -119,7 +121,7 @@ See **[docs/ROADMAP.md](docs/ROADMAP.md)**. Immediate: new escrow fund → opera
 | **90s judge script** | **`/judge`** |
 | Cinematic landing | `/` |
 | Job-first shop | `/shop` |
-| Buy specialists | `/hire` |
+| Browse catalog | `/browse` |
 | Advantage report | `/advantage` |
 | Seeded proof jobs | `/jobs/job_msigjtrw_99syy1` (etc.) |
 | TermiX report | `/termix` |

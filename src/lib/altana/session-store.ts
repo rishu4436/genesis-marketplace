@@ -12,7 +12,7 @@ export type StoredAltanaSession = {
   agentName: string;
   walletAddress: string;
   publicKey: string;
-  permissions: {
+  permissions?: {
     calls: { to?: string; signature?: string }[];
     spend: {
       limit: string;
@@ -60,7 +60,13 @@ export function publicSession(
   s: StoredAltanaSession,
 ): Omit<StoredAltanaSession, "sessionPrivateKey"> {
   const { sessionPrivateKey: _, ...rest } = s;
-  return rest;
+  return {
+    ...rest,
+    permissions: {
+      calls: rest.permissions?.calls || [],
+      spend: rest.permissions?.spend || [],
+    },
+  };
 }
 
 export async function saveSession(

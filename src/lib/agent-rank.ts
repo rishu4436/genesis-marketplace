@@ -2,7 +2,7 @@ import type { Agent } from "./types";
 import type { CategoryId } from "./categories";
 import { CATEGORIES, matchCategory } from "./categories";
 import { compareByScore } from "./agent-score";
-import { destinationRank, hireClassForAgent } from "./hire-class";
+import { destinationRank, isHireableListing } from "./hire-class";
 import { toHundredPointScale } from "./feedback-score";
 import { compareByReadiness } from "./marketplace-score";
 
@@ -45,10 +45,10 @@ export function sortAgents(
 
   copy.sort((a, b) => {
     if (mode === "newest") {
-      return (
-        new Date(b.created_at || 0).getTime() -
-        new Date(a.created_at || 0).getTime()
-      );
+      const tb = Date.parse(String(b.created_at || "")) || 0;
+      const ta = Date.parse(String(a.created_at || "")) || 0;
+      if (tb !== ta) return tb - ta;
+      return Number(b.token_id || 0) - Number(a.token_id || 0);
     }
     if (mode === "ratings") {
       const aRated = (a.total_feedbacks ?? 0) > 0;
@@ -87,6 +87,8 @@ export function queryMatchScore(agent: Agent, q: string): number {
   const hay = `${name} ${desc} ${token} ${(agent.supported_protocols || []).join(" ")}`.toLowerCase();
   if (raw.length < 3) {
     if (name.startsWith(raw) || token === raw) return 40;
+    const words = `${name} ${desc}`.split(/[^a-z0-9]+/);
+    if (words.includes(raw)) return 30;
     return 0;
   }
   let s = 0;
@@ -123,7 +125,7 @@ export function filterAgents(
   let out = agents;
   if (filters.x402) out = out.filter((a) => a.x402_supported);
   if (filters.verified) out = out.filter((a) => a.is_verified);
-  if (filters.live) out = out.filter((a) => hireClassForAgent(a) === "live");
+  if (filters.live) out = out.filter((a) => isHireableListing(a));
   if (filters.hasRatings) out = out.filter((a) => (a.total_feedbacks ?? 0) > 0);
   if (filters.q?.trim()) {
     const q = filters.q.trim();

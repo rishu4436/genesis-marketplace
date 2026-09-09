@@ -7,7 +7,7 @@
     "job_mtphh38g_l69uoy"
   ],
   "escrow": {
-    "label": "ERC-8183 escrow proof (separate from soft-hire jobs)",
+    "label": "On-chain escrow · BSC 56 (separate from Get plan)",
     "network": "bsc-mainnet",
     "chainId": 56,
     "marketplaceJobId": "job_mttldo5y_1x953q",

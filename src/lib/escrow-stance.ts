@@ -1,7 +1,7 @@
 /**
  * Honest escrow stance.
- * Soft hire must never wait on ERC-8183. BSC mainnet OptimisticPolicy is
- * whitelisted; testnet still is not.
+ * Soft hire must never wait on ERC-8183. Optional lock is ERC-8183 on
+ * BSC mainnet (7d window).
  */
 
 export const ESCROW_STANCE = {
@@ -11,7 +11,7 @@ export const ESCROW_STANCE = {
   reason: "BscMainnet",
   path: "/fund",
   network: "bsc-mainnet" as const,
-  note: "Plan delivers without escrow. Optional on-chain lock is BSC mainnet ERC-8183 from the agent page.",
+  note: "Plan delivers without escrow. Optional on-chain lock is ERC-8183 on BSC mainnet (7-day window).",
 };
 
 export type EscrowStance = typeof ESCROW_STANCE;

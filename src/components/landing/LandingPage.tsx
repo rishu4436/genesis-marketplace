@@ -5,8 +5,7 @@ import { useReducedMotion } from "framer-motion";
 import { LandingBackground } from "@/components/landing/LandingBackground";
 import { FadeIn, useLenis } from "@/components/landing/ui";
 import { CATEGORIES } from "@/lib/categories";
-import { GENESIS_AGENTS, genesisHref, HIRE_NOW_HREF } from "@/lib/genesis-agents";
-import { getCategory } from "@/lib/categories";
+import { HIRE_NOW_HREF } from "@/lib/genesis-agents";
 
 const STEPS = [
   {
@@ -19,7 +18,7 @@ const STEPS = [
   },
   {
     t: "Take the plan",
-    d: "Structured brief back. You keep the keys. Escrow is not live.",
+    d: "Structured brief back. You keep the keys. Escrow is optional ERC-8183 on BSC mainnet.",
   },
 ];
 
@@ -50,7 +49,7 @@ export function LandingPage() {
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link href={HIRE_NOW_HREF} className="btn-primary !px-6 !py-3">
-              Get plan
+              Browse
             </Link>
           </div>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -66,99 +65,38 @@ export function LandingPage() {
           </div>
         </div>
 
-        <div className="mx-auto mt-14 max-w-6xl overflow-hidden rounded-3xl border border-white/[0.08] bg-black/35">
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35">
-              Live floor
-            </p>
-            <p className="text-[11px] text-white/30">4 hire-ready · BSC</p>
-          </div>
-          <ul>
-            {GENESIS_AGENTS.map((a, i) => {
-              const cat = getCategory(a.categoryId);
-              return (
-                <li key={a.slug}>
-                  <a
-                    href={`${genesisHref(a)}#buy`}
-                    className={`grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 transition hover:bg-white/[0.03] sm:grid-cols-[auto_1fr_auto_auto] ${
-                      i > 0 ? "border-t border-white/[0.06]" : ""
-                    }`}
-                  >
-                    <span
-                      className={`hidden h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br sm:flex ${a.accent} text-sm font-bold text-black/80`}
-                    >
-                      {a.icon}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[15px] font-semibold text-white">
-                        {a.name}
-                      </span>
-                      <span className="mt-0.5 block truncate text-[13px] text-white/40">
-                        {cat?.shortName} · {a.tagline}
-                      </span>
-                    </span>
-                    <span className="hidden text-right sm:block">
-                      <span className="block font-display text-lg text-white">
-                        ${a.basePriceUsd}
-                      </span>
-                      <span className="text-[11px] text-white/35">
-                        ~{a.etaMinutes}m
-                      </span>
-                    </span>
-                    <span className="rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-xs font-semibold text-black">
-                      Hire
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="mx-auto mt-14 max-w-6xl rounded-3xl border border-white/[0.08] bg-black/35 px-5 py-8 sm:px-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35">
+            Catalog
+          </p>
+          <h2 className="mt-3 font-display text-2xl font-bold text-white">
+            Browse hireable agents
+          </h2>
+          <p className="mt-2 max-w-lg text-sm text-white/50">
+            Hireable first. Unhireable identities are marked. Not a featured
+            promo shelf.
+          </p>
+          <Link href="/browse" className="btn-primary mt-5 inline-flex !px-6 !py-3">
+            Browse
+          </Link>
         </div>
       </section>
 
       <section className="relative border-t border-white/[0.06] px-4 py-20 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <FadeIn>
-            <p className="section-label">Specialists</p>
+            <p className="section-label">Catalog</p>
             <h2 className="mt-3 max-w-xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-bold tracking-tight text-white">
-              One operator per job.
+              Browse hireable agents
             </h2>
+            <p className="mt-3 max-w-lg text-sm text-white/50">
+              Hireable first. Unhireable identities are marked. Not a featured
+              promo shelf.
+            </p>
+            <Link href="/browse" className="btn-primary mt-6 inline-flex !px-6 !py-3">
+              Browse
+            </Link>
           </FadeIn>
-          <div className="mt-10 grid gap-3 sm:grid-cols-2">
-            {GENESIS_AGENTS.map((a, i) => {
-              const cat = getCategory(a.categoryId);
-              return (
-                <FadeIn key={a.slug} delay={i * 0.05}>
-                  <a
-                    href={`${genesisHref(a)}#buy`}
-                    className="group flex h-full gap-4 rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
-                  >
-                    <span
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${a.accent} text-lg font-bold text-black/80`}
-                    >
-                      {a.icon}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="font-display text-xl text-white">
-                          {a.name}
-                        </span>
-                        <span className="rounded-full bg-[#F0B90B] px-1.5 py-0.5 text-[9px] font-bold text-black">
-                          By Genesis
-                        </span>
-                      </span>
-                      <span className="mt-1 block text-sm text-white/45">
-                        {cat?.name} · ${a.basePriceUsd}
-                      </span>
-                      <span className="mt-2 block text-sm leading-relaxed text-white/50">
-                        {a.tagline}
-                      </span>
-                    </span>
-                  </a>
-                </FadeIn>
-              );
-            })}
-          </div>
         </div>
       </section>
 
@@ -202,10 +140,7 @@ export function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link href={HIRE_NOW_HREF} className="btn-primary !px-7 !py-3">
-                Get plan
-              </Link>
-              <Link href="/browse" className="btn-secondary !px-7 !py-3">
-                Browse catalog
+                Browse
               </Link>
             </div>
           </FadeIn>

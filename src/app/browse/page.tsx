@@ -1,9 +1,9 @@
 import { AgentCard } from "@/components/AgentCard";
+import type { Agent } from "@/lib/types";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterBar, type BrowseFilters } from "@/components/FilterBar";
 import { JobFloor } from "@/components/JobFloor";
 import { dedupeAgents } from "@/lib/scan";
-import { fetchHireablePool } from "@/lib/catalog-pool";
 import { filterAgents, sortAgents } from "@/lib/agent-rank";
 import { agentScore } from "@/lib/agent-score";
 import {
@@ -26,7 +26,7 @@ import {
 import { PRICE_LEGEND } from "@/lib/copy";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
-import { getHireTally } from "@/lib/hire-tally";
+import { getHireTallyFast } from "@/lib/hire-tally";
 import { fetchCensusAlive } from "@/lib/census-alive";
 import { deskFloorAgents } from "@/lib/desk-floor";
 import Link from "next/link";
@@ -99,45 +99,47 @@ export default async function BrowsePage({ searchParams }: Props) {
   };
 
   const showIndex = filters.index === "1";
+  const floorFiltersOn = Boolean(
+    q ||
+      filters.x402 === "1" ||
+      filters.verified === "1" ||
+      filters.ratings === "1" ||
+      filters.live === "1" ||
+      sortMode !== "rank",
+  );
 
-  const [pool, tally] = showIndex
+  const pool = showIndex
     ? await (async () => {
         const census = await fetchCensusAlive();
-        return [
-          {
-            agents: census.agents,
-            error: census.stats.error,
-            apiTotal: census.stats.registered,
-            census: census.stats,
-          },
-          null,
-        ] as const;
+        return {
+          agents: census.agents,
+          error: census.stats.error,
+          apiTotal: census.stats.registered,
+          census: census.stats,
+        };
       })()
-    : await Promise.all([
-        fetchHireablePool({
-          q: q || undefined,
-          sortMode,
-          x402: filters.x402 === "1",
-          verified: filters.verified === "1",
-          live: filters.live === "1",
-        }),
-        getHireTally(),
-      ]);
+    : {
+        agents: [] as Agent[],
+        error: null,
+        apiTotal: null,
+        census: null,
+      };
+  const tally = showIndex ? null : getHireTallyFast();
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const floor = deskFloorAgents();
   const merged = showIndex
     ? dedupeAgents([...genesisCards, ...pool.agents])
-    : dedupeAgents([...genesisCards, ...floor, ...pool.agents]);
+    : dedupeAgents([...genesisCards, ...floor]);
   const quality = catalogFilterStats(merged);
 
   let agents = filterAgents(quality.kept, {
     x402: filters.x402 === "1",
     verified: filters.verified === "1",
-    hasRatings: filters.ratings === "1" || sortMode === "ratings",
+    hasRatings: filters.ratings === "1",
     live: filters.live === "1",
     q: q || undefined,
   });
-  if (!showIndex && filters.live === "1") {
+  if (!showIndex) {
     agents = agents.filter(isHireableListing);
   }
   let relaxed = false;
@@ -234,6 +236,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         {filters.ratings === "1" && (
           <input type="hidden" name="ratings" value="1" />
         )}
+        {showIndex && <input type="hidden" name="index" value="1" />}
         <button
           type="submit"
           className="btn-primary hidden shrink-0 !rounded-xl !px-4 !py-3 sm:inline-flex"
@@ -264,12 +267,12 @@ export default async function BrowsePage({ searchParams }: Props) {
         ))}
       </div>
 
-      {!showIndex && !q && safePage === 1 && (
+      {!showIndex && !floorFiltersOn && safePage === 1 && (
         <div className="mt-6 sm:mt-10">
-          <JobFloor perShelf={3} />
+          <JobFloor />
         </div>
       )}
-      {!showIndex && (q || safePage > 1) && (
+      {!showIndex && (floorFiltersOn || safePage > 1) && (
         <div className="mt-8">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
             By Genesis · always hireable
@@ -289,7 +292,10 @@ export default async function BrowsePage({ searchParams }: Props) {
       )}
 
       <div className="mt-6">
-        <FilterBar filters={filters} surface="browse" />
+        <FilterBar
+          filters={filters}
+          surface={showIndex ? "index" : "browse"}
+        />
         <p className="mt-2 text-[11px] leading-relaxed text-white/40">
           {PRICE_LEGEND}
         </p>
@@ -370,20 +376,28 @@ export default async function BrowsePage({ searchParams }: Props) {
           <div className="mt-10">
             <EmptyState
               title={
-                filters.ratings === "1" || sortMode === "ratings"
+                filters.ratings === "1"
                   ? "No 8004scan ratings on this set"
-                  : q
-                    ? `No agents match “${q}”`
-                    : "No agents match"
+                  : filters.verified === "1"
+                    ? "No 8004scan-verified rows on this set"
+                    : filters.x402 === "1"
+                      ? "No x402 listings on this set"
+                      : q
+                        ? `No agents match “${q}”`
+                        : "No agents match"
               }
               body={
-                filters.ratings === "1" || sortMode === "ratings"
-                  ? "Unrated is an index label, not a low score. Almost no hireable row carries on-chain feedback yet. Clear Rated only to see the catalog."
-                  : q
-                    ? "That query is not in names, skills, or job keywords. Try yield, grid, rebalance, or health factor."
-                    : "Try clearing filters or a broader search."
+                filters.ratings === "1"
+                  ? "Unrated is an index label, not a low score. Almost no hireable row carries on-chain feedback yet. Clear Has ratings to see the catalog."
+                  : filters.verified === "1"
+                    ? "Verified is the 8004scan badge. Live A2A we can hire is not the same as that badge. Clear Verified to see the hire floor."
+                    : filters.x402 === "1"
+                      ? "Most hireable rows quote over A2A / ERC-8183, not x402. Clear x402 pay to see the catalog."
+                      : q
+                        ? "That query is not in names, skills, or job keywords. Try yield, grid, rebalance, or health factor."
+                        : "Try clearing filters or a broader search."
               }
-              actionHref="/browse"
+              actionHref={showIndex ? "/browse?index=1" : "/browse"}
               actionLabel="Clear browse"
             />
           </div>

@@ -214,6 +214,108 @@ export const EXTRA_LIVE_SELLERS: ThirdPartySeller[] = [
     skillId: "negotiate",
     ownerAddress: "0xa09991fc5D8637bb4245737C3ebF26E24D653962",
   },
+  {
+    slug: "marketplace-grid-planner",
+    name: "Marketplace Grid Planner",
+    chainId: 56,
+    tokenId: "303779",
+    categoryId: "grid-trading",
+    tagline: "Deterministic grid plan · no custody · live A2A",
+    description:
+      "Marketplace-operated grid seller. Computes deterministic grid plans and performs no trading or custody. Hireable over A2A + ERC-8183. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://bnb-agent-marketplace-ruby.vercel.app/grid/.well-known/agent-card.json",
+    rpcUrl: "https://bnb-agent-marketplace-ruby.vercel.app/api/sellers/grid/a2a",
+    skillId: "negotiate",
+    ownerAddress: "0xa2a2012e52fd075c0f3146e37e833e7294ee52b5",
+  },
+  {
+    slug: "smeai-grid",
+    name: "SMEAI Reference Grid Viability Checker",
+    chainId: 56,
+    tokenId: "331794",
+    categoryId: "grid-trading",
+    tagline: "PCS V3 grid step vs round-trip cost · live A2A",
+    description:
+      "Reads a PancakeSwap V3 pool on BSC mainnet and works out whether a proposed grid step covers its own costs. A full cycle pays the pool fee twice, so any step below that loses money. Hireable over A2A. Not operated by Genesis.",
+    a2aCardUrl: "https://smeai-dev.vercel.app/api/a2a/grid",
+    rpcUrl: "https://smeai-dev.vercel.app/api/a2a/grid",
+    skillId: "grid_viability",
+    ownerAddress: "0x4cda2a93054f2ab639b4a95c261874a77a0af6fa",
+  },
+  {
+    slug: "smeai-health",
+    name: "SMEAI Reference Health Factor Monitor",
+    chainId: 56,
+    tokenId: "331625",
+    categoryId: "health-factor",
+    tagline: "Venus HF from Comptroller + oracle · live A2A",
+    description:
+      "Reads a wallet's Venus position on BSC mainnet and returns its real health factor — weighted collateral over debt, priced by the Venus oracle. Hireable over A2A. Not operated by Genesis.",
+    a2aCardUrl: "https://smeai-dev.vercel.app/api/a2a",
+    rpcUrl: "https://smeai-dev.vercel.app/api/a2a",
+    skillId: "health_factor",
+    ownerAddress: "0x4cda2a93054f2ab639b4a95c261874a77a0af6fa",
+  },
+  {
+    slug: "hallmark-range-keeper",
+    name: "PancakeSwap v3 Range Keeper",
+    chainId: 56,
+    tokenId: "338475",
+    categoryId: "rebalancing",
+    tagline: "PCS V3 range still-earns check + reset · live A2A",
+    description:
+      "Watches a PancakeSwap v3 liquidity position, decides whether its range still earns, and resets it when it does not. Hireable over A2A. Not operated by Genesis.",
+    a2aCardUrl: "https://hallmark-agents.vercel.app/a2a/rebalancer",
+    rpcUrl: "https://hallmark-agents.vercel.app/a2a/rebalancer",
+    skillId: "analyse",
+    ownerAddress: "0x38c6fc4a5525b37f9545423a7132157f69ce08da",
+  },
+  {
+    slug: "lingoai-health",
+    name: "LingoAI Health Factor Sentinel",
+    chainId: 56,
+    tokenId: "340458",
+    categoryId: "health-factor",
+    tagline: "Loan HF + liquidation price · ERC-8183 A2A",
+    description:
+      "Compute a loan's health factor and the price move that would liquidate it. Deterministic and hireable, settled through ERC-8183 escrow. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://holon.lingoai.io/agents/health-factor/.well-known/agent-card.json",
+    rpcUrl: "https://holon.lingoai.io/agents/health-factor/a2a",
+    skillId: "health-factor",
+    ownerAddress: "0x0683406742c8e5fda38692bda855e72676ccdda6",
+  },
+  {
+    slug: "hallmark-liquidation-guard",
+    name: "Venus Liquidation Guard",
+    chainId: 56,
+    tokenId: "338480",
+    categoryId: "health-factor",
+    tagline: "Venus HF threshold + repay-to-margin · live A2A",
+    description:
+      "Watches a Venus position, computes its health and the exact price at which it liquidates, and repays precisely enough to restore a target margin when it crosses a threshold. Hireable over A2A. Not operated by Genesis.",
+    a2aCardUrl: "https://hallmark-agents.vercel.app/a2a/health",
+    rpcUrl: "https://hallmark-agents.vercel.app/a2a/health",
+    skillId: "analyse",
+    ownerAddress: "0x38c6fc4a5525b37f9545423a7132157f69ce08da",
+  },
+  {
+    slug: "healthguard",
+    name: "HealthGuard",
+    chainId: 56,
+    tokenId: "259573",
+    categoryId: "health-factor",
+    tagline: "Loan watch + repay before liquidation · live A2A",
+    description:
+      "Watches your loan health factor and repays before the position can be liquidated. Hireable over A2A. Not operated by Genesis.",
+    a2aCardUrl:
+      "https://bnb-agent-market.vercel.app/agents/healthguard/.well-known/agent-card.json",
+    rpcUrl:
+      "https://bnb-agent-market.vercel.app/agents/healthguard/.well-known/agent-card.json",
+    skillId: "protect",
+    ownerAddress: "0xfb19e30a2b29872cdb513ba77407ee5b4fd3c4c4",
+  },
 ];
 
 export const LIVE_SELLERS: ThirdPartySeller[] = [

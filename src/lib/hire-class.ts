@@ -77,7 +77,7 @@ export function isDirectoryLeak(agent: Agent): boolean {
 
 /** Endpoints we cannot complete a hire against (IAM, object storage, stubs). */
 const UNHIREABLE_A2A =
-  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com|8004scan\.io\/api|agentscan|toly\.me|clipx\.app/i;
+  /localhost|127\.0\.0\.1|\.example\.|bedrock-agentcore|execute-api\.|github\.com|s3[\w.-]*\.amazonaws\.com|8004scan\.io\/api|agentscan|toly\.me|clipx\.app|x\.com|twitter\.com|t\.me|discord\.(gg|com)|youtube\.com|facebook\.com/i;
 
 export function isPublicHireableUrl(url: string): boolean {
   const u = url.trim();
@@ -148,6 +148,8 @@ const DEFI_NEEDLES = [
   "apr",
   "health factor",
   "liquidation",
+  "liquidat",
+  "loan",
   "rebalance",
 ];
 

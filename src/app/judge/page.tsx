@@ -10,6 +10,7 @@ import {
   judgeDemoEmbed,
   judgeDemoVideoUrl,
   resolveEscrowJudgeProof,
+  type EscrowJudgeProof,
 } from "@/lib/judge-proof";
 
 export const metadata = {
@@ -20,10 +21,12 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function JudgePage() {
-  const proof = await readLiveProof();
   const specialists = allGenesisAgents();
-  const census = await fetchCensusAlive();
-  const escrowProof = await resolveEscrowJudgeProof();
+  const [proof, census, escrowProof] = await Promise.all([
+    readLiveProof(),
+    fetchCensusAlive(),
+    resolveEscrowJudgeProof(),
+  ]);
   const demoVideo = judgeDemoVideoUrl();
   const demoEmbed = demoVideo ? judgeDemoEmbed(demoVideo) : null;
 
@@ -34,13 +37,14 @@ export default async function JudgePage() {
         90-second path
       </h1>
       <p className="mt-3 text-[13px] leading-relaxed text-white/50">
-        This is the hire floor, not an explorer. Loop: discover → plan →
-        optional escrow → prove → rank. Runtime is{" "}
+        This is the hire floor, not an explorer. Get plan stays off-chain.
+        Optional escrow is live ERC-8183 on{" "}
+        <span className="text-white/75">BSC mainnet</span>. Loop: discover →
+        plan → optional escrow → prove → rank. Runtime is{" "}
         <span className="text-white/75">Genesis APEX</span> (plan-ready, not
-        Studio-live). Specialists are ERC-8004 on BSC{" "}
-        <span className="text-white/75">#336622–#336625</span>. Get plan is
-        plan-only. Escrow (ERC-8183) is optional. Altana is a post-hire grant
-        with spend caps — never a master key.
+        Studio-live). Identity is ERC-8004 on BSC{" "}
+        <span className="text-white/75">#336622–#336625</span>. Altana is a
+        post-hire grant with spend caps — never a master key.
       </p>
       <div className="mt-6">
         <DeskStrip compact />
@@ -64,16 +68,23 @@ export default async function JudgePage() {
       <div className="mt-4">
         <PartnerStatusStrip compact />
       </div>
-      <Link
-        href="/genesis/range-keeper?task=Rebalance%20my%20PCS%20V3%20BNB%2FUSDT%20LP%20when%20out%20of%20range#buy"
-        className="btn-primary mt-6 inline-flex !px-5 !py-2.5 !text-sm"
-      >
-        Judge mode · Open RangeKeeper
-      </Link>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link
+          href="/genesis/range-keeper?task=Rebalance%20my%20PCS%20V3%20BNB%2FUSDT%20LP%20when%20out%20of%20range#buy"
+          className="btn-primary inline-flex !px-5 !py-2.5 !text-sm"
+        >
+          Judge mode · Get plan
+        </Link>
+        <Link
+          href="/genesis/range-keeper?escrow=1&task=Rebalance%20my%20PCS%20V3%20BNB%2FUSDT%20LP%20when%20out%20of%20range#buy"
+          className="inline-flex min-h-11 items-center justify-center rounded-full border border-amber-400/40 bg-amber-400/10 px-5 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-400/70"
+        >
+          On-chain escrow · BSC
+        </Link>
+      </div>
       <p className="mt-2 text-[11px] text-white/40">
-        Prefills a PCS V3 brief and opens Hire. Click Get plan — the
-        listing does not auto-hire. Then open the receipt → /advantage →
-        /judge. Record that as a 60–90s walkthrough for the intake form.
+        Get plan does not auto-hire. Mainnet lock 56754 is SUBMITTED until 16 Sep
+        2026 04:25 UTC — do not call it Settled.
       </p>
       {demoVideo && demoEmbed ? (
         <div className="mt-4">
@@ -122,10 +133,10 @@ export default async function JudgePage() {
       <ol className="mt-8 space-y-3 text-sm text-white/65">
         <li>
           <span className="font-semibold text-white">1.</span>{" "}
-          <Link href="/hire" className="text-amber-300 hover:underline">
-            Hire
+          <Link href="/browse" className="text-amber-300 hover:underline">
+            Browse
           </Link>{" "}
-          — four desks, then RangeKeeper for the 90s plan
+          — hireable catalog, then RangeKeeper for the 90s plan
         </li>
         <li>
           <span className="font-semibold text-white">2.</span>{" "}
@@ -228,71 +239,7 @@ export default async function JudgePage() {
         </li>
       </ol>
 
-      <div className="mt-8 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
-          {escrowProof.label}
-        </p>
-        {escrowProof.fundTx ? (
-          <>
-            <p className="mt-1 text-sm text-white">
-              Mainnet ERC-8183 fund
-              {escrowProof.onchainJobId
-                ? ` · on-chain job ${escrowProof.onchainJobId}`
-                : ""}
-              {escrowProof.marketplaceJobId
-                ? ` · receipt ${escrowProof.marketplaceJobId}`
-                : ""}
-            </p>
-            <a
-              href={escrowProofExplorer(escrowProof.fundTx) || "#"}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-block text-xs font-semibold text-amber-300 hover:underline"
-            >
-              Fund tx on BscScan ↗
-            </a>
-            {escrowProof.submitTx && (
-              <a
-                href={escrowProofExplorer(escrowProof.submitTx) || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
-              >
-                Submit tx ↗
-              </a>
-            )}
-            {escrowProof.settleTx && (
-              <a
-                href={escrowProofExplorer(escrowProof.settleTx) || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
-              >
-                Settle tx ↗
-              </a>
-            )}
-            {escrowProof.marketplaceJobId && (
-              <Link
-                href={`/jobs/${encodeURIComponent(escrowProof.marketplaceJobId)}`}
-                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
-              >
-                Open receipt
-              </Link>
-            )}
-          </>
-        ) : (
-          <p className="mt-1 text-[12px] leading-relaxed text-white/50">
-            {escrowProof.note} Start from{" "}
-            <Link
-              href="/genesis/range-keeper?escrow=1#buy"
-              className="text-amber-300 hover:underline"
-            >
-              RangeKeeper · Hire with escrow
-            </Link>
-            . Soft-hire jobs above are not this proof.
-          </p>
-        )}
-      </div>
+      <EscrowProofCard proof={escrowProof} />
 
       {proof ? (
         <div className="mt-8 rounded-xl border border-violet-400/25 bg-violet-500/10 p-4">
@@ -391,8 +338,8 @@ export default async function JudgePage() {
           <Link href="/" className="text-amber-300">
             /
           </Link>{" "}
-          → Browse → Get plan. No dead end. Soft hire is free; escrow is
-          optional mainnet ERC-8183.
+          → Browse → Get plan. No dead end. Soft hire is free. Optional escrow
+          is ERC-8183 on BSC mainnet.
         </li>
         <li>
           <span className="font-semibold text-white">Data quality</span> —
@@ -430,7 +377,7 @@ export default async function JudgePage() {
       </ul>
 
       <h2 className="mt-10 text-xs font-semibold uppercase tracking-wider text-white/40">
-        Live proof jobs (2026-09-06)
+        Soft-hire proof jobs (2026-09-06)
       </h2>
       <ul className="mt-3 space-y-1.5">
         {(
@@ -453,6 +400,79 @@ export default async function JudgePage() {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function EscrowProofCard({ proof }: { proof: EscrowJudgeProof }) {
+  const settled = Boolean(proof.settleTx);
+  return (
+    <div className="mt-8 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
+        {proof.label}
+      </p>
+      {proof.fundTx ? (
+        <>
+          <p className="mt-1 text-sm text-white">
+            On-chain escrow · BSC 56{" "}
+            {settled ? "COMPLETED" : "SUBMITTED, not settled"}
+            {proof.onchainJobId ? ` · on-chain job ${proof.onchainJobId}` : ""}
+            {proof.marketplaceJobId
+              ? ` · receipt ${proof.marketplaceJobId}`
+              : ""}
+          </p>
+          <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+            {proof.note}
+          </p>
+          <a
+            href={escrowProofExplorer(proof.fundTx, 56) || "#"}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-block text-xs font-semibold text-amber-300 hover:underline"
+          >
+            Fund tx ↗
+          </a>
+          {proof.submitTx && (
+            <a
+              href={escrowProofExplorer(proof.submitTx, 56) || "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+            >
+              Submit tx ↗
+            </a>
+          )}
+          {proof.settleTx && (
+            <a
+              href={escrowProofExplorer(proof.settleTx, 56) || "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+            >
+              Settle tx ↗
+            </a>
+          )}
+          {proof.marketplaceJobId && (
+            <Link
+              href={`/jobs/${encodeURIComponent(proof.marketplaceJobId)}`}
+              className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+            >
+              Open receipt
+            </Link>
+          )}
+        </>
+      ) : (
+        <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+          {proof.note} Start from{" "}
+          <Link
+            href="/genesis/range-keeper?escrow=1#buy"
+            className="text-amber-300 hover:underline"
+          >
+            RangeKeeper · Hire with escrow
+          </Link>
+          . Soft-hire jobs are not this proof.
+        </p>
+      )}
     </div>
   );
 }

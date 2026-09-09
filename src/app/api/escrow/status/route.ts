@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getJob, saveJob } from "@/lib/job-store";
 import { deliverableSchemaValid } from "@/lib/job-receipt";
-import { canSubmitOnchain, escrowUiPhase } from "@/lib/erc8183-escrow";
+import {
+  canSubmitOnchain,
+  escrowUiPhase,
+  isEscrowChainId,
+} from "@/lib/erc8183-escrow";
 import {
   hasOnchainDeliverable,
   readDisputeWindow,
@@ -19,6 +23,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const jobId = url.searchParams.get("jobId") || "";
     const onchainParam = url.searchParams.get("onchainJobId") || "";
+    const chainParam = Number(url.searchParams.get("chainId") || "");
 
     const stored = jobId ? await getJob(jobId) : null;
     const onchainJobId = BigInt(
@@ -31,9 +36,16 @@ export async function GET(req: Request) {
       );
     }
 
-    const chain = await readOnchainJob(onchainJobId);
+    const escrowChainId =
+      stored?.escrow?.chainId === 97
+        ? 97
+        : isEscrowChainId(chainParam)
+          ? chainParam
+          : 56;
+    const chain = await readOnchainJob(onchainJobId, escrowChainId);
     const disputeWindow =
-      stored?.escrow?.disputeWindowSeconds || (await readDisputeWindow());
+      stored?.escrow?.disputeWindowSeconds ||
+      (await readDisputeWindow(escrowChainId));
     const hasPayload =
       deliverableSchemaValid(stored?.deliverable) ||
       hasOnchainDeliverable(chain.deliverable);
@@ -100,7 +112,11 @@ export async function GET(req: Request) {
         canSubmit: submitWindowOk && hasPayload,
         submitBlockedReason:
           chain.statusName === "FUNDED" && hasPayload && !submitWindowOk
-            ? "SubmissionTooLate — this lock’s deadline no longer covers the 7-day dispute window. Fund a new job (longer deadline), then submit immediately."
+            ? `SubmissionTooLate — this lock’s deadline no longer covers the ${
+                disputeWindow >= 86400
+                  ? `${Math.round(disputeWindow / 86400)}-day`
+                  : `${Math.round(disputeWindow / 60)}-minute`
+              } dispute window. Fund a new job (longer deadline), then submit immediately.`
             : null,
         canDispute: inWindow,
         canApprove:

@@ -7,7 +7,7 @@ import { attachJob } from "@/lib/accounts";
 import { currentAccount } from "@/lib/session";
 import { getGenesisAgent } from "@/lib/genesis-agents";
 import {
-  ERC8183_MAINNET,
+  erc8183Stack,
   formatU,
   isHexAddress,
   isTxHash,
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       budgetUsd?: string;
       duration?: HireIntent["duration"];
       risk?: HireIntent["risk"];
+      escrowChainId?: number;
     };
 
     const task = (body.task || "").trim();
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     }
     if (!isTxHash(body.fundTx)) {
       return NextResponse.json(
-        { success: false, error: "fundTx (BSC mainnet hash) is required" },
+        { success: false, error: "fundTx (BSC hash) is required" },
         { status: 400 },
       );
     }
@@ -90,7 +91,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const chainJob = await readOnchainJob(onchainId);
+    if (Number(body.escrowChainId) === 97) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Escrow is BSC mainnet only (chain 56).",
+        },
+        { status: 400 },
+      );
+    }
+    const escrowChainId = 56;
+    const stack = erc8183Stack(escrowChainId);
+    const chainJob = await readOnchainJob(onchainId, escrowChainId);
     if (chainJob.client.toLowerCase() !== body.wallet.toLowerCase()) {
       return NextResponse.json(
         {
@@ -120,7 +132,7 @@ export async function POST(req: Request) {
     }
 
     const g = body.genesisSlug ? getGenesisAgent(body.genesisSlug) : undefined;
-    const disputeWindow = await readDisputeWindow();
+    const disputeWindow = await readDisputeWindow(escrowChainId);
 
     let job = await createJobWithLiveNegotiate({
       chainId: BSC_MAINNET_CHAIN_ID,
@@ -142,17 +154,17 @@ export async function POST(req: Request) {
 
     const escrow: EscrowRecord = {
       protocol: "ERC-8183",
-      chainId: 56,
+      chainId: stack.chainId,
       onchainJobId: chainJob.id,
-      token: ERC8183_MAINNET.paymentToken,
+      token: stack.paymentToken,
       tokenSymbol: "U",
       amountWei: chainJob.budget,
       amountU: formatU(BigInt(chainJob.budget)),
       buyer: body.wallet,
       provider: provider.address,
-      commerce: ERC8183_MAINNET.commerce,
-      router: ERC8183_MAINNET.router,
-      policy: ERC8183_MAINNET.policy,
+      commerce: stack.commerce,
+      router: stack.router,
+      policy: stack.policy,
       createTx: isTxHash(body.createTx) ? body.createTx : undefined,
       fundTx: body.fundTx,
       approveTx: isTxHash(body.approveTx) ? body.approveTx : undefined,

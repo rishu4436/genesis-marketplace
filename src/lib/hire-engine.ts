@@ -47,7 +47,7 @@ export type HireStatus =
 
 export type EscrowRecord = {
   protocol: "ERC-8183";
-  chainId: 56;
+  chainId: 56 | 97;
   onchainJobId: string;
   token: `0x${string}`;
   tokenSymbol: "U";

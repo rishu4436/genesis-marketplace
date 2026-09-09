@@ -11,10 +11,10 @@ export default function TermixPage() {
         TermiX · Agent Advantage Report
       </h1>
       <p className="mt-2 text-sm text-white/55">
-        Required for the TermiX track ($6k / $3k / $1k). Run ≥3 tasks with vs
-        without an agent; include time, cost, quality; ≥1 trading or security
-        task. Hire Genesis agents to fill the “with agent” arm automatically.
-        The same report is linked from every job receipt.
+        TermiX track: four with-vs-without tasks (one per job), time / cost /
+        quality, trading + security weighted. Get plan fills the “with agent”
+        arm. The same report is linked from every job receipt. SKU $ is a
+        label — plan is no charge.
       </p>
       <p className="mt-3 text-[12px] text-white/40">
         Also on the{" "}

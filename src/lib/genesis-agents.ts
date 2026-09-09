@@ -195,8 +195,8 @@ export function genesisHref(g: GenesisAgent) {
   return `/genesis/${g.slug}`;
 }
 
-/** Header / landing Hire — four-desk floor. Does not pin one specialist. */
-export const HIRE_NOW_HREF = "/hire";
+/** Header / landing Hire — catalog, not a featured promo floor. */
+export const HIRE_NOW_HREF = "/browse";
 
 /**
  * Query before hash so HireWizard can read task.

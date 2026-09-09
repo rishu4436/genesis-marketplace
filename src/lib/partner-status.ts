@@ -80,8 +80,8 @@ async function probeAltana(): Promise<Pick<PartnerProbe, "ok" | "mode" | "detail
       mode: "proof",
       detail:
         proof.chainId === 97
-          ? `${proof.agentName} historical testnet grant (marketplace hire is BSC mainnet)`
-          : `${proof.agentName} Keystore grant on chain ${proof.chainId}`,
+          ? `${proof.agentName} historical testnet grant — not the mainnet prize path`
+          : `${proof.agentName} Keystore grant on BSC mainnet (chain ${proof.chainId})`,
       metric: `${proof.transactionHash.slice(0, 10)}…`,
     };
   }
@@ -165,7 +165,7 @@ async function probeFeatured(): Promise<Pick<PartnerProbe, "ok" | "mode" | "deta
 }
 
 let cached: { at: number; snap: PartnerSnapshot } | null = null;
-const CACHE_MS = 60_000;
+const CACHE_MS = 180_000;
 
 async function withMs<T extends object>(
   fn: () => Promise<T>,

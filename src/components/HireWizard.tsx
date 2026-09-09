@@ -27,6 +27,7 @@ import { skuQuotedLine } from "@/lib/sku-label";
 import { CopyClaimCode } from "@/components/CopyClaimCode";
 import { resolveEscrowProvider } from "@/lib/erc8183-escrow";
 import { EscrowWizard } from "@/components/EscrowWizard";
+import { deskRail } from "@/lib/network-choice";
 
 type Props = {
   chainId: number;
@@ -99,6 +100,7 @@ export function HireWizard({
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [escrowOpen, setEscrowOpen] = useState(false);
+  const railSpec = deskRail("mainnet");
   const [moreTiers, setMoreTiers] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
   const autobuyStarted = useRef(false);
@@ -458,6 +460,7 @@ export function HireWizard({
           genesisSlug={genesisSlug || escrowProvider?.genesisSlug}
           ownerAddress={ownerAddress}
           task={job.task || task}
+          escrowChainId={56}
         />
       </div>
     );
@@ -474,7 +477,7 @@ export function HireWizard({
             Hire {agentName}
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-white/50">
-            Structured plan + claim code. You keep the keys.
+            Structured plan + claim code. You keep the keys. {railSpec.hint}
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -596,7 +599,7 @@ export function HireWizard({
             }}
             className="mt-2 min-h-12 w-full touch-manipulation rounded-full border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-sm font-semibold text-amber-50 transition hover:border-amber-400 hover:bg-amber-400/25 disabled:opacity-40"
           >
-            Hire with escrow (on-chain)
+            {railSpec?.hireLabel || "Hire with escrow"}
           </button>
           <p className="mt-2 text-center text-[11px] leading-relaxed text-white/45">
             {ESCROW_CTA}
@@ -658,7 +661,9 @@ export function HireWizard({
                     title={m.description}
                     onClick={() => {
                       setRail(m.rail);
-                      if (escrowChip && escrowOk) setEscrowOpen(true);
+                      if (escrowChip && escrowOk) {
+                        setEscrowOpen(true);
+                      }
                     }}
                     className={`min-h-9 rounded-full px-3 py-1.5 text-[12px] font-semibold transition touch-manipulation ${
                       active
@@ -686,13 +691,13 @@ export function HireWizard({
             </button>
           ) : null}
           <p className="mt-1.5 text-[11px] leading-relaxed text-white/35">
-            {ESCROW_LINE}. {escrowOk ? "Use Hire with escrow on this page." : "This listing has no lock address — open a specialist."}{" "}
+            {ESCROW_LINE}. {escrowOk ? (railSpec ? `Use ${railSpec.hireLabel} on this page.` : "Use Hire with escrow on this page.") : "This listing has no lock address — open a specialist."}{" "}
             Notes on{" "}
             <Link
               href="/genesis/range-keeper?escrow=1#buy"
               className="text-amber-300/80 hover:underline"
             >
-              RangeKeeper escrow
+              RangeKeeper
             </Link>
             .
           </p>
@@ -740,6 +745,7 @@ export function HireWizard({
         genesisSlug={genesisSlug || escrowProvider?.genesisSlug}
         ownerAddress={ownerAddress}
         task={task}
+        escrowChainId={56}
       />
     </div>
   );

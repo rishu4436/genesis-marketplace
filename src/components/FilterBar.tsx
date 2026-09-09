@@ -34,7 +34,7 @@ export function FilterBar({
 }: {
   basePath?: string;
   filters: BrowseFilters;
-  surface?: "hire" | "browse";
+  surface?: "hire" | "browse" | "index";
 }) {
   const chip = (
     active: boolean,
@@ -63,7 +63,7 @@ export function FilterBar({
           sort: "rank",
         })}
         {chip(filters.sort === "score", "Ready", { sort: "score" })}
-        {chip(filters.sort === "ratings", "Rated only", { sort: "ratings" })}
+        {chip(filters.sort === "ratings", "Rated first", { sort: "ratings" })}
         {chip(filters.sort === "newest", "Newest", { sort: "newest" })}
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -79,10 +79,11 @@ export function FilterBar({
         {chip(filters.ratings === "1", "Has ratings", {
           ratings: filters.ratings === "1" ? undefined : "1",
         })}
-        {chip(filters.live === "1", "Hireable only", {
-          live: filters.live === "1" ? undefined : "1",
-        })}
-        {surface === "browse" && filters.index === "1"
+        {surface === "index" &&
+          chip(filters.live === "1", "Hireable only", {
+            live: filters.live === "1" ? undefined : "1",
+          })}
+        {surface === "index" && filters.index === "1"
           ? chip(true, "Raw index", { index: undefined })
           : null}
         {(filters.x402 ||
@@ -91,7 +92,14 @@ export function FilterBar({
           filters.live ||
           filters.sort) && (
           <Link
-            href={filters.q ? `${basePath}?q=${encodeURIComponent(filters.q)}` : basePath}
+            href={hrefWith(basePath, filters, {
+              x402: undefined,
+              verified: undefined,
+              ratings: undefined,
+              live: undefined,
+              sort: undefined,
+              page: "1",
+            })}
             className="text-xs text-white/40 underline-offset-2 hover:text-white/70 hover:underline"
           >
             Clear

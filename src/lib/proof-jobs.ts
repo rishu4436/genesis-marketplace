@@ -20,7 +20,8 @@ export function scanAgentUrl(chainId: number, tokenId: string): string {
   if (!id || id.startsWith("genesis:") || !/^\d+$/.test(id)) {
     return "https://8004scan.io/agents?chain=56";
   }
-  return `https://8004scan.io/agents/${Number(chainId) || 56}/${id}`;
+  const chain = Number(chainId) === 56 || !chainId ? "bsc" : String(chainId);
+  return `https://8004scan.io/agents/${chain}/${id}`;
 }
 
 export function bscscanNftUrl(tokenId: string): string {

@@ -1,24 +1,24 @@
 /**
- * Server-side ERC-8183 reads on BSC mainnet.
+ * Server-side ERC-8183 reads. Default chain 56 (mainnet). Pass 97 for testnet.
  */
 
 import { createPublicClient, http, decodeEventLog } from "viem";
-import { bsc } from "viem/chains";
+import { bsc, bscTestnet } from "viem/chains";
 import {
   bscRpcUrl,
   COMMERCE_ABI,
   ERC20_ABI,
-  ERC8183_MAINNET,
+  erc8183Stack,
   JOB_CREATED_EVENT,
   POLICY_ABI,
   statusName,
   type JobStatusName,
 } from "./erc8183-escrow";
 
-export function bscPublicClient() {
+export function bscPublicClient(chainId: number = 56) {
   return createPublicClient({
-    chain: bsc,
-    transport: http(bscRpcUrl()),
+    chain: chainId === 97 ? bscTestnet : bsc,
+    transport: http(bscRpcUrl(chainId)),
   });
 }
 
@@ -35,29 +35,35 @@ export type OnchainEscrowJob = {
   deliverable: `0x${string}`;
 };
 
-export async function readDisputeWindow(): Promise<number> {
-  const client = bscPublicClient();
+export async function readDisputeWindow(chainId: number = 56): Promise<number> {
+  const a = erc8183Stack(chainId);
+  const client = bscPublicClient(chainId);
   const w = await client.readContract({
-    address: ERC8183_MAINNET.policy,
+    address: a.policy,
     abi: POLICY_ABI,
     functionName: "disputeWindow",
   });
   return Number(w);
 }
 
-export async function readJobCounter(): Promise<bigint> {
-  const client = bscPublicClient();
+export async function readJobCounter(chainId: number = 56): Promise<bigint> {
+  const a = erc8183Stack(chainId);
+  const client = bscPublicClient(chainId);
   return client.readContract({
-    address: ERC8183_MAINNET.commerce,
+    address: a.commerce,
     abi: COMMERCE_ABI,
     functionName: "jobCounter",
   });
 }
 
-export async function readOnchainJob(jobId: bigint): Promise<OnchainEscrowJob> {
-  const client = bscPublicClient();
+export async function readOnchainJob(
+  jobId: bigint,
+  chainId: number = 56,
+): Promise<OnchainEscrowJob> {
+  const a = erc8183Stack(chainId);
+  const client = bscPublicClient(chainId);
   const job = await client.readContract({
-    address: ERC8183_MAINNET.commerce,
+    address: a.commerce,
     abi: COMMERCE_ABI,
     functionName: "getJob",
     args: [jobId],
@@ -76,27 +82,31 @@ export async function readOnchainJob(jobId: bigint): Promise<OnchainEscrowJob> {
   };
 }
 
-export async function readTokenSnapshot(owner?: `0x${string}`): Promise<{
+export async function readTokenSnapshot(
+  owner?: `0x${string}`,
+  chainId: number = 56,
+): Promise<{
   symbol: string;
   decimals: number;
   balanceWei?: string;
   allowanceWei?: string;
 }> {
-  const client = bscPublicClient();
+  const a = erc8183Stack(chainId);
+  const client = bscPublicClient(chainId);
   const [symbol, decimals, balance, allowance] = await Promise.all([
     client.readContract({
-      address: ERC8183_MAINNET.paymentToken,
+      address: a.paymentToken,
       abi: ERC20_ABI,
       functionName: "symbol",
     }),
     client.readContract({
-      address: ERC8183_MAINNET.paymentToken,
+      address: a.paymentToken,
       abi: ERC20_ABI,
       functionName: "decimals",
     }),
     owner
       ? client.readContract({
-          address: ERC8183_MAINNET.paymentToken,
+          address: a.paymentToken,
           abi: ERC20_ABI,
           functionName: "balanceOf",
           args: [owner],
@@ -104,10 +114,10 @@ export async function readTokenSnapshot(owner?: `0x${string}`): Promise<{
       : Promise.resolve(undefined),
     owner
       ? client.readContract({
-          address: ERC8183_MAINNET.paymentToken,
+          address: a.paymentToken,
           abi: ERC20_ABI,
           functionName: "allowance",
-          args: [owner, ERC8183_MAINNET.commerce],
+          args: [owner, a.commerce],
         })
       : Promise.resolve(undefined),
   ]);
@@ -119,18 +129,23 @@ export async function readTokenSnapshot(owner?: `0x${string}`): Promise<{
   };
 }
 
-export async function readNativeBalance(owner: `0x${string}`): Promise<bigint> {
-  const client = bscPublicClient();
+export async function readNativeBalance(
+  owner: `0x${string}`,
+  chainId: number = 56,
+): Promise<bigint> {
+  const client = bscPublicClient(chainId);
   return client.getBalance({ address: owner });
 }
 
 export function parseJobIdFromCreateLogs(
   logs: { address?: string; topics?: readonly string[]; data?: string }[],
+  chainId: number = 56,
 ): string | null {
+  const commerce = erc8183Stack(chainId).commerce;
   for (const log of logs) {
     if (
       log.address &&
-      log.address.toLowerCase() !== ERC8183_MAINNET.commerce.toLowerCase()
+      log.address.toLowerCase() !== commerce.toLowerCase()
     ) {
       continue;
     }

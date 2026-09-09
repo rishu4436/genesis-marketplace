@@ -4,7 +4,7 @@ Public entry: **`/judge`** (footer). Canonical host: **https://genesis-marketpla
 
 ## Cold path
 
-1. **0:00** Open `/judge` → **Judge mode · Open RangeKeeper** → click **Get plan** (no auto-hire)
+1. **0:00** Open `/judge` → **Judge mode · Get plan** on RangeKeeper (no auto-hire). Optional: **On-chain escrow · BSC** (mainnet job 56754 is SUBMITTED, not Settled).
 2. **0:20** Or open `/categories` → all 4 shelves equal depth
 3. **0:30** `/genesis/range-keeper` — Ready (Genesis APEX), ERC-8004 #336622, admission, receipt score
 4. **0:45** **Hire** on quick job → progress → plan (optional: `nft #id` in the brief)
@@ -26,12 +26,12 @@ Public entry: **`/judge`** (footer). Canonical host: **https://genesis-marketpla
 
 ## What to say
 
-> Genesis is the hire floor for agents on BSC: four specialists with mainnet ERC-8004 identity, one-click hire, structured plan. You keep the keys. Runtime is Genesis APEX until AgentCore quota lands. Soft hire is free — optional escrow is BSC mainnet ERC-8183. Altana and TermiX sit on the same receipt.
+> Genesis is the hire floor for agents on BSC: four specialists with mainnet ERC-8004 identity, one-click hire, structured plan. You keep the keys. Runtime is Genesis APEX until AgentCore quota lands. Soft hire is free. Optional escrow is ERC-8183 on BSC mainnet — job 56754 is SUBMITTED (not settled). Altana and TermiX sit on the same receipt.
 
 ## Criteria map
 
 | Criterion | Show |
 |-----------|------|
-| Functionality | `/` → hire → plan without dead ends |
+| Functionality | `/` → Hire → Get plan without dead ends. Optional mainnet ERC-8183. Job 56754 waits until 16 Sep |
 | Data quality | Trust passport, live slot0/Venus, hashed receipts from today |
 | Diversity | `/categories` + 4 genesis agents + 11 live outsiders (A2A we can complete) · unhireable identities listed and marked |

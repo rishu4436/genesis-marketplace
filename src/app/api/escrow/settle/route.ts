@@ -40,9 +40,10 @@ export async function POST(req: Request) {
     }
 
     const onchainId = BigInt(job.escrow.onchainJobId);
-    const chainNow = await readOnchainJob(onchainId);
+    const escrowChainId = job.escrow.chainId === 97 ? 97 : 56;
+    const chainNow = await readOnchainJob(onchainId, escrowChainId);
     const disputeWindow =
-      job.escrow.disputeWindowSeconds || (await readDisputeWindow());
+      job.escrow.disputeWindowSeconds || (await readDisputeWindow(escrowChainId));
     const now = Math.floor(Date.now() / 1000);
     const windowEnd =
       chainNow.submittedAt > 0 ? chainNow.submittedAt + disputeWindow : 0;
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
             success: false,
             error: inWindow
               ? `Dispute window still open until ${new Date(windowEnd * 1000).toISOString()} — approve would revert`
-              : "Approve is only valid after on-chain submit and the 7-day window",
+              : "Approve is only valid after on-chain submit and the dispute window",
           },
           { status: 400 },
         );
@@ -99,10 +100,10 @@ export async function POST(req: Request) {
 
     const call =
       action === "approve"
-        ? encodeSettleApprove(onchainId)
+        ? encodeSettleApprove(onchainId, escrowChainId)
         : action === "dispute"
-          ? encodeDispute(onchainId)
-          : encodeClaimRefund(onchainId);
+          ? encodeDispute(onchainId, escrowChainId)
+          : encodeClaimRefund(onchainId, escrowChainId);
 
     if (!body.txHash) {
       return NextResponse.json({
@@ -128,7 +129,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const chain = await readOnchainJob(onchainId);
+    const chain = await readOnchainJob(onchainId, escrowChainId);
     if (action === "approve" && chain.statusName !== "COMPLETED") {
       return NextResponse.json(
         {

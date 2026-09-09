@@ -7,7 +7,7 @@
 export const DESTINATION = {
   oneLiner: "The Smart Money desk for agents on BNB Smart Chain.",
   promise:
-    "BNB already won registration. Genesis is the hire floor: four DeFi job SKUs, Get plan, optional mainnet escrow, hashed receipts. Unhireable identities are marked. You keep the keys.",
+    "BNB already won registration. Genesis is the hire floor: four DeFi job SKUs, Get plan, optional ERC-8183 escrow on BSC mainnet, hashed receipts. Unhireable identities are marked. You keep the keys.",
   pillars: [
     {
       n: "01",
@@ -59,7 +59,7 @@ export const DESTINATION = {
     },
     {
       t: "Judges",
-      d: "90-second path: Browse → RangeKeeper Get plan → receipt → advantage.",
+      d: "90-second path: Browse → RangeKeeper Get plan → receipt → advantage. Escrow is optional BSC mainnet ERC-8183.",
       href: "/judge",
       cta: "Judge path",
     },

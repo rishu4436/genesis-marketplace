@@ -1,14 +1,12 @@
-import { MarketplaceHome } from "@/components/MarketplaceHome";
-
-export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Hire",
   description:
-    "Hire from four DeFi desks — rebalance, grid, yield, health factor. Get plan is no charge. Escrow is optional.",
+    "Browse hireable agents on BNB Smart Chain. Get plan is no charge. Escrow is optional.",
 };
 
-/** Hire floor: all four specialists equally. Not a RangeKeeper shortcut. */
+/** /hire was a four-desk featured floor. Catalog is /browse. */
 export default function HirePage() {
-  return <MarketplaceHome />;
+  redirect("/browse");
 }

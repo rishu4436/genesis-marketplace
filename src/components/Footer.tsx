@@ -107,10 +107,10 @@ export function Footer() {
               Judge
             </Link>
             <Link
-              href="/hire"
+              href="/browse"
               className="text-[13.5px] font-medium text-white/55 transition-colors hover:text-[#F0B90B]"
             >
-              Hire →
+              Browse →
             </Link>
           </div>
         </div>

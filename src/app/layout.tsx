@@ -81,7 +81,7 @@ export default function RootLayout({
           <Header />
           <TrialBanner />
           {/* grow (not flex-1/basis-0) so long pages aren't height-clipped */}
-          <main id="main" className="w-full grow">
+          <main id="main" className="w-full grow shrink-0">
             {children}
           </main>
           <Footer />

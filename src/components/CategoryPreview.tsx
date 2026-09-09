@@ -12,16 +12,19 @@ export function CategoryPreview({
   agents,
   genesis,
   receiptFitBySlug,
+  maxLive = 8,
 }: {
   category: Category;
   agents: Agent[];
   genesis?: GenesisAgent[];
   receiptFitBySlug?: Record<string, number>;
+  maxLive?: number;
 }) {
   const g = genesis?.[0];
   const hireable = agents.filter(
     (a) => isHireableListing(a) && !isGenesisListing(a),
   );
+  const liveCap = Math.max(1, maxLive);
 
   return (
     <section className="panel p-4 sm:p-5">
@@ -49,7 +52,7 @@ export function CategoryPreview({
             receiptFit={receiptFitBySlug?.[g.slug]}
           />
         )}
-        {hireable.slice(0, g ? 3 : 4).map((a) => (
+        {hireable.slice(0, g ? liveCap : liveCap + 1).map((a) => (
           <AgentCard
             key={a.id || a.agent_id}
             agent={a}

@@ -12,7 +12,7 @@ import {
 import Lenis from "lenis";
 import { LandingBackgroundCinematic } from "@/components/landing/archive/LandingBackgroundCinematic";
 import { CATEGORIES, getCategory, type CategoryId } from "@/lib/categories";
-import { GENESIS_AGENTS, genesisHref, HIRE_NOW_HREF } from "@/lib/genesis-agents";
+import { GENESIS_AGENTS, HIRE_NOW_HREF } from "@/lib/genesis-agents";
 import { PartnerLiveBadges } from "@/components/PartnerLiveBadges";
 import { PARTNERS } from "@/lib/partners";
 import type { HireTally } from "@/lib/hire-tally-types";
@@ -193,21 +193,11 @@ function Hero({
   tallyBoard: ReactNode;
 }) {
   const reduce = useReducedMotion();
-  const scale = useTransform(
-    scrollYProgress,
-    [0, 0.18],
-    reduce ? [1, 1] : [1, 0.88],
-  );
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.2],
-    reduce ? [1, 1] : [1, 0.15],
-  );
-  const y = useTransform(scrollYProgress, [0, 0.2], reduce ? [0, 0] : [0, -80]);
+  const y = useTransform(scrollYProgress, [0, 0.2], reduce ? [0, 0] : [0, -24]);
 
   return (
     <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden">
-      <motion.div style={{ scale, opacity, y }} className="mx-auto w-full max-w-6xl px-5 py-28 sm:px-8 sm:py-32">
+      <motion.div style={{ y }} className="mx-auto w-full max-w-6xl px-5 py-28 sm:px-8 sm:py-32">
         <motion.p
           className="section-label text-[#F0B90B]/70"
           initial={reduce ? false : { opacity: 0, y: 12 }}
@@ -243,9 +233,12 @@ function Hero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          {tally.hireable.toLocaleString("en-US")} hireable ·{" "}
-          {tally.aliveNotHireable.toLocaleString("en-US")} endpoint-alive (not a
-          hire) · {tally.unhireableRegistered.toLocaleString("en-US")} registered
+          {tally.hireable.toLocaleString("en-US")} hireable
+          {tally.endpointAlive > 0
+            ? ` · ${tally.aliveNotHireable.toLocaleString("en-US")} endpoint-alive (not a hire)`
+            : ""}
+          {" · "}
+          {tally.unhireableRegistered.toLocaleString("en-US")} registered
           (not a hire)
         </motion.p>
         <motion.div
@@ -255,7 +248,7 @@ function Hero({
           transition={{ delay: 0.45 }}
         >
           <Link href={HIRE_NOW_HREF} className="btn-primary !px-6 !py-3 !text-[0.95rem]">
-            Get plan
+            Browse
           </Link>
           <Link
             href="/categories"
@@ -273,9 +266,7 @@ function Hero({
           {CATEGORIES.map((c) => (
             <Link
               key={c.id}
-              href={`/genesis/${
-                GENESIS_AGENTS.find((a) => a.categoryId === c.id)?.slug || ""
-              }#buy`}
+              href={`/categories/${c.id}`}
               className="rounded-full border border-white/10 px-3.5 py-1.5 text-[13px] text-white/60 transition hover:border-[#F0B90B]/40 hover:text-white"
             >
               {c.shortName}
@@ -494,46 +485,25 @@ export function LandingPageCinematic({
         </div>
       </section>
 
-      {/* SPECIALISTS STRIP */}
+      {/* CATALOG — not a featured promo shelf */}
       <section className="relative border-t border-white/[0.06] py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <FadeIn>
-            <p className="section-label">By Genesis</p>
+            <p className="section-label">Catalog</p>
             <h2 className="mt-4 font-display text-2xl font-bold text-white sm:text-3xl">
-              Hire-ready specialists
+              Browse hireable agents
             </h2>
+            <p className="mt-3 max-w-lg text-sm text-white/50">
+              Hireable first. Unhireable identities are marked, not featured.
+              Not a paid promo shelf.
+            </p>
+            <Link
+              href="/browse"
+              className="btn-primary mt-6 inline-flex !px-6 !py-3"
+            >
+              Browse
+            </Link>
           </FadeIn>
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {GENESIS_AGENTS.map((a, i) => {
-              const cat = getCategory(a.categoryId);
-              return (
-                <FadeIn key={a.slug} delay={i * 0.06}>
-                  <Link
-                    href={`${genesisHref(a)}#buy`}
-                    className="group flex h-full flex-col rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 transition hover:border-[#F0B90B]/35"
-                  >
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${a.accent} text-sm font-bold text-black/80`}
-                    >
-                      {a.icon}
-                    </div>
-                    <h3 className="mt-4 text-sm font-semibold text-white group-hover:text-amber-50">
-                      {a.name}
-                    </h3>
-                    <p className="mt-1 text-[11px] text-white/40">
-                      {cat?.shortName} · ${a.basePriceUsd}
-                    </p>
-                    <p className="mt-2 flex-1 text-xs leading-relaxed text-white/50 line-clamp-2">
-                      {a.tagline}
-                    </p>
-                    <span className="mt-4 text-xs font-semibold text-[#F0B90B]">
-                      Hire →
-                    </span>
-                  </Link>
-                </FadeIn>
-              );
-            })}
-          </div>
         </div>
       </section>
 
@@ -665,7 +635,7 @@ export function LandingPageCinematic({
                 href={HIRE_NOW_HREF}
                 className="btn-primary !px-8 !py-3.5 !text-base"
               >
-                Get plan
+                Browse
               </Link>
             </div>
             <p className="mt-10 text-xs font-medium tracking-wide text-white/35">

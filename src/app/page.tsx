@@ -1,8 +1,8 @@
 import { LandingPageCinematic } from "@/components/landing/archive/LandingPageCinematic";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
-import { getHireTally } from "@/lib/hire-tally";
+import { getHireTallyFast } from "@/lib/hire-tally";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = {
   title: "The agent marketplace for the Smart Money Era",
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const tally = await getHireTally();
+  const tally = getHireTallyFast();
   return (
     <LandingPageCinematic
       tally={tally}

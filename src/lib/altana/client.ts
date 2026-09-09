@@ -32,10 +32,10 @@ const FAUCET_WEI = BigInt("50000000000000000"); // 0.05 tBNB
 
 export function altanaNetwork(): AltanaNetwork {
   const raw = (process.env.ALTANA_NETWORK || "").trim().toLowerCase();
-  if (raw === "mainnet" || raw === "bnb" || raw === "56" || raw === "bnb-mainnet") {
-    return "bnb";
+  if (raw === "testnet" || raw === "bnb-testnet" || raw === "97") {
+    return "bnb-testnet";
   }
-  return "bnb-testnet";
+  return "bnb";
 }
 
 export function altanaChainId(): number {
@@ -377,10 +377,10 @@ export async function revokeAgentSession(
             walletAddress: s.walletAddress as `0x${string}`,
             publicKey: s.publicKey as `0x${string}`,
             permissions: {
-              calls: s.permissions.calls
+              calls: (s.permissions?.calls || [])
                 .filter((c) => c.to)
                 .map((c) => ({ to: c.to as `0x${string}` })),
-              spend: s.permissions.spend.map((sp) => ({
+              spend: (s.permissions?.spend || []).map((sp) => ({
                 limit: BigInt(sp.limit),
                 period: (sp.period || "day") as "day",
                 ...(sp.token ? { token: sp.token as `0x${string}` } : {}),

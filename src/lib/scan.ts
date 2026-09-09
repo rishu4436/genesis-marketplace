@@ -369,7 +369,11 @@ export function shortAddress(addr?: string | null, chars = 4) {
 export function explorerAgentUrl(agent: Agent) {
   const id = String(agent.token_id || "");
   if (/^\d+$/.test(id)) {
-    return `https://8004scan.io/agents/${agent.chain_id || 56}/${id}`;
+    const chain =
+      Number(agent.chain_id) === 56 || !agent.chain_id
+        ? "bsc"
+        : String(agent.chain_id);
+    return `https://8004scan.io/agents/${chain}/${id}`;
   }
   return "https://8004scan.io/agents?chain=56";
 }

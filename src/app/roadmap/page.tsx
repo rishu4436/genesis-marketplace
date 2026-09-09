@@ -119,10 +119,7 @@ export default function RoadmapPage() {
       </section>
 
       <div className="mt-12 flex flex-wrap gap-3">
-        <Link href="/hire" className="btn-primary">
-          Hire
-        </Link>
-        <Link href="/browse" className="btn-secondary">
+        <Link href="/browse" className="btn-primary">
           Browse
         </Link>
       </div>

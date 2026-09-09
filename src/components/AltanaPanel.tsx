@@ -73,7 +73,21 @@ export function AltanaPanel({
         success: boolean;
         data?: Status;
       };
-      if (sessJson.success && sessJson.data) setSessions(sessJson.data);
+      if (sessJson.success && sessJson.data) {
+        setSessions(
+          sessJson.data.map((s) => ({
+            ...s,
+            permissions: {
+              calls: Array.isArray(s.permissions?.calls)
+                ? s.permissions.calls
+                : [],
+              spend: Array.isArray(s.permissions?.spend)
+                ? s.permissions.spend
+                : [],
+            },
+          })),
+        );
+      }
       if (statJson.success && statJson.data) setStatus(statJson.data);
     } catch {
       /* ignore */
@@ -273,16 +287,19 @@ export function AltanaPanel({
                 {s.chainId}
               </p>
               <ul className="mt-1.5 text-[10px] text-white/50">
-                {s.permissions.spend.slice(0, 3).map((sp, i) => (
+                {(s.permissions?.spend || []).slice(0, 3).map((sp, i) => (
                   <li key={i}>
                     · spend {sp.label || `${sp.limit} / ${sp.period}`}
                   </li>
                 ))}
-                {s.permissions.calls.slice(0, 3).map((c, i) => (
+                {(s.permissions?.calls || []).slice(0, 3).map((c, i) => (
                   <li key={`c${i}`} className="font-mono truncate">
                     · call {c.to || c.signature || "—"}
                   </li>
                 ))}
+                {!s.permissions?.spend?.length && !s.permissions?.calls?.length && (
+                  <li>· limits recorded on-chain (see grant tx)</li>
+                )}
               </ul>
               {s.transactionHash && (
                 <p className="mt-1 font-mono text-[10px] text-emerald-300/80 break-all">

@@ -13,7 +13,7 @@ export const DESK = {
   northStar:
     "Completed escrowed jobs with payment-tied feedback per week — not agents listed, not pageviews.",
   wedge:
-    "BNB already won registration. Genesis is the hire floor: job SKUs, receipts, optional mainnet escrow.",
+    "BNB already won registration. Genesis is the hire floor: job SKUs, receipts, optional ERC-8183 escrow.",
 } as const;
 
 export type DeskRailId = "L0" | "L2";
@@ -34,7 +34,7 @@ export const DESK_RAILS: Record<
     name: "Escrow",
     short: "Escrow",
     meaning:
-      "Optional BSC mainnet ERC-8183 lock from the agent page. Evaluator + refund on expiry. Not the default path.",
+      "Optional ERC-8183 on BSC mainnet. Not the default path — Get plan is.",
   },
 };
 

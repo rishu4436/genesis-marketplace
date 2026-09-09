@@ -50,7 +50,8 @@ export async function POST(req: Request) {
     }
 
     const onchainId = BigInt(job.escrow.onchainJobId);
-    const chain = await readOnchainJob(onchainId);
+    const escrowChainId = job.escrow.chainId === 97 ? 97 : 56;
+    const chain = await readOnchainJob(onchainId, escrowChainId);
     const now = Math.floor(Date.now() / 1000);
 
     if (chain.statusName === "SUBMITTED" || chain.statusName === "COMPLETED") {
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
     }
 
     const disputeWindow =
-      job.escrow.disputeWindowSeconds || (await readDisputeWindow());
+      job.escrow.disputeWindowSeconds || (await readDisputeWindow(escrowChainId));
     if (
       chain.statusName === "FUNDED" &&
       !canSubmitOnchain({
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
         {
           success: false,
           error:
-            "SubmissionTooLate on this lock — OptimisticPolicy needs expiredAt ≥ now + 7d. Fund a new job, then submit from the operator wallet.",
+            "SubmissionTooLate on this lock — OptimisticPolicy needs expiredAt ≥ now + dispute window. Fund a new job, then submit from the operator wallet.",
         },
         { status: 400 },
       );
@@ -110,6 +111,7 @@ export async function POST(req: Request) {
         jobId: onchainId,
         deliverable,
         receiptUrl,
+        chainId: escrowChainId,
       });
       return NextResponse.json({
         success: true,
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const after = await readOnchainJob(onchainId);
+    const after = await readOnchainJob(onchainId, escrowChainId);
     if (after.statusName !== "SUBMITTED" && after.statusName !== "COMPLETED") {
       return NextResponse.json(
         {

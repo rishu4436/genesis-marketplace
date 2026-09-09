@@ -30,7 +30,7 @@ export default async function AltanaPage() {
         <strong className="text-white/80">spend caps</strong>,{" "}
         <strong className="text-white/80">allowlists</strong>, and{" "}
         <strong className="text-white/80">expiry</strong> — then revoke it
-        in-product. Testnet counts; a BSC mainnet grant is the prize proof.
+        in-product. A BSC mainnet Keystore grant is the prize proof.
       </p>
 
       <div className="panel mt-8 grid gap-3 sm:grid-cols-3">
@@ -114,16 +114,9 @@ export default async function AltanaPage() {
         </div>
       )}
       {status.network === "bnb-testnet" && (
-        <p className="mt-2 text-xs text-white/40">
-          Faucet:{" "}
-          <a
-            href={status.faucet}
-            className="text-amber-300 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            tBNB faucet
-          </a>
+        <p className="mt-2 text-xs text-amber-200/80">
+          Admin is still on testnet — grant from a mainnet-funded EOA for the
+          prize path.
         </p>
       )}
 
@@ -171,7 +164,7 @@ export default async function AltanaPage() {
           <li>User can view permissions and revoke in-product</li>
           <li>
             Live grant writes Keystore when the admin key is set and the EOA has
-            BNB (mainnet) or tBNB (testnet) — failures do not fall back to demo
+            BNB on mainnet — failures do not fall back to a simulated session
           </li>
           <li>
             Last live tx is saved to{" "}

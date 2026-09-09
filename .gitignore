@@ -34,6 +34,7 @@
 /data/wallet-jobs/
 /data/altana-sessions/
 /data/incidents/
+/data/testnet-escrow-cycle.json
 
 # debug
 npm-debug.log*

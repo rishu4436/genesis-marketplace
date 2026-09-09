@@ -29,7 +29,7 @@ export const PARTNERS: PartnerDef[] = [
     href: "/partners#8004scan",
     docs: "https://8004scan.io/developers",
     powers: [
-      "Hire / browse catalog",
+      "Browse catalog (hireable vs Unhireable)",
       "On-chain ratings (never invented)",
       "5-axis hire readiness",
     ],
@@ -55,7 +55,7 @@ export const PARTNERS: PartnerDef[] = [
     href: "/advantage",
     docs: "/termix",
     powers: [
-      "Three weighted tasks",
+      "Four tasks, one per job",
       "Receipt-linked proof",
       "Trading + security stakes",
     ],
@@ -77,7 +77,7 @@ export const PARTNERS: PartnerDef[] = [
     id: "featured-a2a",
     name: "BNB LP Rebalancer",
     track: "Live third-party",
-    role: "Labeled featured LP seller — not organic rank. One of four outsiders (LP + Brain grid/yield/HF). We negotiate their A2A and return their payload.",
+    role: "Labeled featured LP seller — not organic rank. Live A2A we can complete (Brain, ChainHelix, and this LP pin). Featured stays labeled.",
     href: "/agents/56/265375#buy",
     powers: [
       "A2A negotiate + quote",

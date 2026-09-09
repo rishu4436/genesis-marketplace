@@ -31,9 +31,9 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
     n: "0",
     title: "Operate the desk",
     status: "now",
-    goal: "A stranger can Hire from four desks, get a plan, and leave with a receipt. Browse stays the catalog.",
+    goal: "A stranger can Browse the catalog, get a plan, and leave with a receipt. /hire is not a featured promo floor.",
     ship: [
-      "Hire opens all four specialists. Browse is hireable vs Unhireable — not a second Hire button.",
+      "Browse is the catalog (hireable vs Unhireable). /hire redirects there — not a featured promo floor.",
       "Get plan on RangeKeeper, Gridwright, YieldRouter, and HealthSentinel.",
       "Keep 56754 labeled SUBMITTED until settle exists. Refund 56748 after it expires.",
     ],
@@ -41,7 +41,7 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
       "Do not restyle the landing while the desk is in use.",
       "Do not mark SUBMITTED as Ready or Settled.",
     ],
-    exit: "Phone, no wallet: Hire → pick a desk → Get plan → receipt.",
+    exit: "Phone, no wallet: Browse → pick a hireable listing → Get plan → receipt.",
   },
   {
     id: "escrow",
@@ -51,8 +51,8 @@ export const ROADMAP_PHASES: RoadmapPhase[] = [
     goal: "One BscScan story: create → fund → submit → window → settle. Seller $U stays 0 until the kernel pays.",
     ship: [
       "Job 56754 is SUBMITTED on mainnet (plan hash on-chain). Approve only after 16 Sep 2026 04:25 UTC.",
-      "Pin the real settle hash when the buyer approves. Unique payers = distinct settle addresses.",
-      "New locks use a deadline that covers the 7-day dispute window so submit is possible.",
+      "Pin the real mainnet settle hash when the buyer approves. Unique payers = distinct settle addresses.",
+      "New locks use a deadline that covers the dispute window so submit is possible.",
     ],
     hold: [
       "Do not approve early — the kernel reverts.",

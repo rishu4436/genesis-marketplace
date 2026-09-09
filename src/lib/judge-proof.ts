@@ -30,9 +30,12 @@ export function escrowJudgeProof(): EscrowJudgeProof {
   };
 }
 
-export function escrowProofExplorer(hash: string | null): string | null {
+export function escrowProofExplorer(
+  hash: string | null,
+  chainId: number = 56,
+): string | null {
   if (!hash || !isTxHash(hash)) return null;
-  return bscscanTx(hash);
+  return bscscanTx(hash, chainId === 97 ? 97 : 56);
 }
 
 /** Env wins so Vercel can pin a video without a code change. Never invent a URL. */
@@ -70,10 +73,13 @@ export function judgeDemoEmbed(url: string): JudgeDemoEmbed {
 }
 
 function proofFromJob(job: HireJob, note: string): EscrowJudgeProof {
+  const testnet = job.escrow?.chainId === 97;
   return {
-    label: "ERC-8183 escrow proof (separate from soft-hire jobs)",
-    network: "bsc-mainnet",
-    chainId: 56,
+    label: testnet
+      ? "ERC-8183 testnet settle (not the mainnet pin)"
+      : "ERC-8183 escrow proof (separate from soft-hire jobs)",
+    network: testnet ? "bsc-testnet" : "bsc-mainnet",
+    chainId: testnet ? 97 : 56,
     marketplaceJobId: job.id,
     onchainJobId: job.escrow?.onchainJobId ?? null,
     fundTx: job.escrow?.fundTx ?? null,
@@ -84,9 +90,22 @@ function proofFromJob(job: HireJob, note: string): EscrowJudgeProof {
   };
 }
 
+export function escrowTestnetJudgeProof(): EscrowJudgeProof | null {
+  const raw = (proofJson as { escrowTestnet?: EscrowJudgeProof }).escrowTestnet;
+  if (!raw || raw.chainId !== 97) return null;
+  if (!isTxHash(raw.fundTx) || !isTxHash(raw.settleTx)) return null;
+  return {
+    ...raw,
+    submitTx: isTxHash(raw.submitTx) ? raw.submitTx : null,
+    settleTx: raw.settleTx,
+    disputeTx: isTxHash(raw.disputeTx) ? raw.disputeTx : null,
+  };
+}
+
 /** Persist a verified mainnet fund so /judge can pin it. Never invent hashes. */
 export async function pinEscrowJudgeProof(job: HireJob): Promise<void> {
   if (!isTxHash(job.escrow?.fundTx)) return;
+  if (job.escrow?.chainId === 97) return;
   if (job.quote?.protocol === "ERC-8183-sim") return;
   const payload = proofFromJob(
     job,
@@ -120,6 +139,7 @@ export async function resolveEscrowJudgeProof(): Promise<EscrowJudgeProof> {
     const hit = jobs.find(
       (j) =>
         isTxHash(j.escrow?.fundTx) &&
+        j.escrow?.chainId !== 97 &&
         j.quote?.protocol === "ERC-8183" &&
         j.purpose !== "holdout",
     );

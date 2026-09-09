@@ -79,7 +79,7 @@ function main() {
   const loops = growthLoops({
     task: "rebalance",
     jobId: "job_x",
-    hireHref: "/hire",
+    hireHref: "/browse",
   });
   check(
     "share loop does not point at rank",

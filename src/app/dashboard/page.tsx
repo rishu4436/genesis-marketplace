@@ -24,7 +24,7 @@ export default function DashboardPage() {
           <SoftHireNote className="mt-5 max-w-xl" />
         </div>
         <Link href={HIRE_NOW_HREF} className="btn-solid">
-          Get plan
+          Browse
         </Link>
       </div>
 

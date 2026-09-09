@@ -73,8 +73,8 @@ async function main() {
   }
 
   check(
-    "Hire CTA is the four-desk floor, not RangeKeeper",
-    HIRE_NOW_HREF === "/hire",
+    "Hire CTA is the catalog, not a featured floor",
+    HIRE_NOW_HREF === "/browse",
     HIRE_NOW_HREF,
   );
   check(

@@ -28,6 +28,7 @@ import {
   getFeaturedThirdParty,
   isPinnedLiveSeller,
 } from "../src/lib/third-party-sellers";
+import { deskFloorAgents } from "../src/lib/desk-floor";
 import { siteUrl, PRODUCTION_SITE_URL } from "../src/lib/site-url";
 import {
   JOB_SKUS,
@@ -98,7 +99,7 @@ function main() {
   const loops = growthLoops({
     task: "rebalance",
     jobId: "job_x",
-    hireHref: "/hire",
+    hireHref: "/browse",
     genesisSlug: "range-keeper",
   });
   check(
@@ -240,6 +241,10 @@ function main() {
       "https://gvwyso8occ.execute-api.us-east-1.amazonaws.com/a2a",
     ) === false,
   );
+  check(
+    "twitter profile is not a hireable A2A",
+    isPublicHireableUrl("https://x.com/4lpha_agent") === false,
+  );
   check("four job SKUs", JOB_SKUS.length === 4);
   check(
     "genesis never claims bonded or insured",
@@ -254,8 +259,46 @@ function main() {
       (b) => b.id !== "live" || b.on === false,
     ),
   );
-  check("five extra live pins", EXTRA_LIVE_SELLERS.length === 5);
-  check("eleven live third-party pins", LIVE_SELLERS.length === 11);
+  check(
+    "original extra live pins still present",
+    [
+      "chainhelix-rebalancer",
+      "chainhelix-grid",
+      "chainhelix-health",
+      "bnb-yield-optimizer",
+      "bnb-lending-guardian",
+    ].every((slug) => EXTRA_LIVE_SELLERS.some((s) => s.slug === slug)),
+  );
+  check(
+    "probed live A2A pinned on the floor",
+    [
+      "marketplace-grid-planner",
+      "smeai-grid",
+      "smeai-health",
+      "hallmark-range-keeper",
+      "lingoai-health",
+      "hallmark-liquidation-guard",
+      "healthguard",
+    ].every((slug) => EXTRA_LIVE_SELLERS.some((s) => s.slug === slug)),
+  );
+  check("twelve extra live pins", EXTRA_LIVE_SELLERS.length === 12);
+  check("eighteen live third-party pins", LIVE_SELLERS.length === 18);
+  check(
+    "healthguard pin is hireable",
+    isHireableListing(
+      featuredAsAgent(
+        EXTRA_LIVE_SELLERS.find((s) => s.slug === "healthguard"),
+      ),
+    ) === true,
+  );
+  check(
+    "healthguard is on the desk floor",
+    deskFloorAgents().some((a) => String(a.token_id) === "259573"),
+  );
+  check(
+    "lp two-letter query matches LP rebalancer",
+    queryMatchScore(featured, "lp") > 0,
+  );
   const helix = brainHitToAgent(
     {
       id: 269223,

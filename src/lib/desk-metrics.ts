@@ -27,8 +27,13 @@ function isEscrowJob(job: HireJob): boolean {
   return isTxHash(job.escrow?.fundTx);
 }
 
+/** North-star settled count is mainnet only. Testnet COMPLETED is a separate proof. */
+function isMainnetEscrow(job: HireJob): boolean {
+  return isEscrowJob(job) && job.escrow?.chainId !== 97;
+}
+
 function isPaidEscrow(job: HireJob): boolean {
-  return isEscrowJob(job) && isTxHash(job.escrow?.settleTx);
+  return isMainnetEscrow(job) && isTxHash(job.escrow?.settleTx);
 }
 
 export async function deskWeek(): Promise<DeskWeek> {

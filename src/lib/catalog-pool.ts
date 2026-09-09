@@ -1,5 +1,5 @@
 /**
- * Shared 8004scan hireable pool for /hire and /browse.
+ * Shared 8004scan hireable pool for /browse.
  * Aim for 200–500 loaded agents so x402 / verified / job chips
  * still have rows after in-memory filters.
  */
@@ -16,8 +16,15 @@ import {
 } from "./census-alive";
 import { filterHireableCatalog } from "./catalog-quality";
 import { hireableBscAsAgents } from "./hireable-bsc";
+import { createSwrMem } from "./swr-mem";
 
 const CATALOG_CACHE_KEY = "genesis:catalog:hireable:v5";
+const catalogSwr = createSwrMem<{
+  agents: Agent[];
+  error: string | null;
+  apiTotal: number | null;
+  census: CensusAliveStats | null;
+}>(60_000, 900_000);
 
 export type CatalogSortMode = "rank" | "score" | "newest" | "ratings";
 
@@ -47,6 +54,26 @@ function collect(
 }
 
 export async function fetchHireablePool(opts: {
+  q?: string;
+  sortMode: CatalogSortMode;
+  x402?: boolean;
+  verified?: boolean;
+  live?: boolean;
+}): Promise<{
+  agents: Agent[];
+  error: string | null;
+  apiTotal: number | null;
+  census: CensusAliveStats | null;
+}> {
+  const searching = Boolean(opts.q?.trim());
+  const filtered = Boolean(opts.x402 || opts.verified || opts.live || searching);
+  if (!filtered) {
+    return catalogSwr.get(() => buildHireablePool(opts));
+  }
+  return buildHireablePool(opts);
+}
+
+async function buildHireablePool(opts: {
   q?: string;
   sortMode: CatalogSortMode;
   x402?: boolean;

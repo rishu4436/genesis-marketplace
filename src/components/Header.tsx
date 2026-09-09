@@ -32,7 +32,6 @@ export function Header() {
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -94,17 +93,17 @@ export function Header() {
           <Link
             href={HIRE_NOW_HREF}
             className={`btn-solid ml-2 !h-9 !px-4 !text-[0.8rem] ${
-              navActive(pathname, "/hire") ? "ring-1 ring-white/20" : ""
+              navActive(pathname, "/browse") ? "ring-1 ring-white/20" : ""
             }`}
           >
             Hire
           </Link>
-          <span className="ml-1">
+          <span className="ml-1.5">
             <AuthNav />
           </span>
         </nav>
 
-        <div className="flex shrink-0 items-center md:hidden">
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -153,12 +152,7 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              <Link href="/login?mode=login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
-                Sign in
-              </Link>
-              <Link href="/login" className="rounded-xl px-3 py-3 text-sm font-medium text-white/60">
-                Create account
-              </Link>
+              <AuthNav stacked />
             </nav>
           </motion.div>
         )}

@@ -9,6 +9,7 @@ import type { CategoryId } from "./categories";
 import { isCloneBotName, isPublicHireableUrl } from "./hire-class";
 import { categorizeHireable } from "./hireable-bsc";
 import { kvCmd } from "./kv";
+import { createSwrMem } from "./swr-mem";
 
 const CENSUS_URL = "https://agentcensus.xyz/api/agents";
 const CACHE_KEY = "genesis:census:alive:v1";
@@ -140,20 +141,19 @@ async function mapPool<T, R>(
   return ret;
 }
 
-let inflight: Promise<{
+type CensusBundle = {
   agents: Agent[];
   stats: CensusAliveStats;
-}> | null = null;
+};
 
-export async function fetchCensusAlive(): Promise<{
-  agents: Agent[];
-  stats: CensusAliveStats;
-}> {
-  if (inflight) return inflight;
-  inflight = loadCensusAlive().finally(() => {
-    inflight = null;
-  });
-  return inflight;
+const censusSwr = createSwrMem<CensusBundle>(60_000, 900_000);
+
+export function peekCensusAlive(): CensusBundle | null {
+  return censusSwr.peek();
+}
+
+export async function fetchCensusAlive(): Promise<CensusBundle> {
+  return censusSwr.get(loadCensusAlive);
 }
 
 async function loadCensusAlive(): Promise<{
@@ -168,6 +168,7 @@ async function loadCensusAlive(): Promise<{
         stats: CensusAliveStats;
       };
       if (parsed.agents?.length && parsed.stats) {
+        censusSwr.set(parsed);
         return parsed;
       }
     } catch {
@@ -205,16 +206,18 @@ async function loadCensusAlive(): Promise<{
     error: agents.length ? null : error || "Census returned no alive agents",
   };
 
+  const bundle = { agents, stats };
+  censusSwr.set(bundle);
   if (agents.length) {
     await kvCmd(
       "SET",
       CACHE_KEY,
-      JSON.stringify({ agents, stats }),
+      JSON.stringify(bundle),
       "EX",
       900,
     );
   }
-  return { agents, stats };
+  return bundle;
 }
 
 export function censusAgentsForCategory(

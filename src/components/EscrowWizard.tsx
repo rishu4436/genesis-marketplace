@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { decodeEventLog, formatEther, formatUnits } from "viem";
 import type { CategoryId } from "@/lib/categories";
@@ -9,11 +10,14 @@ import {
   encodeRegisterJob,
   encodeSetBudget,
   ERC8183_MAINNET,
+  escrowNetworkLabel,
   JOB_CREATED_EVENT,
-  MIN_BNB_BNB,
+  minBnbFor,
+  nativeSymbolFor,
 } from "@/lib/erc8183-escrow";
 import type { HireJob } from "@/lib/hire-engine";
 import { ESCROW_CTA, ESCROW_LINE, NEVER_PAY_SELLER } from "@/lib/copy";
+import { shortWallet } from "@/lib/demo-pay";
 import {
   discoverWallets,
   getChainId,
@@ -76,29 +80,44 @@ type Props = {
   genesisSlug?: string;
   ownerAddress?: string;
   task: string;
+  /** Listing chainId stays 56 for ERC-8004 identity. Escrow is always BSC 56. */
+  escrowChainId?: number;
 };
 
-function explain(e: unknown, kind: "gas" | "token" | "tx"): string {
+function explain(
+  e: unknown,
+  kind: "gas" | "token" | "tx",
+  chainId: number,
+): string {
   if (isUserRejected(e)) return "You rejected the transaction in the wallet.";
   const msg = e instanceof Error ? e.message : String(e);
+  const net = escrowNetworkLabel(chainId);
+  const gas = nativeSymbolFor(chainId);
   if (/insufficient funds|insufficient balance/i.test(msg)) {
     return kind === "gas"
-      ? "Insufficient BNB for gas on BSC mainnet."
+      ? `Insufficient ${gas} for gas on ${net}.`
       : "Insufficient $U for this job.";
   }
   if (/chain|network/i.test(msg)) {
-    return "Wrong network. Switch to BNB Smart Chain (chain 56).";
+    return `Wrong network. Switch to ${net} (BSC mainnet, chain 56).`;
   }
   return msg || "Transaction failed";
 }
 
+function formatDuration(sec: number): string {
+  if (sec >= 86400) return `${Math.round(sec / 86400)}d`;
+  if (sec >= 3600) return `${Math.round(sec / 3600)}h`;
+  return `${Math.max(1, Math.round(sec / 60))}m`;
+}
+
 function parseCreatedJobId(
   logs: { address?: string; topics?: string[]; data?: string }[],
+  commerce: string,
 ): string | null {
   for (const log of logs) {
     if (
       log.address &&
-      log.address.toLowerCase() !== ERC8183_MAINNET.commerce.toLowerCase()
+      log.address.toLowerCase() !== commerce.toLowerCase()
     ) {
       continue;
     }
@@ -129,8 +148,13 @@ export function EscrowWizard({
   genesisSlug,
   ownerAddress,
   task,
+  escrowChainId,
 }: Props) {
   const router = useRouter();
+  void escrowChainId;
+  const railChain = 56 as const;
+  const netLabel = escrowNetworkLabel(railChain);
+  const gasSymbol = nativeSymbolFor(railChain);
   const [step, setStep] = useState<Step>("connect");
   const [wallets, setWallets] = useState<DiscoveredWallet[]>([]);
   const [provider, setProvider] = useState<EthProvider | null>(null);
@@ -140,23 +164,95 @@ export function EscrowWizard({
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [onchainJobId, setOnchainJobId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const sessionRef = useRef(0);
 
   const brief = task.trim();
 
   useEffect(() => {
-    if (!open) return;
+    setMounted(true);
+  }, []);
+
+  function handleClose() {
+    sessionRef.current += 1;
+    setBusy(false);
     setError(null);
-    void discoverWallets().then(setWallets);
-    void loadQuote().catch((e) =>
-      setError(e instanceof Error ? e.message : "Could not load escrow quote"),
-    );
+    setStep("connect");
+    setAddress(null);
+    setProvider(null);
+    setQuote(null);
+    setLog([]);
+    setOnchainJobId(null);
+    onClose();
+  }
+
+  function disconnectWallet() {
+    sessionRef.current += 1;
+    const session = sessionRef.current;
+    setBusy(false);
+    setError(null);
+    setAddress(null);
+    setProvider(null);
+    setLog([]);
+    setOnchainJobId(null);
+    setStep("connect");
+    void loadQuote(undefined)
+      .then((q) => {
+        if (session !== sessionRef.current) return;
+        setQuote(q);
+      })
+      .catch((e) => {
+        if (session !== sessionRef.current) return;
+        setQuote(null);
+        setError(e instanceof Error ? e.message : "Could not load escrow quote");
+      });
+    void discoverWallets().then((found) => {
+      if (session !== sessionRef.current) return;
+      setWallets(found);
+    });
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const session = sessionRef.current;
+    setError(null);
+    setQuote(null);
+    void discoverWallets().then((found) => {
+      if (session !== sessionRef.current) return;
+      setWallets(found);
+    });
+    void loadQuote(address || undefined)
+      .then((q) => {
+        if (session !== sessionRef.current) return;
+        setQuote(q);
+      })
+      .catch((e) => {
+        if (session !== sessionRef.current) return;
+        setError(e instanceof Error ? e.message : "Could not load escrow quote");
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, railChain]);
+
+  const connected = Boolean(address && quote?.wallet);
+  const enoughU = Boolean(quote?.wallet?.enoughU);
   const enoughBnb = useMemo(() => {
     if (!quote?.wallet) return false;
-    return BigInt(quote.wallet.bnbWei) >= parseEtherSafe(MIN_BNB_BNB);
-  }, [quote]);
+    const floor = quote.minBnb || minBnbFor(railChain);
+    return BigInt(quote.wallet.bnbWei) >= parseEtherSafe(floor);
+  }, [quote, railChain]);
 
   function push(line: string) {
     setLog((prev) => [...prev, line]);
@@ -173,6 +269,7 @@ export function EscrowWizard({
         ownerAddress,
         task: brief,
         wallet: wallet || undefined,
+        escrowChainId: railChain,
       }),
     });
     const json = (await res.json()) as {
@@ -183,33 +280,44 @@ export function EscrowWizard({
     if (!res.ok || !json.success || !json.data) {
       throw new Error(json.error || "Escrow quote failed");
     }
-    setQuote(json.data);
     return json.data;
   }
 
+  function tokenShort(q: QuoteData): string {
+    const token = q.addresses.paymentToken;
+    return `${token.slice(0, 8)}…`;
+  }
+
+  function insufficientUMessage(q: QuoteData): string {
+    return `This wallet has no $U on BSC mainnet. Escrow locks ${q.budgetU} $U at ${tokenShort(q)}. Get plan is free and does not need $U.`;
+  }
+
   async function connect(w: DiscoveredWallet) {
+    const session = sessionRef.current;
     setBusy(true);
     setError(null);
     try {
       const addr = await requestAccounts(w.provider);
+      if (session !== sessionRef.current) return;
       const chain = await getChainId(w.provider);
-      if (chain !== 56) {
-        push("Wrong network — switching to BSC mainnet…");
+      if (session !== sessionRef.current) return;
+      if (chain !== railChain) {
+        push(`Wrong network — switching to ${netLabel}…`);
         await switchToBsc(w.provider);
       }
+      if (session !== sessionRef.current) return;
       setProvider(w.provider);
       setAddress(addr);
       const q = await loadQuote(addr);
-      if (!q.wallet?.enoughU) {
-        setError(
-          `Insufficient $U. Need ${q.budgetU} U on BSC mainnet (token ${q.addresses.paymentToken.slice(0, 8)}…).`,
-        );
-      }
+      if (session !== sessionRef.current) return;
+      setQuote(q);
+      setError(null);
       setStep("balances");
     } catch (e) {
-      setError(explain(e, "tx"));
+      if (session !== sessionRef.current) return;
+      setError(explain(e, "tx", railChain));
     } finally {
-      setBusy(false);
+      if (session === sessionRef.current) setBusy(false);
     }
   }
 
@@ -224,6 +332,7 @@ export function EscrowWizard({
       from,
       to: call.to,
       data: call.data,
+      chainId: railChain,
     });
     push(`${label} tx ${hash.slice(0, 10)}…`);
     const rec = await waitForReceipt(eth, hash);
@@ -233,18 +342,26 @@ export function EscrowWizard({
 
   async function runFund() {
     if (!provider || !address || !quote) return;
+    const session = sessionRef.current;
     setBusy(true);
     setError(null);
     try {
       const chain = await getChainId(provider);
-      if (chain !== 56) await switchToBsc(provider);
+      if (session !== sessionRef.current) return;
+      if (chain !== railChain) {
+        await switchToBsc(provider);
+      }
+      if (session !== sessionRef.current) return;
 
       const q = await loadQuote(address);
+      if (session !== sessionRef.current) return;
+      setQuote(q);
       if (!q.wallet?.enoughU) {
-        throw new Error(`Insufficient $U. Need ${q.budgetU} U.`);
+        throw new Error(insufficientUMessage(q));
       }
-      if (BigInt(q.wallet.bnbWei) < parseEtherSafe(MIN_BNB_BNB)) {
-        throw new Error("Insufficient BNB for gas on BSC mainnet.");
+      const floor = q.minBnb || minBnbFor(railChain);
+      if (BigInt(q.wallet.bnbWei) < parseEtherSafe(floor)) {
+        throw new Error(`Insufficient ${gasSymbol} for gas on ${netLabel}.`);
       }
 
       let approveTx: `0x${string}` | undefined;
@@ -262,9 +379,10 @@ export function EscrowWizard({
         "Create escrow job",
       );
       let createdId =
-        parseCreatedJobId(created.rec.logs) || q.predictedJobId;
+        parseCreatedJobId(created.rec.logs, q.addresses.commerce) ||
+        q.predictedJobId;
       const check = await fetch(
-        `/api/escrow/status?onchainJobId=${encodeURIComponent(createdId)}`,
+        `/api/escrow/status?onchainJobId=${encodeURIComponent(createdId)}&chainId=${railChain}`,
       );
       const checked = (await check.json()) as {
         success?: boolean;
@@ -283,19 +401,19 @@ export function EscrowWizard({
       await send(
         provider,
         address,
-        encodeRegisterJob(jobIdBig),
+        encodeRegisterJob(jobIdBig, railChain),
         "Register policy",
       );
       await send(
         provider,
         address,
-        encodeSetBudget(jobIdBig, amount),
+        encodeSetBudget(jobIdBig, amount, railChain),
         "Set budget",
       );
       const funded = await send(
         provider,
         address,
-        encodeFund(jobIdBig, amount),
+        encodeFund(jobIdBig, amount, railChain),
         "Fund escrow",
       );
 
@@ -317,6 +435,7 @@ export function EscrowWizard({
           createTx: created.hash,
           approveTx,
           budgetUsd: q.budgetU,
+          escrowChainId: railChain,
         }),
       });
       const saved = (await persist.json()) as {
@@ -349,24 +468,59 @@ export function EscrowWizard({
       setStep("done");
       router.push(saved.sharePath);
     } catch (e) {
-      setError(explain(e, step === "approve" ? "token" : "gas"));
+      if (session !== sessionRef.current) return;
+      setError(explain(e, step === "approve" ? "token" : "gas", railChain));
       setStep(address ? "balances" : "connect");
     } finally {
-      setBusy(false);
+      if (session === sessionRef.current) setBusy(false);
     }
   }
 
-  if (!open) return null;
+  async function watchUToken() {
+    if (!provider || !quote) return;
+    try {
+      await provider.request({
+        method: "wallet_watchAsset",
+        params: [
+          {
+            type: "ERC20",
+            options: {
+              address: quote.addresses.paymentToken,
+              symbol: "U",
+              decimals: quote.tokenDecimals || 18,
+            },
+          },
+        ],
+      });
+    } catch {
+      /* wallet may not support watchAsset */
+    }
+  }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center">
-      <div className="max-h-[min(92dvh,92vh)] w-full max-w-lg overflow-auto rounded-2xl border border-white/12 bg-[#121214] p-5 shadow-2xl">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+  if (!open || !mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[200] flex items-end justify-center overflow-y-auto bg-black/70 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center"
+      role="presentation"
+      onClick={handleClose}
+    >
+      <div
+        className="relative flex max-h-[min(92dvh,92vh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#121214] shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="escrow-wizard-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+          <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-200/80">
-              Hire with escrow
+              On-chain escrow · BSC 56
             </p>
-            <h2 className="mt-1 text-lg font-semibold text-white">
+            <h2
+              id="escrow-wizard-title"
+              className="mt-1 text-lg font-semibold text-white"
+            >
               {agentName}
             </h2>
             <p className="mt-1 text-[12px] leading-relaxed text-white/50">
@@ -375,14 +529,16 @@ export function EscrowWizard({
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-full px-2 py-1 text-xs text-white/45 hover:text-white"
+            onClick={handleClose}
+            aria-label="Close hire panel"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-xl leading-none text-white hover:bg-white/20"
           >
-            Close
+            ×
           </button>
         </div>
+        <div className="overflow-y-auto px-5 py-4">
 
-        <p className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-[11px] leading-relaxed text-amber-50/90">
+        <p className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-[11px] leading-relaxed text-amber-50/90">
           {ESCROW_CTA}
         </p>
         <p className="mt-2 text-[11px] font-semibold text-rose-200/90">
@@ -390,9 +546,16 @@ export function EscrowWizard({
         </p>
 
         {error && (
-          <p className="mt-3 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-200">
-            {error}
-          </p>
+          <div className="mt-3 space-y-2 rounded-lg bg-rose-500/15 px-3 py-3">
+            <p className="text-xs text-rose-200">{error}</p>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-full border border-white/20 px-3 py-2 text-xs font-semibold text-white"
+            >
+              Close
+            </button>
+          </div>
         )}
 
         <ol className="mt-4 flex flex-wrap gap-1">
@@ -422,14 +585,36 @@ export function EscrowWizard({
           payout or dispute.
         </p>
 
+        {address && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+            <p className="font-mono text-[12px] text-white/80">
+              {shortWallet(address)}
+              <span className="ml-2 font-sans text-[11px] text-white/40">
+                connected
+              </span>
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => disconnectWallet()}
+              className="rounded-full border border-white/20 px-3 py-1.5 text-[11px] font-semibold text-white/80 hover:border-white/40 hover:text-white disabled:opacity-40"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+
         {step === "connect" && (
           <div className="mt-4 space-y-2">
-            <p className="text-xs text-white/50">Connect a wallet on BSC mainnet to sign.</p>
+            <p className="text-xs text-white/50">
+              Connect a wallet on {netLabel} (chain {railChain}) to read $U
+              and sign. We do not know your balance until you connect.
+            </p>
             {wallets.length === 0 && (
               <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-relaxed text-white/55">
-                No injected wallet in this browser. Preview below still shows
-                the lock, kernel, and steps. Install MetaMask, Binance Wallet,
-                or another EIP-6963 wallet on chain 56, then reopen.
+                No injected wallet in this browser. Preview below is the lock
+                size, not your balance. Install MetaMask, Binance Wallet, or
+                another EIP-6963 wallet on chain {railChain}, then reopen.
               </p>
             )}
             {wallets.map((w) => (
@@ -476,34 +661,56 @@ export function EscrowWizard({
                 · {quote.provider.label}
               </p>
             </div>
-            {quote.wallet && (
+            {connected ? (
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-white/[0.04] px-2 py-2">
-                  <div className="text-[10px] text-white/40">$U</div>
+                  <div className="text-[10px] text-white/40">Your $U</div>
                   <div className="font-semibold text-white">
-                    {formatUnits(BigInt(quote.wallet.uBalanceWei), quote.tokenDecimals)}
+                    {formatUnits(BigInt(quote.wallet!.uBalanceWei), quote.tokenDecimals)}
                   </div>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] px-2 py-2">
-                  <div className="text-[10px] text-white/40">BNB (gas)</div>
+                  <div className="text-[10px] text-white/40">Your BNB (gas)</div>
                   <div className="font-semibold text-white">
-                    {formatEther(BigInt(quote.wallet.bnbWei))}
+                    {formatEther(BigInt(quote.wallet!.bnbWei))}
                   </div>
                 </div>
               </div>
+            ) : (
+              <p className="text-[11px] leading-relaxed text-white/45">
+                Lock size is {quote.budgetU} $U. Your $U balance is unknown
+                until a wallet is connected.
+              </p>
             )}
             <p className="text-[10px] text-white/40">
-              Need {quote.budgetU} U + ~{quote.estimatedGasBnb} BNB gas (keep ≥{" "}
-              {quote.minBnb} BNB). Submit the plan hash within{" "}
-              {Math.round((quote.deadlineSeconds || 604800) / 86400)}d of fund.
-              Dispute window {Math.round(quote.disputeWindowSeconds / 3600)}h
-              after submit.
+              Escrow locks {quote.budgetU} $U + ~{quote.estimatedGasBnb}{" "}
+              {gasSymbol} gas (keep ≥ {quote.minBnb} {gasSymbol}). Submit the
+              plan hash within{" "}
+              {formatDuration(quote.deadlineSeconds || 604800)} of fund.
+              Dispute window {formatDuration(quote.disputeWindowSeconds)} after
+              submit.
             </p>
-            {quote.wallet && !quote.wallet.enoughU && (
-              <p className="text-xs text-rose-200">Insufficient $U for this lock.</p>
+            {connected && !enoughU && (
+              <div className="space-y-2 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2">
+                <p className="text-xs text-amber-50/90">
+                  {insufficientUMessage(quote)}
+                </p>
+                {provider ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void watchUToken()}
+                    className="rounded-full border border-white/20 px-3 py-1.5 text-[11px] text-white/85"
+                  >
+                    Add $U token to wallet
+                  </button>
+                ) : null}
+              </div>
             )}
-            {quote.wallet && !enoughBnb && (
-              <p className="text-xs text-rose-200">Insufficient BNB for gas.</p>
+            {connected && !enoughBnb && (
+              <p className="text-xs text-rose-200">
+                This wallet needs more {gasSymbol} for gas on BSC mainnet.
+              </p>
             )}
           </div>
         )}
@@ -512,10 +719,10 @@ export function EscrowWizard({
           <button
             type="button"
             disabled={
-              busy || !quote?.wallet?.enoughU || !enoughBnb || brief.length <= 8
+              busy || !connected || !enoughU || !enoughBnb || brief.length <= 8
             }
             onClick={() => void runFund()}
-            className="btn-primary mt-4 w-full disabled:opacity-40"
+            className="btn-primary mt-3 w-full disabled:opacity-40"
           >
             {busy
               ? step === "approve"
@@ -544,8 +751,19 @@ export function EscrowWizard({
             ))}
           </ol>
         )}
+        </div>
+        <div className="shrink-0 border-t border-white/10 px-5 py-3">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="min-h-11 w-full rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+          >
+            Close · use Get plan
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

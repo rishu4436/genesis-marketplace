@@ -176,8 +176,8 @@ export function HireDashboard() {
             />
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/hire" className="btn-solid">
-              Get a new plan
+            <Link href="/browse" className="btn-solid">
+              Browse
             </Link>
             <Link href="/categories" className="btn-line">
               Shop by job

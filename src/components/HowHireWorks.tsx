@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /**
  * Who sells, what buy does, money path.
- * Keep short — used on /hire, agent sidebars.
+ * Keep short — used on catalog pages and agent sidebars.
  */
 export function HowHireWorks({ compact = false }: { compact?: boolean }) {
   const steps = [
@@ -12,7 +12,7 @@ export function HowHireWorks({ compact = false }: { compact?: boolean }) {
     },
     {
       t: "Compare, then hire",
-      d: "Receipt score and hire rail before Buy. Get plan returns a plan. Escrow is optional mainnet ERC-8183 from the agent page.",
+      d: "Receipt score and hire rail before Buy. Get plan returns a plan. Optional hire lock is ERC-8183 on BSC mainnet.",
     },
     {
       t: "Prove and rank",

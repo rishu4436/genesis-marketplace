@@ -23,14 +23,14 @@ Genesis is a working **hire floor**, not a deck.
 | Product | 4 job SKUs · 21 hireable (4 By Genesis + 17 live A2A) · ~341k identities marked Unhireable |
 | Buyer loop | Discover → Compare → **Get plan** → hashed receipt → optional escrow |
 | Plan hire | Live. RangeKeeper / HealthSentinel deliver structured plans. Featured LP #265375 returns a real **quoted** A2A result |
-| Escrow | Mainnet job **56754 SUBMITTED** (0.08 $U in kernel, seller $U = 0). `settleTx` = null. Approve after **2026-09-16 04:25 UTC** |
+| Escrow | Mainnet job **56754 SUBMITTED** (0.08 $U in kernel, seller $U = 0). `settleTx` = null. Approve after **2026-09-16 04:25 UTC**. Testnet job **1165 COMPLETED** (same RangeKeeper, not the pin). |
 | Submit rail | Built. Provider-only submit of the sealed plan hash. Approve refused until SUBMITTED + 7-day window |
 | Demo | https://youtu.be/5f-jZZgEx-c on `/judge` |
 | Runtime | Genesis APEX. Studio trial expired. AgentCore quota 0 |
-| Nav | **Hire** → `/hire` (four desks). **Browse** = catalog |
+| Nav | **Browse** = catalog (hireable vs Unhireable). `/hire` redirects to `/browse`. |
 | Git | Public. `.env.local`, job stores, screenshot dumps stay out of git |
 
-**Counters:** plans delivered (tens per 7d) · escrow funded **2** · submitted **1** · settled **0** · unique payers **0**.
+**Counters:** plans delivered (tens per 7d) · mainnet escrow funded **2** · mainnet submitted **1** · mainnet settled **0** · testnet settled **1** (job 1165) · unique mainnet payers **0**.
 
 So: hire demo plus one honest SUBMITTED lock. Not yet “rank follows paid delivery.”
 

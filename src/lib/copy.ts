@@ -5,7 +5,7 @@
  */
 
 export const SOFT_HIRE_LINE =
-  "Plan only · you keep the keys · no custody. Escrow is optional BSC mainnet ERC-8183 from the agent page.";
+  "Plan only · you keep the keys · no custody. Escrow is optional ERC-8183 on BSC mainnet.";
 
 export const SOFT_HIRE_SHORT =
   "Plan only · you keep the keys · no custody";

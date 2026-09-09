@@ -24,7 +24,8 @@ import { SellerIdentityPanel } from "@/components/SellerIdentityPanel";
 import { AdmissionPanel } from "@/components/AdmissionPanel";
 import { ReceiptScorePanel } from "@/components/ReceiptScorePanel";
 import { admitSeller } from "@/lib/admission";
-import { scoreAllSpecialists } from "@/lib/receipt-score";
+import { scoreSellerFromJobs } from "@/lib/receipt-score";
+import { listJobs } from "@/lib/job-store";
 import { defaultTaskForCategory } from "@/lib/hire";
 import { checkAgentHealth } from "@/lib/agent-health";
 import {
@@ -64,9 +65,14 @@ export default async function GenesisAgentPage({ params }: Props) {
 
   const defaultTask = defaultTaskForCategory(agent.categoryId);
   const fit = taskFitForGenesis(agent, defaultTask);
-  const health = await checkAgentHealth(agent);
   const admission = admitSeller(agent);
-  const allScores = await scoreAllSpecialists();
+  const jobs = await listJobs(200);
+  const [health, allScores] = await Promise.all([
+    checkAgentHealth(agent, undefined, jobs),
+    Promise.resolve(
+      allGenesisAgents().map((a) => scoreSellerFromJobs(a, jobs)),
+    ),
+  ]);
   const receiptScore = allScores.find((s) => s.slug === agent.slug) ?? null;
   const fitBySlug = Object.fromEntries(
     allScores.map((s) => [s.slug, s.composite]),

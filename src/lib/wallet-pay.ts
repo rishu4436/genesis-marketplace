@@ -6,6 +6,8 @@
 
 export const BSC_MAINNET = 56;
 export const BSC_HEX = "0x38";
+export const BSC_TESTNET = 97;
+export const BSC_TESTNET_HEX = "0x61";
 
 export type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -92,10 +94,19 @@ export async function getChainId(eth: EthProvider): Promise<number> {
 }
 
 export async function switchToBsc(eth: EthProvider): Promise<void> {
+  await switchToChain(eth, 56);
+}
+
+export async function switchToBscTestnet(eth: EthProvider): Promise<void> {
+  await switchToChain(eth, 97);
+}
+
+async function switchToChain(eth: EthProvider, chainId: 56 | 97): Promise<void> {
+  const hex = chainId === 97 ? BSC_TESTNET_HEX : BSC_HEX;
   try {
     await eth.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: BSC_HEX }],
+      params: [{ chainId: hex }],
     });
   } catch (e) {
     const err = e as { code?: number };
@@ -103,13 +114,21 @@ export async function switchToBsc(eth: EthProvider): Promise<void> {
     await eth.request({
       method: "wallet_addEthereumChain",
       params: [
-        {
-          chainId: BSC_HEX,
-          chainName: "BNB Smart Chain",
-          nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
-          rpcUrls: ["https://bsc-dataseed.binance.org"],
-          blockExplorerUrls: ["https://bscscan.com"],
-        },
+        chainId === 97
+          ? {
+              chainId: hex,
+              chainName: "BNB Smart Chain Testnet",
+              nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
+              rpcUrls: ["https://bsc-testnet-rpc.publicnode.com"],
+              blockExplorerUrls: ["https://testnet.bscscan.com"],
+            }
+          : {
+              chainId: hex,
+              chainName: "BNB Smart Chain",
+              nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+              rpcUrls: ["https://bsc-dataseed.binance.org"],
+              blockExplorerUrls: ["https://bscscan.com"],
+            },
       ],
     });
   }
@@ -137,8 +156,9 @@ export async function walletCall(
 
 export async function sendContractTx(
   eth: EthProvider,
-  opts: { from: string; to: string; data: string },
+  opts: { from: string; to: string; data: string; chainId?: number },
 ): Promise<`0x${string}`> {
+  const chainHex = opts.chainId === 97 ? BSC_TESTNET_HEX : BSC_HEX;
   const hash = (await eth.request({
     method: "eth_sendTransaction",
     params: [
@@ -146,7 +166,7 @@ export async function sendContractTx(
         from: opts.from,
         to: opts.to,
         data: opts.data,
-        chainId: BSC_HEX,
+        chainId: chainHex,
       },
     ],
   })) as string;

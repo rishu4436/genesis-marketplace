@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import {
   budgetUFor,
   budgetWeiFor,
-  DEADLINE_SECONDS,
+  deadlineSecondsFor,
   encodeApprove,
   encodeCreateJob,
-  ERC8183_MAINNET,
-  ESTIMATED_GAS_BNB,
+  erc8183Stack,
+  estimatedGasFor,
   isHexAddress,
-  MIN_BNB_BNB,
+  minBnbFor,
   resolveEscrowProvider,
 } from "@/lib/erc8183-escrow";
 import {
@@ -35,6 +35,8 @@ export async function POST(req: Request) {
       task?: string;
       wallet?: string;
       budgetU?: string;
+      /** Desk escrow is BSC 56. Chain 97 is rejected. */
+      escrowChainId?: number;
     };
 
     const task = (body.task || "").trim();
@@ -75,32 +77,45 @@ export async function POST(req: Request) {
     });
 
     const wallet = isHexAddress(body.wallet) ? body.wallet : undefined;
+    if (Number(body.escrowChainId) === 97) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Escrow is BSC mainnet only (chain 56).",
+        },
+        { status: 400 },
+      );
+    }
+    const escrowChainId = 56;
+    const stack = erc8183Stack(escrowChainId);
+    const extraDeadline = deadlineSecondsFor(escrowChainId);
 
     const [disputeWindow, jobCounter, token, bnbWei] = await Promise.all([
-      readDisputeWindow(),
-      readJobCounter(),
-      readTokenSnapshot(wallet),
-      wallet ? readNativeBalance(wallet) : Promise.resolve(undefined),
+      readDisputeWindow(escrowChainId),
+      readJobCounter(escrowChainId),
+      readTokenSnapshot(wallet, escrowChainId),
+      wallet ? readNativeBalance(wallet, escrowChainId) : Promise.resolve(undefined),
     ]);
 
     const predictedJobId = jobCounter + BigInt(1);
     const expiredAt =
       BigInt(Math.floor(Date.now() / 1000)) +
       BigInt(disputeWindow) +
-      BigInt(DEADLINE_SECONDS);
+      BigInt(extraDeadline);
 
-    const approve = encodeApprove(budgetWei);
+    const approve = encodeApprove(budgetWei, escrowChainId);
     const createJob = encodeCreateJob({
       provider: provider.address,
       expiredAt,
       description: task,
+      chainId: escrowChainId,
     });
 
     return NextResponse.json({
       success: true,
       data: {
-        chainId: ERC8183_MAINNET.chainId,
-        addresses: ERC8183_MAINNET,
+        chainId: stack.chainId,
+        addresses: stack,
         provider: {
           address: provider.address,
           label: provider.label,
@@ -115,9 +130,9 @@ export async function POST(req: Request) {
         predictedJobId: predictedJobId.toString(),
         disputeWindowSeconds: disputeWindow,
         expiredAt: Number(expiredAt),
-        deadlineSeconds: DEADLINE_SECONDS,
-        estimatedGasBnb: ESTIMATED_GAS_BNB,
-        minBnb: MIN_BNB_BNB,
+        deadlineSeconds: extraDeadline,
+        estimatedGasBnb: estimatedGasFor(escrowChainId),
+        minBnb: minBnbFor(escrowChainId),
         wallet: wallet
           ? {
               address: wallet,

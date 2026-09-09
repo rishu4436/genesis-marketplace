@@ -1,23 +1,14 @@
 import Link from "next/link";
 import { CategoryPreview } from "@/components/CategoryPreview";
-import { getAllCategorySnapshots } from "@/lib/category-agents";
-import { allGenesisAgents } from "@/lib/genesis-agents";
-import { scoreAllSpecialists } from "@/lib/receipt-score";
+import { CATEGORIES } from "@/lib/categories";
+import { getGenesisAgentsByCategory } from "@/lib/genesis-agents";
+import { deskFloorForCategory } from "@/lib/desk-floor";
 
-export async function JobFloor({
-  perShelf = 3,
+export function JobFloor({
+  perShelf = 8,
 }: {
   perShelf?: number;
 }) {
-  const [shelves, specialists, scores] = await Promise.all([
-    getAllCategorySnapshots(perShelf),
-    Promise.resolve(allGenesisAgents()),
-    scoreAllSpecialists(),
-  ]);
-  const receiptFitBySlug = Object.fromEntries(
-    scores.map((s) => [s.slug, s.composite]),
-  );
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -36,13 +27,13 @@ export async function JobFloor({
           All categories →
         </Link>
       </div>
-      {shelves.map((s) => (
+      {CATEGORIES.map((cat) => (
         <CategoryPreview
-          key={s.category.id}
-          category={s.category}
-          agents={s.agents}
-          genesis={specialists.filter((g) => g.categoryId === s.category.id)}
-          receiptFitBySlug={receiptFitBySlug}
+          key={cat.id}
+          category={cat}
+          genesis={getGenesisAgentsByCategory(cat.id)}
+          agents={deskFloorForCategory(cat.id).slice(0, perShelf)}
+          maxLive={perShelf}
         />
       ))}
     </div>

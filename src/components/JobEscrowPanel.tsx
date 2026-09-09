@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { HireJob } from "@/lib/hire-engine";
-import { bscscanAddress, bscscanTx, escrowUiPhase } from "@/lib/erc8183-escrow";
+import {
+  bscscanAddress,
+  bscscanTx,
+  escrowNetworkLabel,
+  escrowUiPhase,
+} from "@/lib/erc8183-escrow";
 import { ESCROW_LINE, NEVER_PAY_SELLER } from "@/lib/copy";
 import {
   discoverWallets,
@@ -11,6 +16,7 @@ import {
   requestAccounts,
   sendContractTx,
   switchToBsc,
+  switchToBscTestnet,
   waitForReceipt,
 } from "@/lib/wallet-pay";
 
@@ -117,11 +123,32 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
     const s = Math.max(0, end - now);
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
-    return `${h}h ${m}m`;
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
   }, [status?.windowEnd, now]);
 
   if (!escrow) return null;
   const record = escrow;
+  const railChain: 56 | 97 = record.chainId === 97 ? 97 : 56;
+  const windowSeconds =
+    status?.disputeWindowSeconds || record.disputeWindowSeconds || 0;
+  const windowLabel =
+    windowSeconds >= 86400
+      ? `${Math.round(windowSeconds / 86400)}-day`
+      : windowSeconds > 0
+        ? `${Math.round(windowSeconds / 60)}-minute`
+        : railChain === 97
+          ? "15-minute"
+          : "7-day";
+
+  async function ensureRailChain(eth: Parameters<typeof getChainId>[0]) {
+    const chain = await getChainId(eth);
+    if (chain === railChain) return;
+    if (railChain === 97) await switchToBscTestnet(eth);
+    else await switchToBsc(eth);
+  }
 
   async function submitPlan() {
     setBusy(true);
@@ -158,12 +185,12 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
           `Connect the operator wallet ${record.provider.slice(0, 8)}… — the buyer who funded cannot submit`,
         );
       }
-      const chain = await getChainId(eth);
-      if (chain !== 56) await switchToBsc(eth);
+      await ensureRailChain(eth);
       const hash = await sendContractTx(eth, {
         from: addr,
         to: pre.data.call.to,
         data: pre.data.call.data,
+        chainId: railChain,
       });
       const rec = await waitForReceipt(eth, hash);
       if (rec.status !== "0x1") throw new Error("Submit transaction reverted");
@@ -210,12 +237,12 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
       if (record.buyer && addr.toLowerCase() !== record.buyer.toLowerCase()) {
         throw new Error("Connect the wallet that funded this escrow");
       }
-      const chain = await getChainId(eth);
-      if (chain !== 56) await switchToBsc(eth);
+      await ensureRailChain(eth);
       const hash = await sendContractTx(eth, {
         from: addr,
         to: pre.data.call.to,
         data: pre.data.call.data,
+        chainId: railChain,
       });
       const rec = await waitForReceipt(eth, hash);
       if (rec.status !== "0x1") throw new Error("Settle transaction reverted");
@@ -251,6 +278,9 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         </p>
         <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-100">
           {PHASE_LABEL[phase] || phase}
+        </span>
+        <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/55">
+          {escrowNetworkLabel(railChain)}
         </span>
       </div>
       <p className="mt-1 text-[12px] text-white/55">{ESCROW_LINE}</p>
@@ -293,7 +323,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
           <dt className="text-white/35">Kernel (escrow)</dt>
           <dd className="mt-0.5">
             <a
-              href={bscscanAddress(escrow.commerce)}
+              href={bscscanAddress(escrow.commerce, railChain)}
               target="_blank"
               rel="noreferrer"
               className="font-mono text-amber-300 hover:underline"
@@ -313,7 +343,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
       <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
         {escrow.fundTx && (
           <a
-            href={bscscanTx(escrow.fundTx)}
+            href={bscscanTx(escrow.fundTx, railChain)}
             target="_blank"
             rel="noreferrer"
             className="text-amber-300 hover:underline"
@@ -323,7 +353,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         )}
         {escrow.submitTx && (
           <a
-            href={bscscanTx(escrow.submitTx)}
+            href={bscscanTx(escrow.submitTx, railChain)}
             target="_blank"
             rel="noreferrer"
             className="text-amber-300 hover:underline"
@@ -333,7 +363,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         )}
         {escrow.settleTx && (
           <a
-            href={bscscanTx(escrow.settleTx)}
+            href={bscscanTx(escrow.settleTx, railChain)}
             target="_blank"
             rel="noreferrer"
             className="text-amber-300 hover:underline"
@@ -343,7 +373,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         )}
         {escrow.disputeTx && (
           <a
-            href={bscscanTx(escrow.disputeTx)}
+            href={bscscanTx(escrow.disputeTx, railChain)}
             target="_blank"
             rel="noreferrer"
             className="text-amber-300 hover:underline"
@@ -357,7 +387,7 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         <p className="mt-3 text-[11px] text-amber-100/80">
           Plan is on this receipt. $U is locked, not paid out. Submit the plan
           hash from the operator wallet ({escrow.provider.slice(0, 8)}…) to
-          start the 7-day dispute window.
+          start the {windowLabel} dispute window.
         </p>
       )}
       {status?.submitBlockedReason && (
