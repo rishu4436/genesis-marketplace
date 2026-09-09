@@ -4,7 +4,7 @@
  * and bnbagent BNB_CHAIN_ADDRESSES — not a new deployment.
  */
 
-import { encodeFunctionData, parseEther, formatUnits } from "viem";
+import { encodeFunctionData, parseEther, formatUnits, stringToHex } from "viem";
 import { getPin } from "./pins";
 import { getFeaturedByToken } from "./third-party-sellers";
 import { GENESIS_AGENTS, getGenesisAgent } from "./genesis-agents";
@@ -73,6 +73,17 @@ export const COMMERCE_ABI = [
     type: "function",
     stateMutability: "nonpayable",
     inputs: [{ name: "jobId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "submit",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "jobId", type: "uint256" },
+      { name: "deliverable", type: "bytes32" },
+      { name: "optParams", type: "bytes" },
+    ],
     outputs: [],
   },
   {
@@ -221,10 +232,31 @@ const GENESIS_BUDGET_U: Record<string, string> = {
 };
 
 export const DEFAULT_BUDGET_U = "0.08";
-export const DEADLINE_SECONDS = 1800;
+/**
+ * Extra seconds after the dispute window on create/fund.
+ * OptimisticPolicy reverts submit with SubmissionTooLate if
+ * `now + disputeWindow > expiredAt`. So this is the seller's
+ * time-to-submit after fund — 30 minutes was too short.
+ */
+export const DEADLINE_SECONDS = 7 * 24 * 60 * 60;
 /** Typical 4–5 self-paid txs on BSC. */
 export const ESTIMATED_GAS_BNB = "0.004";
 export const MIN_BNB_BNB = "0.007";
+
+/** True when the policy will accept submit() on a FUNDED job. */
+export function canSubmitOnchain(opts: {
+  statusName?: string;
+  expiredAt?: number;
+  disputeWindowSeconds?: number;
+  nowSec?: number;
+}): boolean {
+  if ((opts.statusName || "").toUpperCase() !== "FUNDED") return false;
+  const expiredAt = opts.expiredAt || 0;
+  const window = opts.disputeWindowSeconds || 7 * 24 * 60 * 60;
+  const now = opts.nowSec ?? Math.floor(Date.now() / 1000);
+  if (expiredAt <= 0) return false;
+  return now + window <= expiredAt;
+}
 
 export type EncodedCall = { to: `0x${string}`; data: `0x${string}` };
 
@@ -375,6 +407,36 @@ export function encodeFund(jobId: bigint, amount: bigint): EncodedCall {
       abi: COMMERCE_ABI,
       functionName: "fund",
       args: [jobId, amount, "0x"],
+    }),
+  };
+}
+
+/** sha256 hex from a sealed receipt → bytes32 the kernel stores. */
+export function bytes32FromSha256(hex: string | null | undefined): `0x${string}` | null {
+  const h = (hex || "").replace(/^0x/i, "");
+  if (!/^[a-fA-F0-9]{64}$/.test(h)) return null;
+  return `0x${h}`;
+}
+
+/**
+ * Provider-only: Funded → Submitted. `deliverable` is the plan hash
+ * (receipt outputHash). optParams may carry a public receipt URL for
+ * the policy's JobInitialised log — never a payout address.
+ */
+export function encodeSubmit(opts: {
+  jobId: bigint;
+  deliverable: `0x${string}`;
+  receiptUrl?: string;
+}): EncodedCall {
+  const optParams = opts.receiptUrl
+    ? stringToHex(JSON.stringify({ deliverable_url: opts.receiptUrl }))
+    : "0x";
+  return {
+    to: ERC8183_MAINNET.commerce,
+    data: encodeFunctionData({
+      abi: COMMERCE_ABI,
+      functionName: "submit",
+      args: [opts.jobId, opts.deliverable, optParams],
     }),
   };
 }

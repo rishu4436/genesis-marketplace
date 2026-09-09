@@ -6,7 +6,7 @@ import {
   encodeSettleApprove,
   isTxHash,
 } from "@/lib/erc8183-escrow";
-import { readOnchainJob } from "@/lib/erc8183-read";
+import { readDisputeWindow, readOnchainJob } from "@/lib/erc8183-read";
 import { pinEscrowJudgeProof } from "@/lib/judge-proof";
 
 export const runtime = "nodejs";
@@ -40,6 +40,63 @@ export async function POST(req: Request) {
     }
 
     const onchainId = BigInt(job.escrow.onchainJobId);
+    const chainNow = await readOnchainJob(onchainId);
+    const disputeWindow =
+      job.escrow.disputeWindowSeconds || (await readDisputeWindow());
+    const now = Math.floor(Date.now() / 1000);
+    const windowEnd =
+      chainNow.submittedAt > 0 ? chainNow.submittedAt + disputeWindow : 0;
+    const inWindow =
+      chainNow.statusName === "SUBMITTED" &&
+      chainNow.submittedAt > 0 &&
+      now < windowEnd;
+    const windowElapsed =
+      chainNow.statusName === "SUBMITTED" &&
+      chainNow.submittedAt > 0 &&
+      now >= windowEnd;
+
+    if (action === "approve") {
+      if (chainNow.statusName === "COMPLETED") {
+        /* already settled — still allow recording a real hash below */
+      } else if (!windowElapsed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: inWindow
+              ? `Dispute window still open until ${new Date(windowEnd * 1000).toISOString()} — approve would revert`
+              : "Approve is only valid after on-chain submit and the 7-day window",
+          },
+          { status: 400 },
+        );
+      }
+    }
+    if (action === "dispute" && !inWindow && chainNow.statusName !== "REJECTED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Dispute is only valid inside the window after submit",
+        },
+        { status: 400 },
+      );
+    }
+    if (action === "refund") {
+      const canRefund =
+        chainNow.statusName === "OPEN" ||
+        (chainNow.statusName === "FUNDED" &&
+          chainNow.expiredAt > 0 &&
+          now >= chainNow.expiredAt &&
+          chainNow.submittedAt === 0);
+      if (!canRefund) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Refund is only valid if the seller never submitted and the job expired",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const call =
       action === "approve"
         ? encodeSettleApprove(onchainId)
@@ -72,6 +129,15 @@ export async function POST(req: Request) {
     }
 
     const chain = await readOnchainJob(onchainId);
+    if (action === "approve" && chain.statusName !== "COMPLETED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Chain is ${chain.statusName}, not COMPLETED — settle hash not recorded`,
+        },
+        { status: 400 },
+      );
+    }
     const hash = body.txHash;
     const escrow = { ...job.escrow, chainStatus: chain.statusName };
     if (action === "approve") escrow.settleTx = hash;

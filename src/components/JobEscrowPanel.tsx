@@ -49,6 +49,9 @@ type StatusPayload = {
   disputeWindowSeconds: number;
   windowEnd: number;
   inWindow: boolean;
+  provider?: string;
+  canSubmit: boolean;
+  submitBlockedReason?: string | null;
   canDispute: boolean;
   canApprove: boolean;
   canRefund: boolean;
@@ -120,6 +123,69 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
   if (!escrow) return null;
   const record = escrow;
 
+  async function submitPlan() {
+    setBusy(true);
+    setError(null);
+    try {
+      const prep = await fetch("/api/escrow/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      const pre = (await prep.json()) as {
+        success: boolean;
+        error?: string;
+        data?: {
+          alreadySubmitted?: boolean;
+          call?: { to: string; data: string };
+          provider?: string;
+          note?: string;
+        };
+      };
+      if (!pre.success) throw new Error(pre.error || "Could not encode submit");
+      if (pre.data?.alreadySubmitted) {
+        window.location.reload();
+        return;
+      }
+      if (!pre.data?.call) throw new Error("Could not encode submit call");
+      const found = await discoverWallets();
+      if (found.length === 0) throw new Error("Connect a wallet first");
+      const eth = found[0].provider;
+      const addr = await requestAccounts(eth);
+      const provider = (pre.data.provider || record.provider).toLowerCase();
+      if (addr.toLowerCase() !== provider) {
+        throw new Error(
+          `Connect the operator wallet ${record.provider.slice(0, 8)}… — the buyer who funded cannot submit`,
+        );
+      }
+      const chain = await getChainId(eth);
+      if (chain !== 56) await switchToBsc(eth);
+      const hash = await sendContractTx(eth, {
+        from: addr,
+        to: pre.data.call.to,
+        data: pre.data.call.data,
+      });
+      const rec = await waitForReceipt(eth, hash);
+      if (rec.status !== "0x1") throw new Error("Submit transaction reverted");
+      await fetch("/api/escrow/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id, txHash: hash }),
+      });
+      window.location.reload();
+    } catch (e) {
+      setError(
+        isUserRejected(e)
+          ? "You rejected the transaction in the wallet."
+          : e instanceof Error
+            ? e.message
+            : "Submit failed",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function settle(action: "approve" | "dispute" | "refund") {
     setBusy(true);
     setError(null);
@@ -174,6 +240,8 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
 
   const canApprove = status?.canApprove === true;
   const canDispute = status?.canDispute === true;
+  const canSubmit = status?.canSubmit === true;
+  const canRefund = status?.canRefund === true;
 
   return (
     <section className="mt-6 rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-4">
@@ -253,6 +321,16 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
             Fund tx ↗
           </a>
         )}
+        {escrow.submitTx && (
+          <a
+            href={bscscanTx(escrow.submitTx)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-amber-300 hover:underline"
+          >
+            Submit tx ↗
+          </a>
+        )}
         {escrow.settleTx && (
           <a
             href={bscscanTx(escrow.settleTx)}
@@ -275,6 +353,18 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
         )}
       </div>
 
+      {phase === "funded" && hasPayload && !status?.submitBlockedReason && (
+        <p className="mt-3 text-[11px] text-amber-100/80">
+          Plan is on this receipt. $U is locked, not paid out. Submit the plan
+          hash from the operator wallet ({escrow.provider.slice(0, 8)}…) to
+          start the 7-day dispute window.
+        </p>
+      )}
+      {status?.submitBlockedReason && (
+        <p className="mt-3 text-[11px] text-amber-100/90">
+          {status.submitBlockedReason}
+        </p>
+      )}
       {phase === "working" && !hasPayload && (
         <p className="mt-3 text-[11px] text-amber-100/80">
           Escrow is funded. Awaiting a deliverable — this is not Delivered.
@@ -301,6 +391,19 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
+          disabled={busy || !canSubmit}
+          title={
+            canSubmit
+              ? "Provider submits the sealed plan hash on-chain"
+              : "Submit is only valid while FUNDED with a plan on this receipt"
+          }
+          onClick={() => void submitPlan()}
+          className="rounded-full bg-[#F0B90B] px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
+        >
+          Submit plan hash on-chain
+        </button>
+        <button
+          type="button"
           disabled={busy || !canApprove}
           title={
             canApprove
@@ -324,6 +427,19 @@ export function JobEscrowPanel({ job }: { job: HireJob }) {
           className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-white/80 disabled:opacity-40"
         >
           Dispute
+        </button>
+        <button
+          type="button"
+          disabled={busy || !canRefund}
+          title={
+            canRefund
+              ? "Reclaim locked $U — seller never submitted and the job expired"
+              : "Refund is only valid after expiry with no on-chain submit"
+          }
+          onClick={() => void settle("refund")}
+          className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-white/80 disabled:opacity-40"
+        >
+          Claim refund
         </button>
       </div>
     </section>

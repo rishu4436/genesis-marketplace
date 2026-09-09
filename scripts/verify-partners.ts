@@ -403,6 +403,10 @@ function main() {
     "judge escrow proof does not invent a fund tx",
     !jp.fundTx || /^0x[a-fA-F0-9]{64}$/.test(jp.fundTx),
   );
+  check(
+    "judge escrow proof does not invent a submit tx",
+    !jp.submitTx || /^0x[a-fA-F0-9]{64}$/.test(jp.submitTx),
+  );
   const demo = judgeDemoVideoUrl();
   check(
     "judge demo video is https or unset",

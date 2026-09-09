@@ -251,6 +251,16 @@ export default async function JudgePage() {
             >
               Fund tx on BscScan ↗
             </a>
+            {escrowProof.submitTx && (
+              <a
+                href={escrowProofExplorer(escrowProof.submitTx) || "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 ml-3 inline-block text-xs font-semibold text-amber-300 hover:underline"
+              >
+                Submit tx ↗
+              </a>
+            )}
             {escrowProof.settleTx && (
               <a
                 href={escrowProofExplorer(escrowProof.settleTx) || "#"}

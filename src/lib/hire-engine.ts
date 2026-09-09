@@ -62,6 +62,7 @@ export type EscrowRecord = {
   createTx?: `0x${string}`;
   fundTx?: `0x${string}`;
   approveTx?: `0x${string}`;
+  submitTx?: `0x${string}`;
   settleTx?: `0x${string}`;
   disputeTx?: `0x${string}`;
   chainStatus?: string;

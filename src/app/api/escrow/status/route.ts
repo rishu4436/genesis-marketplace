@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getJob, saveJob } from "@/lib/job-store";
 import { deliverableSchemaValid } from "@/lib/job-receipt";
-import { escrowUiPhase } from "@/lib/erc8183-escrow";
+import { canSubmitOnchain, escrowUiPhase } from "@/lib/erc8183-escrow";
 import {
   hasOnchainDeliverable,
   readDisputeWindow,
@@ -75,6 +75,17 @@ export async function GET(req: Request) {
       chain.statusName === "SUBMITTED" &&
       chain.submittedAt > 0 &&
       now < windowEnd;
+    const expiredUnsubmitted =
+      chain.statusName === "FUNDED" &&
+      chain.expiredAt > 0 &&
+      now >= chain.expiredAt &&
+      chain.submittedAt === 0;
+    const submitWindowOk = canSubmitOnchain({
+      statusName: chain.statusName,
+      expiredAt: chain.expiredAt,
+      disputeWindowSeconds: disputeWindow,
+      nowSec: now,
+    });
 
     return NextResponse.json({
       success: true,
@@ -85,17 +96,19 @@ export async function GET(req: Request) {
         disputeWindowSeconds: disputeWindow,
         windowEnd,
         inWindow,
+        provider: stored?.escrow?.provider || chain.provider,
+        canSubmit: submitWindowOk && hasPayload,
+        submitBlockedReason:
+          chain.statusName === "FUNDED" && hasPayload && !submitWindowOk
+            ? "SubmissionTooLate — this lock’s deadline no longer covers the 7-day dispute window. Fund a new job (longer deadline), then submit immediately."
+            : null,
         canDispute: inWindow,
         canApprove:
           chain.statusName === "SUBMITTED" &&
           chain.submittedAt > 0 &&
           now >= windowEnd,
         canRefund:
-          chain.statusName === "OPEN" ||
-          (chain.statusName === "FUNDED" &&
-            chain.expiredAt > 0 &&
-            now >= chain.expiredAt &&
-            chain.submittedAt === 0),
+          chain.statusName === "OPEN" || expiredUnsubmitted,
       },
     });
   } catch (e) {

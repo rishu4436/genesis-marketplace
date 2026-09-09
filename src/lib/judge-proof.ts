@@ -13,6 +13,7 @@ export type EscrowJudgeProof = {
   marketplaceJobId: string | null;
   onchainJobId: string | null;
   fundTx: string | null;
+  submitTx: string | null;
   settleTx: string | null;
   disputeTx: string | null;
   note: string;
@@ -21,9 +22,12 @@ export type EscrowJudgeProof = {
 export function escrowJudgeProof(): EscrowJudgeProof {
   const raw = proofJson.escrow as EscrowJudgeProof;
   if (raw.fundTx && !isTxHash(raw.fundTx)) {
-    return { ...raw, fundTx: null, settleTx: null, disputeTx: null };
+    return { ...raw, fundTx: null, submitTx: null, settleTx: null, disputeTx: null };
   }
-  return raw;
+  return {
+    ...raw,
+    submitTx: isTxHash(raw.submitTx) ? raw.submitTx : null,
+  };
 }
 
 export function escrowProofExplorer(hash: string | null): string | null {
@@ -73,6 +77,7 @@ function proofFromJob(job: HireJob, note: string): EscrowJudgeProof {
     marketplaceJobId: job.id,
     onchainJobId: job.escrow?.onchainJobId ?? null,
     fundTx: job.escrow?.fundTx ?? null,
+    submitTx: job.escrow?.submitTx ?? null,
     settleTx: job.escrow?.settleTx ?? null,
     disputeTx: job.escrow?.disputeTx ?? null,
     note,

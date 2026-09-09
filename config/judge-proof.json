@@ -13,8 +13,9 @@
     "marketplaceJobId": "job_mtsv2f9d_9yjpwg",
     "onchainJobId": "56748",
     "fundTx": "0x9a9f3f4531668c4760b5a36a93c005ed0fb0adb93f1caca99334d97bcee7cdbe",
+    "submitTx": null,
     "settleTx": null,
     "disputeTx": null,
-    "note": "BSC mainnet job 56748 FUNDED. Buyer 0xd951…0b93 locked 0.08 U in kernel 0xEa4D…EBA6. RangeKeeper 0xa17E…0133 is counterparty only — seller $U stayed 0. Soft-hire receipts are not this proof. Dispute window is 7d after SUBMITTED; do not approve payout early."
+    "note": "BSC mainnet job 56748 FUNDED. Buyer 0xd951…0b93 locked 0.08 U in kernel 0xEa4D…EBA6. RangeKeeper 0xa17E…0133 is counterparty only — seller $U stayed 0. Soft-hire receipts are not this proof. Submit is provider-only (plan hash on-chain). Dispute window is 7d after SUBMITTED; do not approve payout early."
   }
 }

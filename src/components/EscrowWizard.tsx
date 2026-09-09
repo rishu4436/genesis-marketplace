@@ -41,6 +41,7 @@ type QuoteData = {
   tokenDecimals: number;
   predictedJobId: string;
   disputeWindowSeconds: number;
+  deadlineSeconds?: number;
   estimatedGasBnb: string;
   minBnb: string;
   wallet: {
@@ -493,7 +494,9 @@ export function EscrowWizard({
             )}
             <p className="text-[10px] text-white/40">
               Need {quote.budgetU} U + ~{quote.estimatedGasBnb} BNB gas (keep ≥{" "}
-              {quote.minBnb} BNB). Dispute window {Math.round(quote.disputeWindowSeconds / 3600)}h
+              {quote.minBnb} BNB). Submit the plan hash within{" "}
+              {Math.round((quote.deadlineSeconds || 604800) / 86400)}d of fund.
+              Dispute window {Math.round(quote.disputeWindowSeconds / 3600)}h
               after submit.
             </p>
             {quote.wallet && !quote.wallet.enoughU && (
