@@ -1,12 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getAgentSafe, parseAgentKey } from "@/lib/scan";
-import { matchCategory, getCategory } from "@/lib/categories";
 import { ComparePicker } from "@/components/ComparePicker";
 import type { Agent } from "@/lib/types";
 import {
   hireClassForAgent,
-  hireClassLabel,
   isHireableListing,
   listingHref,
   matchingGenesisSlug,
@@ -28,7 +26,7 @@ import {
 } from "@/lib/third-party-sellers";
 import { CompareHireAll } from "@/components/CompareHireAll";
 import { listingPriceForAgent } from "@/lib/listing-price";
-import { budgetUFor } from "@/lib/erc8183-escrow";
+import { jobTicketForAgent } from "@/lib/job-ticket";
 import { scoreAllSpecialists } from "@/lib/receipt-score";
 
 export const metadata = {
@@ -49,31 +47,8 @@ function priceCell(agent: Agent): string {
   return "Quote on hire · plan · no charge";
 }
 
-function escrowCell(agent: Agent): string {
-  const cls = hireClassForAgent(agent);
-  if (cls === "indexed") return "—";
-  const slug = matchingGenesisSlug(agent);
-  if (slug) return `${budgetUFor({ genesisSlug: slug })} $U optional`;
-  const list = listingPriceForAgent(agent);
-  if (list?.unit === "U") return `${list.label} optional`;
-  return "Optional · seller names $U";
-}
-
-function returnsCell(agent: Agent): string {
-  const c = hireClassForAgent(agent);
-  if (c === "genesis") return "Structured plan you execute";
-  if (c === "live") return "Their A2A quote + live payload";
-  return "Identity only — no hire we can complete";
-}
-
-function etaCell(agent: Agent): string {
-  const slug = matchingGenesisSlug(agent);
-  if (slug) {
-    const m = getGenesisAgent(slug)?.etaMinutes;
-    return m ? `~${m} min` : "—";
-  }
-  if (hireClassForAgent(agent) === "live") return "~1 min";
-  return "—";
+function ticketCell(agent: Agent) {
+  return jobTicketForAgent(agent);
 }
 
 function clip(text: string, n = 240): string {
@@ -191,37 +166,41 @@ export default async function ComparePage({ searchParams }: Props) {
       values: agents.map(capabilityCell),
     });
     rows.push({
+      label: "Job",
+      values: agents.map((a) => ticketCell(a).job),
+    });
+    rows.push({
+      label: "You send",
+      values: agents.map((a) => ticketCell(a).youSend),
+    });
+    rows.push({
+      label: "You get",
+      values: agents.map((a) => ticketCell(a).youGet),
+    });
+    rows.push({
       label: "List price",
       hint: "SKU $ is a label. Get plan is no charge. $U is only shown when the seller published it.",
       values: agents.map(priceCell),
     });
     rows.push({
-      label: "Escrow",
-      hint: "Optional on-chain lock in $U. Never a transfer to the seller EOA.",
-      values: agents.map(escrowCell),
+      label: "Optional lock",
+      hint: "Fund $U → deliverable hash on-chain → release after the dispute window.",
+      values: agents.map((a) => ticketCell(a).lockLabel),
     });
     rows.push({
-      label: "You get",
-      values: agents.map(returnsCell),
+      label: "Completes",
+      values: agents.map((a) => ticketCell(a).completesLabel),
     });
     rows.push({
-      label: "Can hire",
-      values: agents.map((a) =>
-        isHireableListing(a)
-          ? `Yes · ${hireClassLabel(hireClassForAgent(a))}`
-          : "No · Unhireable",
-      ),
-    });
-    rows.push({
-      label: "Job",
-      values: agents.map((a) => {
-        const id = matchCategory(a.name || "", a.description || "");
-        return id ? getCategory(id)?.name || id : "General";
-      }),
+      label: "Identity",
+      values: agents.map((a) => ticketCell(a).passport),
     });
     rows.push({
       label: "ETA",
-      values: agents.map(etaCell),
+      values: agents.map((a) => {
+        const m = ticketCell(a).etaMinutes;
+        return m != null ? `~${m} min` : "—";
+      }),
     });
     rows.push({
       label: "Receipt score",

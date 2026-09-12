@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { findJobReceipt, listJobs, saveJob } from "@/lib/job-store";
 import type { HireJob } from "@/lib/hire-engine";
+import { currentAccount } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,13 @@ export async function GET(req: Request) {
 /** POST /api/jobs — persist a hire job for share links */
 export async function POST(req: Request) {
   try {
+    const acc = await currentAccount();
+    if (!acc) {
+      return NextResponse.json(
+        { success: false, error: "Sign in required to save a hire" },
+        { status: 401 },
+      );
+    }
     const body = (await req.json()) as { job?: HireJob };
     if (!body.job?.id) {
       return NextResponse.json(
@@ -32,7 +40,7 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const saved = await saveJob(body.job);
+    const saved = await saveJob({ ...body.job, ownerId: acc.id });
     return NextResponse.json({
       success: true,
       data: saved,

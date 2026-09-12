@@ -30,6 +30,7 @@
 # durable job store (local / runtime)
 /data/jobs/
 /data/claims/
+/data/seller-listings/
 /data/accounts/
 /data/wallet-jobs/
 /data/altana-sessions/

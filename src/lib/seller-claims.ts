@@ -5,6 +5,7 @@
 
 import { promises as fs } from "fs";
 import path from "path";
+import { kvCmd } from "./kv";
 
 export type SellerClaim = {
   id: string;
@@ -45,8 +46,9 @@ export async function saveClaim(claim: SellerClaim): Promise<SellerClaim> {
     await ensure();
     await fs.writeFile(fileFor(claim.id), JSON.stringify(claim, null, 2), "utf8");
   } catch {
-    /* memory only */
+    /* memory still holds */
   }
+  await kvCmd("SET", `genesis:claim-row:${claim.id}`, JSON.stringify(claim));
   return claim;
 }
 

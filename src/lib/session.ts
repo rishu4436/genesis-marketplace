@@ -26,6 +26,10 @@ export async function clearSessionCookie() {
   jar.set(COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
 }
 
+export async function requireAccount(): Promise<Account | null> {
+  return currentAccount();
+}
+
 export async function currentAccount(): Promise<Account | null> {
   const jar = await cookies();
   const sid = jar.get(COOKIE)?.value;

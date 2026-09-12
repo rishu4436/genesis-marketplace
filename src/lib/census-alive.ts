@@ -13,6 +13,8 @@ import { createSwrMem } from "./swr-mem";
 
 const CENSUS_URL = "https://agentcensus.xyz/api/agents";
 const CACHE_KEY = "genesis:census:alive:v1";
+const STATS_KEY = "genesis:census:stats:v1";
+let lastStats: CensusAliveStats | null = null;
 const FETCH_MS = 8_000;
 const ALIVE_PAGES = 13;
 
@@ -152,6 +154,10 @@ export function peekCensusAlive(): CensusBundle | null {
   return censusSwr.peek();
 }
 
+export function peekCensusStats(): CensusAliveStats | null {
+  return censusSwr.peek()?.stats || lastStats;
+}
+
 export async function fetchCensusAlive(): Promise<CensusBundle> {
   return censusSwr.get(loadCensusAlive);
 }
@@ -208,6 +214,8 @@ async function loadCensusAlive(): Promise<{
 
   const bundle = { agents, stats };
   censusSwr.set(bundle);
+  lastStats = stats;
+  await kvCmd("SET", STATS_KEY, JSON.stringify(stats), "EX", 86400);
   if (agents.length) {
     await kvCmd(
       "SET",
@@ -218,6 +226,17 @@ async function loadCensusAlive(): Promise<{
     );
   }
   return bundle;
+}
+
+export async function hydrateCensusStats(): Promise<void> {
+  if (lastStats || censusSwr.peek()) return;
+  const raw = await kvCmd<string>("GET", STATS_KEY);
+  if (!raw) return;
+  try {
+    lastStats = JSON.parse(raw) as CensusAliveStats;
+  } catch {
+    /* ignore */
+  }
 }
 
 export function censusAgentsForCategory(

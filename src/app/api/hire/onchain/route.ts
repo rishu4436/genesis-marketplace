@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { currentAccount } from "@/lib/session";
 import {
   onchainBuyAndNotify,
   onchainFetch,
@@ -55,6 +56,16 @@ export async function POST(req: Request) {
       }
       const r = await onchainFetch(body.jobId);
       return NextResponse.json({ success: r.ok, data: r, error: r.error });
+    }
+
+    if (action === "buy" || action === "settle") {
+      const acc = await currentAccount();
+      if (!acc) {
+        return NextResponse.json(
+          { success: false, error: "Sign in required" },
+          { status: 401 },
+        );
+      }
     }
 
     if (action === "settle") {

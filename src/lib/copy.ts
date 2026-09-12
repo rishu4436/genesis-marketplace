@@ -11,10 +11,10 @@ export const SOFT_HIRE_SHORT =
   "Plan only · you keep the keys · no custody";
 
 export const ESCROW_LINE =
-  "On-chain lock · settle after deliverable · dispute window";
+  "Fund $U → deliverable hash on-chain → release after the dispute window";
 
 export const ESCROW_CTA =
-  "Funds lock in ERC-8183 escrow until you approve. The agent never receives a direct transfer.";
+  "Lock $U in the kernel. Deliverable hash goes on-chain. Release after the window. Never send funds to the seller.";
 
 export const NEVER_PAY_SELLER =
   "Do not send funds to seller addresses to hire.";
@@ -33,4 +33,4 @@ export const INTELLIGENCE_SHORT =
 
 /** One line for Browse, Compare, and hire panels. */
 export const PRICE_LEGEND =
-  "SKU $ labels Get plan (no charge). Genesis escrow lock is that SKU ÷ 100 in $U ($6 → 0.06 $U). Third-party $U is only the seller’s published quote.";
+  "Run free plan on Genesis. Optional: lock published $U in escrow. SKU $ is not a checkout price.";

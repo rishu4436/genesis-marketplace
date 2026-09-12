@@ -10,6 +10,7 @@ import { dedupeAgents } from "./scan";
 import { allGenesisAgents, genesisToAgentCard } from "./genesis-agents";
 import { hireableBscAsAgents, categorizeHireable } from "./hireable-bsc";
 import { featuredAsAgent, LIVE_SELLERS } from "./third-party-sellers";
+import { hireableSellerAgents } from "./seller-listings";
 import {
   isGenesisListing,
   isHireableListing,
@@ -20,7 +21,8 @@ export function deskFloorAgents(): Agent[] {
   const genesis = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const probed = hireableBscAsAgents();
   const live = LIVE_SELLERS.map((s) => featuredAsAgent(s));
-  return dedupeAgents([...genesis, ...live, ...probed]).filter(
+  const sellers = hireableSellerAgents();
+  return dedupeAgents([...genesis, ...live, ...probed, ...sellers]).filter(
     isHireableListing,
   );
 }

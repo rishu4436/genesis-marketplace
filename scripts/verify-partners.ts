@@ -53,6 +53,12 @@ import { escrowJudgeProof, judgeDemoVideoUrl } from "../src/lib/judge-proof";
 import { hasLivePayload, jobOutcome } from "../src/lib/job-outcome";
 import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
 import { listingPriceForAgent } from "../src/lib/listing-price";
+import { jobTicketForAgent } from "../src/lib/job-ticket";
+import { capabilityForAgent } from "../src/lib/capability";
+import {
+  createListingDraft,
+  listingToAgent,
+} from "../src/lib/seller-listings";
 import {
   buildExpertDeliverable,
   parseBrief,
@@ -132,6 +138,7 @@ function main() {
     token_id: "1",
     chain_id: 56,
     name: "Indexed only",
+    desk_live: false,
     total_feedbacks: 0,
     average_score: 0,
   };
@@ -142,6 +149,15 @@ function main() {
   check("live stats count 1 live", stats.live === 1);
   check("live stats count 1 indexed", stats.indexed === 1);
   check("featured is hireable", isHireableListing(featured) === true);
+  check(
+    "genesis is delivery-ready",
+    capabilityForAgent(genesisToAgentCard(getGenesisAgent("range-keeper")!)) ===
+      "delivery-ready",
+  );
+  check(
+    "pinned third-party is quote-ready not delivery-ready",
+    capabilityForAgent(featured) === "quote-ready",
+  );
   check("identity-only is not hireable", isHireableListing(indexed) === false);
   check(
     "featured LP has no invented 0.1 $U",
@@ -433,6 +449,33 @@ function main() {
     marketplaceTiers({ escrowAvailable: false }).filter((t) => t.available).every(
       (t) => t.id !== "escrow",
     ),
+  );
+  const healthTicket = jobTicketForAgent(
+    genesisToAgentCard(getGenesisAgent("health-sentinel")!),
+  );
+  check("health ticket job is the SKU", /liquidation/i.test(healthTicket.job));
+  check("health ticket lock is 0.06 $U", healthTicket.lockU === "0.06");
+  check(
+    "health ticket completes on APEX",
+    healthTicket.completes === "genesis-apex",
+  );
+  const brainTicket = jobTicketForAgent(featuredAsAgent(getFeaturedThirdParty("grid-trading")));
+  check("brain grid ticket lock is 0.10 $U", brainTicket.lockU === "0.10");
+  check(
+    "quote-only ticket has no invented lock",
+    jobTicketForAgent(featuredAsAgent(EXTRA_LIVE_SELLERS[0])).lockU == null,
+  );
+  const indexedListing = listingToAgent(
+    createListingDraft({
+      chainId: 56,
+      tokenId: "1",
+      ownerAddress: "0x0000000000000000000000000000000000000001",
+      accountId: "acc_test",
+    }),
+  );
+  check(
+    "indexed seller listing is not hireable",
+    isHireableListing(indexedListing) === false,
   );
   check("SKU $6 locks 0.06 $U", skuUsdToLockU(6) === "0.06");
   check("SKU $8 locks 0.08 $U", skuUsdToLockU(8) === "0.08");

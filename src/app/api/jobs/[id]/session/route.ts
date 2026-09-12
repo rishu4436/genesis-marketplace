@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getJob, saveJob } from "@/lib/job-store";
 import { closeSession, sessionPublicView } from "@/lib/job-session";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
+import { currentAccount } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -29,11 +30,18 @@ export async function GET(_req: Request, ctx: Ctx) {
 /** POST /api/jobs/:id/session — { action: "revoke" } */
 export async function POST(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
+  const acc = await currentAccount();
   const job = await getJob(decodeURIComponent(id));
   if (!job) {
     return NextResponse.json(
       { success: false, error: "Job not found" },
       { status: 404 },
+    );
+  }
+  if (!acc || (job.ownerId && job.ownerId !== acc.id)) {
+    return NextResponse.json(
+      { success: false, error: "Not your hire" },
+      { status: 403 },
     );
   }
   if (!job.session) {

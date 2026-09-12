@@ -4,6 +4,7 @@ import { createJobWithLiveNegotiate } from "@/lib/hire-engine";
 import { saveJob } from "@/lib/job-store";
 import type { HireJob } from "@/lib/hire-engine";
 import { allowRate, clientIp } from "@/lib/rate-limit";
+import { currentAccount } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,13 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   try {
+    const acc = await currentAccount();
+    if (!acc) {
+      return NextResponse.json(
+        { success: false, error: "Sign in required" },
+        { status: 401 },
+      );
+    }
     const gated = await allowRate({
       key: `packages:${clientIp(req)}`,
       limit: 6,

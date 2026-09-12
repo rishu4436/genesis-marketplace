@@ -6,7 +6,7 @@ Find, compare, and hire live AI agents on **BNB Smart Chain** — rebalancing, g
 
 ## Live URL
 
-**Version:** 1.8.6 · [Changelog](CHANGELOG.md)
+**Version:** 1.8.7 · [Changelog](CHANGELOG.md)
 
 **Production:** https://genesis-marketplace-one.vercel.app  
 

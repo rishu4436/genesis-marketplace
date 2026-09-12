@@ -4,9 +4,8 @@
  * Alive HTTP ≠ hireable. Uncategorized hireable stay on /browse, not a wrong shelf.
  */
 
-import { readFileSync } from "fs";
-import path from "path";
 import type { Agent } from "./types";
+import hireableJson from "../../config/hireable-bsc.json";
 import type { CategoryId } from "./categories";
 import { isCloneBotName, isPublicHireableUrl } from "./hire-class";
 
@@ -88,30 +87,8 @@ function isCloneBot(name: string, description: string): boolean {
 
 export function loadHireableBsc(): HireableBscFile {
   if (cached) return cached;
-  const empty: HireableBscFile = {
-    asOf: "",
-    registered: 0,
-    endpointAlive: 0,
-    candidates: 0,
-    probedEndpoints: 0,
-    hireable: [],
-    byCategory: {
-      rebalancing: 0,
-      "grid-trading": 0,
-      "yield-optimisation": 0,
-      "health-factor": 0,
-    },
-    uncategorized: 0,
-    source: "none",
-  };
-  try {
-    const p = path.join(process.cwd(), "config", "hireable-bsc.json");
-    const raw = readFileSync(p, "utf8");
-    cached = JSON.parse(raw) as HireableBscFile;
-    return cached;
-  } catch {
-    return empty;
-  }
+  cached = hireableJson as HireableBscFile;
+  return cached;
 }
 
 export function hireableBscAsAgents(categoryId?: CategoryId): Agent[] {
@@ -137,6 +114,7 @@ export function hireableBscAsAgents(categoryId?: CategoryId): Agent[] {
       probe_status: "alive" as const,
       probe_latency_ms: r.latencyMs,
       census_category: r.categoryId || undefined,
+      desk_live: true,
       health_score: 80,
     }));
   return rows;

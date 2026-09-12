@@ -84,7 +84,7 @@ export function CompareTray() {
   const href = `/compare?ids=${keys.map(encodeURIComponent).join(",")}`;
 
   return (
-    <div className="fixed bottom-[4.75rem] left-1/2 z-40 w-[min(100%-2rem,36rem)] -translate-x-1/2 rounded-2xl border border-amber-400/30 bg-[#0c1018]/95 p-3 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-4">
+    <div className="fixed bottom-24 left-1/2 z-30 w-[min(100%-2rem,36rem)] -translate-x-1/2 rounded-2xl border border-amber-400/30 bg-[#0c1018]/95 p-3 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-6">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 text-xs text-white/70">
           <span className="font-semibold text-amber-200">

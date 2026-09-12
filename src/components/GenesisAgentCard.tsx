@@ -11,6 +11,8 @@ function admissionGrade(slug: string) {
   admissionCache ??= admitAllSpecialists();
   return admissionCache.find((a) => a.slug === slug)?.grade === "admitted";
 }
+import { jobTicketForAgent } from "@/lib/job-ticket";
+import { JobTicketStrip } from "@/components/JobTicketStrip";
 import { ScorePentagon } from "@/components/ScorePentagon";
 import {
   compositeFromAxes,
@@ -52,6 +54,7 @@ export function GenesisAgentCard({
   });
   const composite = compositeFromAxes(axes);
   const gid = `genesis-${agent.slug}`;
+  const ticket = jobTicketForAgent(card);
 
   return (
     <a
@@ -111,9 +114,10 @@ export function GenesisAgentCard({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-3 text-xs leading-relaxed text-white/60">
+          <p className="line-clamp-2 text-xs leading-relaxed text-white/60">
             {agent.tagline}
           </p>
+          <JobTicketStrip ticket={ticket} dense />
           <p className="mt-2 line-clamp-1 text-[10px] tabular-nums text-white/35">
             {axes
               .map((a) =>
@@ -140,7 +144,7 @@ export function GenesisAgentCard({
           Unrated
         </span>
         <span className="ml-auto rounded-full bg-amber-400 px-2.5 py-0.5 text-[11px] font-semibold text-black">
-          Buy · ${agent.basePriceUsd}
+          Get plan
         </span>
       </div>
     </a>

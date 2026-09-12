@@ -29,6 +29,7 @@ import { HireTallyBoard } from "@/components/HireTallyBoard";
 import { getHireTallyFast } from "@/lib/hire-tally";
 import { fetchCensusAlive } from "@/lib/census-alive";
 import { deskFloorAgents } from "@/lib/desk-floor";
+import { hydrateSellerListings } from "@/lib/seller-listings";
 import Link from "next/link";
 
 /** Browse uses searchParams; light revalidate via partner fetch cache */
@@ -124,6 +125,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         apiTotal: null,
         census: null,
       };
+  if (!showIndex) await hydrateSellerListings();
   const tally = showIndex ? null : getHireTallyFast();
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const floor = deskFloorAgents();

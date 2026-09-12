@@ -415,6 +415,7 @@ export function featuredAsAgent(seller?: ThirdPartySeller | null): Agent {
     supported_protocols: ["A2A", "ERC-8183"],
     a2a_endpoint: s.a2aCardUrl || s.rpcUrl || undefined,
     census_category: s.categoryId,
+    desk_live: true,
     total_score: 25,
     health_score: 100,
   };

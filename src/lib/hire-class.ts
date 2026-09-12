@@ -86,15 +86,11 @@ export function isPublicHireableUrl(url: string): boolean {
   return u.length >= 24;
 }
 
-function hasPublicA2a(agent: Agent): boolean {
-  return isPublicHireableUrl(agent.a2a_endpoint || "");
-}
-
 export function hireClassForAgent(agent: Agent): HireClass {
   if (isGenesisListing(agent)) return "genesis";
   if (isDirectoryLeak(agent)) return "indexed";
   if (isPinnedLiveSeller(agent.chain_id, agent.token_id)) return "live";
-  if (hasPublicA2a(agent) && isDefiJobAgent(agent)) return "live";
+  if (agent.desk_live) return "live";
   return "indexed";
 }
 

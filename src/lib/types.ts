@@ -27,6 +27,13 @@ export type Agent = {
   probe_status?: "alive" | "dead" | "degraded" | "never-probed";
   probe_latency_ms?: number;
   census_category?: string;
+  /** On the desk because we pinned or a seller probe passed — not keyword+URL. */
+  desk_live?: boolean;
+  quote_only?: boolean;
+  list_lock_u?: string;
+  you_send?: string;
+  you_get?: string;
+  last_probe_at?: string;
 };
 
 export type Feedback = {

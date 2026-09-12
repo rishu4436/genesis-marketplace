@@ -8,6 +8,9 @@ import {
 } from "@/lib/genesis-agents";
 import { getCategory } from "@/lib/categories";
 import { HireWizard } from "@/components/HireWizard";
+import { JobTicketPanel } from "@/components/JobTicketStrip";
+import { A2aEvidence } from "@/components/A2aEvidence";
+import { jobTicketForAgent } from "@/lib/job-ticket";
 import { GenesisAgentCard } from "@/components/GenesisAgentCard";
 import { ScoreAxisList, ScorePentagon } from "@/components/ScorePentagon";
 import { TrustPassport } from "@/components/TrustPassport";
@@ -152,6 +155,8 @@ export default async function GenesisAgentPage({ params }: Props) {
           </div>
         </header>
         <aside className="space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start">
+          <JobTicketPanel ticket={jobTicketForAgent(card)} />
+          <A2aEvidence agent={card} />
           <HireWizard
             chainId={agent.chainId ?? 56}
             tokenId={agent.tokenId || `genesis:${agent.slug}`}

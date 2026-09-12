@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { DESK } from "@/lib/desk";
 import { deskWeek } from "@/lib/desk-metrics";
-import { fetchCensusAlive } from "@/lib/census-alive";
-import { deskFloorAgents } from "@/lib/desk-floor";
+import { getHireTally } from "@/lib/hire-tally";
 
 export async function DeskStrip({
   compact = false,
@@ -11,11 +10,9 @@ export async function DeskStrip({
   compact?: boolean;
   hideCensus?: boolean;
 }) {
-  const [week, census] = await Promise.all([
+  const [week, tally] = await Promise.all([
     deskWeek(),
-    hideCensus
-      ? Promise.resolve(null)
-      : fetchCensusAlive(),
+    hideCensus ? Promise.resolve(null) : getHireTally(),
   ]);
 
   return (
@@ -33,22 +30,21 @@ export async function DeskStrip({
         {DESK.loop}
       </p>
       <p className="mt-1 text-[11px] text-white/40">{DESK.northStar}</p>
-      {!hideCensus && census && census.stats.alive > 0 && (
+      {!hideCensus && tally && tally.endpointAlive > 0 && (
         <p className="mt-1 text-[11px] text-white/45">
           {(() => {
-            const hireable = deskFloorAgents().length;
             return (
               <>
                 <span className="text-amber-100">
-                  {hireable.toLocaleString("en-US")} hireable
+                  {tally.hireable.toLocaleString("en-US")} on the desk
                 </span>
                 {" · "}
                 <span className="text-lime-200/80">
-                  {census.stats.alive.toLocaleString("en-US")} alive, not a hire
+                  {tally.aliveNotHireable.toLocaleString("en-US")} alive, not a hire
                 </span>
                 {" · "}
                 <span className="text-rose-200/70">
-                  {census.stats.registered.toLocaleString("en-US")} registered, not
+                  {tally.registered.toLocaleString("en-US")} registered, not
                   a hire
                 </span>
               </>

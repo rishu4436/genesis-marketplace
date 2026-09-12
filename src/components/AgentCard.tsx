@@ -11,25 +11,16 @@ import {
   computeAxes,
 } from "@/lib/marketplace-score";
 import {
-  getFeaturedByToken,
-  isFeaturedThirdParty,
-} from "@/lib/third-party-sellers";
-import {
-  genesisTrustBadges,
-  sellerPayloadKind,
-  thirdPartyTrustBadges,
-} from "@/lib/desk";
-import { TrustBadges } from "@/components/TrustBadges";
-import {
   hireClassForAgent,
-  hireClassLabel,
   listingHref,
 } from "@/lib/hire-class";
-import { listingPriceForAgent } from "@/lib/listing-price";
 import {
-  formatOnchainRating,
-  hasOnchainRating,
-} from "@/lib/feedback-score";
+  capabilityBadge,
+  capabilityForAgent,
+  listingCta,
+} from "@/lib/capability";
+import { jobTicketForAgent } from "@/lib/job-ticket";
+import { JobTicketStrip } from "@/components/JobTicketStrip";
 
 export function AgentCard({
   agent,
@@ -51,24 +42,13 @@ export function AgentCard({
   const gid = `card-${agent.chain_id}-${String(agent.token_id).replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const href = listingHref(agent);
   const cls = hireClassForAgent(agent);
-  const canHire = cls === "genesis" || cls === "live";
-  const pinned = getFeaturedByToken(agent.chain_id, agent.token_id);
-  const badges =
-    cls === "genesis"
-      ? genesisTrustBadges({
-          healthHireable: true,
-          admissionAdmitted: true,
-        })
-      : cls === "live"
-        ? thirdPartyTrustBadges(
-            pinned ? sellerPayloadKind(pinned) : "quote",
-          )
-        : [];
-  const listing = listingPriceForAgent(agent);
-  const actionLabel = canHire
-    ? listing?.cta || ctaLabel
-    : "View identity";
-  const actionHref = canHire ? `${href}#buy` : href;
+  const cap = capabilityForAgent(agent);
+  const capBadge = capabilityBadge(cap);
+  const cta = listingCta(agent);
+  const canHire = cta.hire;
+  const ticket = jobTicketForAgent(agent);
+  const actionLabel = cta.label;
+  const actionHref = cta.hire ? `${href}#buy` : href;
 
   return (
     <div
@@ -101,57 +81,33 @@ export function AgentCard({
             </span>
           </div>
           <p className="mt-0.5 text-[11px] text-white/40">
-            BSC · #{agent.token_id} · {shortAddress(agent.owner_address)}
+            {ticket.passport}
+            {shortAddress(agent.owner_address)
+              ? ` · ${shortAddress(agent.owner_address)}`
+              : ""}
             {cat && (
               <span className="text-white/30"> · {cat.shortName}</span>
             )}
-            {listing && listing.unit !== "quote" && (
-              <span
-                className="text-amber-200/80"
-                title={
-                  listing.unit === "U"
-                    ? "Published list quote in $U. Get plan is no charge."
-                    : "SKU label. Get plan is no charge."
-                }
-              >
-                {" "}
-                · {listing.label}
-              </span>
-            )}
+
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {(agent.agent_id || agent.token_id != null) && (
-              <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
-                Registered
-              </span>
-            )}
-            {agent.probe_status === "alive" && (
-              <span
-                className="rounded-md bg-lime-500/15 px-1.5 py-0.5 text-[10px] font-medium text-lime-200"
-                title="Declared URL answered a public probe. Not a hire guarantee."
-              >
-                Endpoint alive
-              </span>
-            )}
-            {cls === "genesis" ? (
+            {cls === "genesis" && (
               <span className="rounded-md bg-[#F0B90B] px-1.5 py-0.5 text-[10px] font-bold text-black">
                 By Genesis
               </span>
-            ) : cls === "live" ||
-              isFeaturedThirdParty(agent.chain_id, agent.token_id) ? (
-              <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
-                {hireClassLabel("live")}
-              </span>
-            ) : (
-              <span className="rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-200">
-                Unhireable
-              </span>
             )}
-            {badges.length > 0 && (
-              <span className="ml-0.5">
-                <TrustBadges badges={badges} />
-              </span>
-            )}
+            <span
+              className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                cap === "delivery-ready"
+                  ? "bg-emerald-500/15 text-emerald-200"
+                  : cap === "quote-ready"
+                    ? "bg-sky-500/15 text-sky-200"
+                    : "bg-rose-500/20 text-rose-200"
+              }`}
+              title={capBadge.title}
+            >
+              {capBadge.label}
+            </span>
           </div>
         </div>
       </div>
@@ -172,9 +128,10 @@ export function AgentCard({
           />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="line-clamp-3 text-xs leading-relaxed text-white/55">
+          <p className="line-clamp-2 text-xs leading-relaxed text-white/55">
             {desc}
           </p>
+          <JobTicketStrip ticket={ticket} dense />
           <p className="mt-2 line-clamp-1 text-[10px] tabular-nums text-white/30">
             {axes
               .map((a) =>
@@ -186,44 +143,10 @@ export function AgentCard({
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
-        {agent.x402_supported && (
-          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
-            x402
-          </span>
-        )}
-        {agent.is_verified && (
-          <span className="rounded-md bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
-            Verified
-          </span>
-        )}
-        {hasOnchainRating(agent) ? (
-          <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] text-white/60">
-            {formatOnchainRating(agent)}
-            {agent.total_feedbacks
-              ? ` · ${agent.total_feedbacks}`
-              : ""}
-          </span>
-        ) : (
-          <span
-            className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-white/35"
-            title="8004scan Unrated is an index label, not a low score"
-          >
-            Unrated · not a low score
-          </span>
-        )}
         <div className="ml-auto flex items-center gap-2">
           {showCompare && <CompareToggle agentKey={agentKey(agent)} />}
           <a
             href={actionHref}
-            title={
-              listing
-                ? listing.unit === "U"
-                  ? "Published list quote in $U. Get plan is no charge."
-                  : listing.unit === "quote"
-                    ? "Seller quotes on hire. Get plan is no charge."
-                    : "SKU label. Get plan is no charge."
-                : undefined
-            }
             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
               canHire
                 ? "bg-amber-400 text-black hover:bg-amber-300"

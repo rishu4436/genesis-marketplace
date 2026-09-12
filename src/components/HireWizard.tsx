@@ -600,9 +600,9 @@ export function HireWizard({
           ? phase === "working"
             ? "Analyzing…"
             : "Starting…"
-          : rail === "free"
-            ? "Run free scan"
-            : "Get plan"}
+          : isHireReady
+            ? "Run free plan"
+            : "Request quote"}
       </button>
       {escrowOk ? (
         <>
@@ -616,7 +616,9 @@ export function HireWizard({
             }}
             className="mt-2 min-h-12 w-full touch-manipulation rounded-full border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-sm font-semibold text-amber-50 transition hover:border-amber-400 hover:bg-amber-400/25 disabled:opacity-40"
           >
-            {railSpec?.hireLabel || "Hire with escrow"}
+            {lockU
+              ? `Lock ${lockU} $U in escrow`
+              : railSpec?.hireLabel || "Lock $U in escrow"}
           </button>
           <p className="mt-2 text-center text-[11px] leading-relaxed text-white/45">
             {ESCROW_CTA}

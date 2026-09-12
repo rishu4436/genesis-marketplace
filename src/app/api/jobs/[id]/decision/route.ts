@@ -8,6 +8,7 @@ import {
 } from "@/lib/job-decision";
 import { saveIncident } from "@/lib/slash-store";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
+import { currentAccount } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -35,11 +36,18 @@ export async function GET(_req: Request, ctx: Ctx) {
 /** POST /api/jobs/:id/decision { action: accept|dispute, reason? } */
 export async function POST(req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
+  const acc = await currentAccount();
   const job = await getJob(decodeURIComponent(id));
   if (!job) {
     return NextResponse.json(
       { success: false, error: "Job not found" },
       { status: 404 },
+    );
+  }
+  if (!acc || (job.ownerId && job.ownerId !== acc.id)) {
+    return NextResponse.json(
+      { success: false, error: "Not your hire" },
+      { status: 403 },
     );
   }
 

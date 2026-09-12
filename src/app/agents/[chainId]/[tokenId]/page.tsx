@@ -44,6 +44,10 @@ import {
 import { hireableBscAsAgents, hireableOwnerFor } from "@/lib/hireable-bsc";
 import { bscscanNftUrl } from "@/lib/proof-jobs";
 import { listingPriceForAgent } from "@/lib/listing-price";
+import { jobTicketForAgent } from "@/lib/job-ticket";
+import { JobTicketPanel } from "@/components/JobTicketStrip";
+import { A2aEvidence } from "@/components/A2aEvidence";
+import { canRunPlan, canRequestQuote } from "@/lib/capability";
 
 export const revalidate = 90;
 
@@ -196,7 +200,9 @@ export default async function AgentDetailPage({ params }: Props) {
           </div>
         </header>
         <aside className="space-y-4 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start">
-          {isHireableListing(agent) ? (
+          <JobTicketPanel ticket={jobTicketForAgent(agent)} />
+          <A2aEvidence agent={agent} />
+          {canRunPlan(agent) || canRequestQuote(agent) ? (
             <HireWizard
               chainId={agent.chain_id}
               tokenId={String(agent.token_id)}
@@ -209,7 +215,7 @@ export default async function AgentDetailPage({ params }: Props) {
                 featured?.ownerAddress ||
                 undefined
               }
-              hireReady={isHireableListing(agent)}
+              hireReady={canRunPlan(agent)}
               priceUsd={listing?.amount ?? 0}
               priceLabel={
                 listing?.unit === "U"

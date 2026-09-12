@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { grantAgentSession } from "@/lib/altana/client";
 import { listSessions } from "@/lib/altana/session-store";
+import { currentAccount } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -17,6 +18,13 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   try {
+    const acc = await currentAccount();
+    if (!acc) {
+      return NextResponse.json(
+        { success: false, error: "Sign in required" },
+        { status: 401 },
+      );
+    }
     const body = (await req.json()) as {
       agentSlug?: string;
       expiryHours?: number;

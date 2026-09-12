@@ -1,6 +1,6 @@
 import { LandingPageCinematic } from "@/components/landing/archive/LandingPageCinematic";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
-import { getHireTallyFast } from "@/lib/hire-tally";
+import { getHireTally } from "@/lib/hire-tally";
 
 export const revalidate = 60;
 
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const tally = getHireTallyFast();
+  const tally = await getHireTally();
   return (
     <LandingPageCinematic
       tally={tally}

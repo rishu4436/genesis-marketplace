@@ -12,12 +12,14 @@ const PRIMARY = [
   { href: "/judge", label: "Judge" },
   { href: "/dashboard", label: "My hires" },
   { href: "/browse", label: "Browse" },
+  { href: "/sell", label: "Sell" },
 ];
 
 const MOBILE = [
   { href: "/browse", label: "Browse" },
   { href: "/judge", label: "Judge" },
   { href: "/dashboard", label: "My hires" },
+  { href: "/sell", label: "Sell" },
   { href: "/packages", label: "Packages" },
   { href: "/partners", label: "Partners" },
 ];

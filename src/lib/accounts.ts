@@ -99,9 +99,8 @@ export function checkPassword(password: string, stored: string) {
   return timingSafeEqual(next, prev);
 }
 
-export function loginMessage(nonce: string) {
-  return `Genesis Marketplace — sign in\n\nNonce: ${nonce}\n\nThis proves you control the wallet. No payment.`;
-}
+import { loginMessage, listAgentMessage } from "./auth-messages";
+export { loginMessage, listAgentMessage };
 
 function indexAcc(a: Account) {
   memAcc.set(a.id, a);

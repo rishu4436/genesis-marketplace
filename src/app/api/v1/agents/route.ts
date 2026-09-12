@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { allGenesisAgents } from "@/lib/genesis-agents";
+import { allGenesisAgents, genesisToAgentCard } from "@/lib/genesis-agents";
 import { checkAllAgentHealth } from "@/lib/agent-health";
 import { listClaims } from "@/lib/seller-claims";
 import { LIVE_SELLERS, featuredAsAgent } from "@/lib/third-party-sellers";
@@ -19,7 +19,12 @@ import { catalogRecordMatchesQuery } from "@/lib/catalog-search";
 import { fetchCensusAlive } from "@/lib/census-alive";
 import { isCloneBotName, isHireableListing } from "@/lib/hire-class";
 import { hireableBscAsAgents, loadHireableBsc } from "@/lib/hireable-bsc";
+import {
+  hireableSellerAgents,
+  hydrateSellerListings,
+} from "@/lib/seller-listings";
 import { listingPriceForAgent } from "@/lib/listing-price";
+import { jobTicketForAgent, jobTicketJson } from "@/lib/job-ticket";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +42,7 @@ export async function GET(req: Request) {
     scoreAllSpecialists(),
     deskWeek(),
     fetchCensusAlive(),
+    hydrateSellerListings(),
   ]);
   const scoreBySlug = Object.fromEntries(scores.map((s) => [s.slug, s]));
   const healthBySlug = Object.fromEntries(health.map((h) => [h.slug, h]));
@@ -97,6 +103,7 @@ export async function GET(req: Request) {
           axes: scoreBySlug[a.slug].axes,
         }
       : null,
+    ticket: jobTicketJson(jobTicketForAgent(genesisToAgentCard(a))),
   }));
 
   const liveThird = LIVE_SELLERS.map((s) => {
@@ -130,6 +137,7 @@ export async function GET(req: Request) {
       sellerPayloadKind(s) === "quote"
         ? "A2A quote only. Not a completed plan until they deliver on-chain."
         : "Not operated by Genesis. Hire returns their A2A quote plus operator report or public measured sample.",
+    ticket: jobTicketJson(jobTicketForAgent(featuredAsAgent(s))),
     };
   });
 
@@ -165,6 +173,19 @@ export async function GET(req: Request) {
       : "Endpoint answered a public probe. Not a Genesis hire until A2A is public.",
   }));
 
+  const sellerLive = hireableSellerAgents().map((a) => ({
+    type: "seller_hireable" as const,
+    hireClass: "live" as const,
+    name: a.name,
+    chainId: a.chain_id,
+    tokenId: String(a.token_id),
+    categoryId: a.census_category || null,
+    a2a: a.a2a_endpoint || null,
+    buyUrl: `${origin}/agents/${a.chain_id}/${a.token_id}#buy`,
+    ticket: jobTicketJson(jobTicketForAgent(a)),
+    note: "Seller listing. Wallet owns the token. A2A probe passed.",
+  }));
+
   const probedLive = hireableBscAsAgents().map((a) => ({
     type: "probed_hireable" as const,
     hireClass: "live" as const,
@@ -182,6 +203,7 @@ export async function GET(req: Request) {
   let data = [
     ...specialists,
     ...liveThird,
+    ...sellerLive,
     ...claimed,
     ...probedLive,
     ...alive,
@@ -216,7 +238,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
     marketplace: "Genesis Marketplace",
-    version: "1.2",
+    version: "1.3",
     desk: DESK,
     rails: DESK_RAILS,
     skus: JOB_SKUS,

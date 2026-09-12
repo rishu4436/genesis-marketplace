@@ -1,70 +1,41 @@
 import { NextResponse } from "next/server";
+import { probeA2aUrl } from "@/lib/probe-a2a";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
 /**
  * POST /api/sell/probe
- * Fetch an A2A agent card. Does not list the seller — only reports reachability.
+ * Reachability only. Does not list the seller or mark hireable.
  */
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as { url?: string };
-    const raw = (body.url || "").trim();
-    if (!/^https:\/\//i.test(raw)) {
+    const probe = await probeA2aUrl(body.url || "");
+    if (!probe.ok) {
       return NextResponse.json(
-        { success: false, error: "https URL required" },
+        {
+          success: false,
+          error: probe.error || "unreachable",
+          hireable: false,
+        },
         { status: 400 },
       );
     }
-    const candidates = [
-      raw,
-      raw.replace(/\/$/, "") + "/.well-known/agent-card.json",
-    ];
-    let lastError = "unreachable";
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url, {
-          headers: { Accept: "application/json" },
-          signal: AbortSignal.timeout(5000),
-          cache: "no-store",
-        });
-        const json = (await res.json().catch(() => null)) as {
-          name?: string;
-          description?: string;
-          url?: string;
-        } | null;
-        if (!res.ok || !json) {
-          lastError = `${res.status} ${res.statusText}`;
-          continue;
-        }
-        const name = json.name || json.url;
-        if (!name) {
-          lastError = "JSON but no agent name";
-          continue;
-        }
-        return NextResponse.json({
-          success: true,
-          data: {
-            probed: url,
-            name,
-            description: (json.description || "").slice(0, 280),
-            hireable: true,
-            note: "Card reachable. Claim it on /sell to list.",
-          },
-        });
-      } catch (e) {
-        lastError = e instanceof Error ? e.message : "fetch failed";
-      }
-    }
     return NextResponse.json({
-      success: false,
-      error: lastError,
-      hireable: false,
+      success: true,
+      data: {
+        probed: probe.probed,
+        name: probe.name || null,
+        description: probe.description || null,
+        kind: probe.kind,
+        hireable: false,
+        note: "Reachable. Hireable only after you own the token and the job ticket passes.",
+      },
     });
   } catch {
     return NextResponse.json(
-      { success: false, error: "probe failed" },
+      { success: false, error: "probe failed", hireable: false },
       { status: 400 },
     );
   }

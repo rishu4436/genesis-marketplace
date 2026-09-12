@@ -70,11 +70,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const budgetU = listedLockU({
+    let budgetU = listedLockU({
       genesisSlug: body.genesisSlug,
       chainId: body.chainId,
       tokenId: body.tokenId,
     });
+    if (!budgetU && body.chainId && body.tokenId) {
+      const { getListingByToken } = await import("@/lib/seller-listings");
+      const listing = getListingByToken(body.chainId, body.tokenId);
+      if (
+        listing?.gate === "hireable" &&
+        listing.lockU &&
+        !listing.quoteOnly
+      ) {
+        budgetU = listing.lockU;
+      }
+    }
     if (!budgetU) {
       return NextResponse.json(
         {

@@ -8,6 +8,27 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.7 — 2026-09-10
+
+Job tickets, two-gate seller desk, honest capability. Not overselling Hire.
+
+### Was
+
+- Cards showed a blurb and a price, not what you send, get, or lock.
+- Compare mixed category names with “you get.”
+- Machine catalog had no single job object.
+
+### Now
+
+- One ticket: job, you send, you get, plan free, optional $U lock, whether we complete, identity passport.
+- Same object on Browse cards, listing pages, Compare, and `GET /api/v1/agents` (v1.3).
+- Escrow copy: fund $U → deliverable hash on-chain → release after the window.
+- **Sell:** wallet must own the ERC-8004 token (Indexed). Hire floor only after live A2A probe + one of four jobs. No USD form stamp. Header has Sell.
+- Capability ladder: registered → alive → callable → quote-ready → delivery-ready. Only Genesis is **Can complete / Get plan**. Live third-party is **Quote only**. Public URL + keywords is not Hire.
+- A2A card/endpoint/probe on listings. Census numbers share one tally. Mutations auth-gated. Seller claim is owner-signed. Probe blocks private hosts. CTAs: Run free plan vs Lock $U.
+
+---
+
 ## 1.8.6 — 2026-09-09
 
 Bug fixes. `9f7ee8d`

@@ -6,7 +6,9 @@
 import { allGenesisAgents } from "./genesis-agents";
 import {
   fetchCensusAlive,
+  hydrateCensusStats,
   peekCensusAlive,
+  peekCensusStats,
   type CensusAliveStats,
 } from "./census-alive";
 import { loadHireableBsc } from "./hireable-bsc";
@@ -28,9 +30,9 @@ function tallyFrom(census: {
     floor.map((a) => String(a.token_id || "")).filter((id) => /^\d+$/.test(id)),
   );
 
-  const registered = census?.stats.registered || file.registered || 0;
-  const endpointAlive =
-    census?.stats.alive || file.endpointAlive || 0;
+  const snap = census?.stats || peekCensusStats();
+  const registered = snap?.registered || file.registered || 0;
+  const endpointAlive = snap?.alive || file.endpointAlive || 0;
   const aliveNotHireable = census?.agents.length
     ? census.agents.filter((a) => !hireableIds.has(String(a.token_id))).length
     : Math.max(0, endpointAlive - hireableIds.size);
@@ -44,7 +46,7 @@ function tallyFrom(census: {
     unhireableRegistered: Math.max(0, registered - hireableIds.size),
     aliveNotHireable,
     byCategory: deskFloorByCategory(),
-    asOf: file.asOf || census?.stats.asOf || null,
+    asOf: snap?.asOf || file.asOf || census?.stats.asOf || null,
   };
 }
 
@@ -54,5 +56,10 @@ export function getHireTallyFast(): HireTally {
 }
 
 export async function getHireTally(): Promise<HireTally> {
+  await hydrateCensusStats();
+  const live = peekCensusAlive();
+  if (live) return tallyFrom(live);
+  const stats = peekCensusStats();
+  if (stats) return tallyFrom({ agents: [], stats });
   return tallyFrom(await fetchCensusAlive());
 }
