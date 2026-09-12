@@ -8,6 +8,20 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.9 — 2026-09-12
+
+Profile is a pop menu, not a full page.
+
+### Was
+
+- Profile opened a whole page to pick Sign in or Create account.
+
+### Now
+
+- Header **Profile** opens a small menu. Sign in or Create account goes to that form.
+
+---
+
 ## 1.8.8 — 2026-09-12
 
 Profile first. Sign in and Create account are a choice, not two header buttons.
