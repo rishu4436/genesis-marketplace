@@ -8,6 +8,20 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.8 — 2026-09-12
+
+Profile first. Sign in and Create account are a choice, not two header buttons.
+
+### Was
+
+- Header and landing showed **Sign in** and **Create account** as two equal actions.
+
+### Now
+
+- Header is **Profile**. That page asks Sign in or Create account. The next page is the form for that choice.
+
+---
+
 ## 1.8.7 — 2026-09-12
 
 Job tickets, two-gate seller desk, honest capability. Not overselling Hire.

@@ -53,45 +53,25 @@ export function AuthNav({
   if (!me) {
     if (stacked) {
       return (
-        <>
-          <Link
-            href="/login?mode=login"
-            className="rounded-xl px-3 py-3 text-sm font-medium text-white/60"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/login?mode=signup"
-            className="btn-solid mt-1 !h-11 w-full !text-sm"
-          >
-            Create account
-          </Link>
-        </>
+        <Link
+          href="/profile"
+          className="btn-solid mt-1 !h-11 w-full !text-sm"
+        >
+          Profile
+        </Link>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5">
-        <Link
-          href="/login?mode=login"
-          className={
-            compact
-              ? "rounded-full px-2 py-1.5 text-[11px] font-semibold text-white/70"
-              : "rounded-full px-3 py-1.5 text-[0.8rem] font-semibold text-white/70 hover:text-white"
-          }
-        >
-          Sign in
-        </Link>
-        <Link
-          href="/login?mode=signup"
-          className={
-            compact
-              ? "rounded-full bg-[#F0B90B] px-2.5 py-1.5 text-[11px] font-semibold text-black"
-              : "rounded-full bg-[#F0B90B] px-3.5 py-1.5 text-[0.8rem] font-semibold text-black hover:bg-[#f5c842]"
-          }
-        >
-          Create account
-        </Link>
-      </span>
+      <Link
+        href="/profile"
+        className={
+          compact
+            ? "rounded-full border border-white/15 px-2.5 py-1.5 text-[11px] font-semibold text-white"
+            : "rounded-full border border-white/15 px-3.5 py-1.5 text-[0.8rem] font-semibold text-white hover:border-amber-400/40 hover:text-amber-100"
+        }
+      >
+        Profile
+      </Link>
     );
   }
 

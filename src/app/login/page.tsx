@@ -38,14 +38,30 @@ export default async function LoginPage({ searchParams }: Props) {
           redirectTo={redirectTo}
           defaultMode={defaultMode}
           syncUrl
+          hideModeSwitch
         />
         <RecoverHireBox />
       </div>
 
       <p className="mt-8 text-[13px] text-white/40">
         {defaultMode === "signup"
-          ? "Already hired as a guest? Paste the claim code above after you create the account."
-          : "New here? Use Create account in the tabs above."}{" "}
+          ? "Already have an account? "
+          : "New here? "}
+        <Link
+          href={
+            defaultMode === "signup"
+              ? "/login?mode=login"
+              : "/login?mode=signup"
+          }
+          className="text-amber-300 hover:underline"
+        >
+          {defaultMode === "signup" ? "Sign in" : "Create account"}
+        </Link>
+        {" · "}
+        <Link href="/profile" className="text-amber-300 hover:underline">
+          Profile
+        </Link>
+        {" · "}
         <Link href="/browse" className="text-amber-300 hover:underline">
           Hire
         </Link>

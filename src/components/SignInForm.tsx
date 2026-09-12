@@ -43,6 +43,7 @@ export function SignInForm({
   hint,
   syncUrl = false,
   compact = false,
+  hideModeSwitch = false,
 }: {
   onChange?: (signedIn: boolean) => void;
   jobId?: string;
@@ -53,6 +54,8 @@ export function SignInForm({
   /** Keep /login?mode= in the URL when the tab changes. */
   syncUrl?: boolean;
   compact?: boolean;
+  /** Choice already happened on /profile — form is one mode. */
+  hideModeSwitch?: boolean;
 }) {
   const router = useRouter();
   const [me, setMe] = useState<PublicAccount | null>(null);
@@ -254,32 +257,36 @@ export function SignInForm({
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/35 p-1">
-        <button
-          type="button"
-          onClick={() => switchMode("login")}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-            !isSignup
-              ? "bg-white/[0.1] text-white"
-              : "text-white/45 hover:text-white/70"
-          }`}
-        >
-          Sign in
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("signup")}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-            isSignup
-              ? "bg-[#F0B90B] text-black"
-              : "text-white/45 hover:text-white/70"
-          }`}
-        >
-          Create account
-        </button>
-      </div>
+      {!hideModeSwitch && (
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/35 p-1">
+          <button
+            type="button"
+            onClick={() => switchMode("login")}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+              !isSignup
+                ? "bg-white/[0.1] text-white"
+                : "text-white/45 hover:text-white/70"
+            }`}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("signup")}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+              isSignup
+                ? "bg-[#F0B90B] text-black"
+                : "text-white/45 hover:text-white/70"
+            }`}
+          >
+            Create account
+          </button>
+        </div>
+      )}
 
-      <p className="mt-4 text-sm font-semibold text-white">{heading}</p>
+      <p className={`${hideModeSwitch ? "mt-0" : "mt-4"} text-sm font-semibold text-white`}>
+        {heading}
+      </p>
       <p className="mt-1 text-[12px] leading-relaxed text-white/45">{sub}</p>
 
       <form onSubmit={submitEmail} className="mt-4 grid gap-3">
