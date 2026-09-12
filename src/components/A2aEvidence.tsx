@@ -25,21 +25,21 @@ export function A2aEvidence({ agent }: { agent: Agent }) {
             </dd>
           </div>
         )}
-        {ev.endpoint && ev.endpoint !== ev.cardUrl && (
+        {ev.endpoint && (
           <div className="flex gap-3">
             <dt className="w-[6.5rem] shrink-0 text-white/40">Endpoint</dt>
             <dd className="min-w-0 break-all text-white/70">{ev.endpoint}</dd>
           </div>
         )}
-        {ev.lastProbeAt && (
-          <div className="flex gap-3">
-            <dt className="w-[6.5rem] shrink-0 text-white/40">Last probe</dt>
-            <dd className="text-white/70">
-              {ev.lastProbeKind ? `${ev.lastProbeKind} · ` : ""}
-              {ev.lastProbeAt}
-            </dd>
-          </div>
-        )}
+        <div className="flex gap-3">
+          <dt className="w-[6.5rem] shrink-0 text-white/40">Last probe</dt>
+          <dd className="text-white/70">
+            {ev.lastProbeKind ? `${ev.lastProbeKind} · ` : ""}
+            {ev.lastProbeAt
+              ? new Date(ev.lastProbeAt).toISOString()
+              : "not recorded"}
+          </dd>
+        </div>
         {ev.protocols.length > 0 && (
           <div className="flex gap-3">
             <dt className="w-[6.5rem] shrink-0 text-white/40">Protocol</dt>

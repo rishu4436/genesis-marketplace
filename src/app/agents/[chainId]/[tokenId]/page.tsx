@@ -200,7 +200,12 @@ export default async function AgentDetailPage({ params }: Props) {
           </div>
         </header>
         <aside className="space-y-4 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start">
-          <JobTicketPanel ticket={jobTicketForAgent(agent)} />
+          <JobTicketPanel
+            ticket={jobTicketForAgent(agent)}
+            ownerSigned={
+              Boolean(agent.desk_live) && !matchingGenesisSlug(agent)
+            }
+          />
           <A2aEvidence agent={agent} />
           {canRunPlan(agent) || canRequestQuote(agent) ? (
             <HireWizard

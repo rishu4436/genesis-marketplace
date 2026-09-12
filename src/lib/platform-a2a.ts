@@ -301,6 +301,61 @@ export async function a2aNotifyFunded(opts: {
     if (!res.ok) {
       return { ok: false, raw, error: `A2A HTTP ${res.status}` };
     }
+    if (raw && typeof raw === "object" && "error" in raw && !("result" in raw)) {
+      return { ok: false, raw, error: "JSON-RPC error envelope" };
+    }
+    return { ok: true, raw };
+  } catch (e) {
+    return {
+      ok: false,
+      raw: null,
+      error: e instanceof Error ? e.message : "notify_funded failed",
+    };
+  }
+}
+
+/** Third-party notify without Studio OAuth. */
+export async function a2aNotifyFundedOpen(opts: {
+  a2aUrl: string;
+  jobId: number;
+}): Promise<{ ok: boolean; raw: unknown; error?: string }> {
+  try {
+    const rpc = {
+      jsonrpc: "2.0",
+      id: `nf-${Date.now()}`,
+      method: "message/send",
+      params: {
+        message: {
+          role: "user",
+          parts: [
+            {
+              kind: "data",
+              data: { skill: "notify_funded", job_id: opts.jobId },
+            },
+          ],
+        },
+      },
+    };
+    const res = await fetch(opts.a2aUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(rpc),
+      cache: "no-store",
+      redirect: "manual",
+      signal: abortMs(LIVE_MS),
+    });
+    const raw = await res.json().catch(async () => ({
+      text: await res.text().catch(() => ""),
+    }));
+    if (!res.ok) {
+      return { ok: false, raw, error: `A2A HTTP ${res.status}` };
+    }
+    if (raw && typeof raw === "object" && "error" in raw && !("result" in raw)) {
+      return { ok: false, raw, error: "JSON-RPC error envelope" };
+    }
     return { ok: true, raw };
   } catch (e) {
     return {

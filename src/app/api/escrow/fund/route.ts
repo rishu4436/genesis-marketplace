@@ -18,7 +18,12 @@ import {
   readDisputeWindow,
   readOnchainJob,
 } from "@/lib/erc8183-read";
-import { a2aNotifyFunded, getPlatformConfig } from "@/lib/platform-a2a";
+import {
+  a2aNotifyFunded,
+  a2aNotifyFundedOpen,
+  getPlatformConfig,
+} from "@/lib/platform-a2a";
+import { getFeaturedByToken, sellerRpcUrl } from "@/lib/third-party-sellers";
 import { BSC_MAINNET_CHAIN_ID } from "@/lib/pins";
 import type { CategoryId } from "@/lib/categories";
 import type { HireIntent } from "@/lib/hire";
@@ -214,6 +219,21 @@ export async function POST(req: Request) {
           jobId: Number(chainJob.id),
           clientId: clientId || undefined,
           clientSecret: clientSecret || undefined,
+        });
+        job.timeline.push({
+          at: new Date().toISOString(),
+          status: "funded",
+          detail: notify.ok
+            ? "Seller notified (notify_funded)"
+            : `notify_funded failed: ${notify.error || "timeout"}`,
+        });
+      }
+    } else if (job.tokenId) {
+      const seller = getFeaturedByToken(job.chainId, job.tokenId);
+      if (seller) {
+        notify = await a2aNotifyFundedOpen({
+          a2aUrl: sellerRpcUrl(seller),
+          jobId: Number(chainJob.id),
         });
         job.timeline.push({
           at: new Date().toISOString(),

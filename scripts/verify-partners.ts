@@ -55,6 +55,7 @@ import { genesisToAgentCard, getGenesisAgent } from "../src/lib/genesis-agents";
 import { listingPriceForAgent } from "../src/lib/listing-price";
 import { jobTicketForAgent } from "../src/lib/job-ticket";
 import { capabilityForAgent } from "../src/lib/capability";
+import { probeUrlBlocked } from "../src/lib/probe-a2a";
 import {
   createListingDraft,
   listingToAgent,
@@ -476,6 +477,18 @@ function main() {
   check(
     "indexed seller listing is not hireable",
     isHireableListing(indexedListing) === false,
+  );
+  check(
+    "probe blocks localhost",
+    probeUrlBlocked("https://localhost/a2a") != null,
+  );
+  check(
+    "probe blocks private IPv4",
+    probeUrlBlocked("https://10.0.0.5/card.json") != null,
+  );
+  check(
+    "probe allows public https",
+    probeUrlBlocked("https://smeai-dev.vercel.app/api/a2a") == null,
   );
   check("SKU $6 locks 0.06 $U", skuUsdToLockU(6) === "0.06");
   check("SKU $8 locks 0.08 $U", skuUsdToLockU(8) === "0.08");

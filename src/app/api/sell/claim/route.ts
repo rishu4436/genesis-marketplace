@@ -8,11 +8,14 @@ import {
   createListingDraft,
   saveListing,
 } from "@/lib/seller-listings";
+import { rateGate } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 20;
 
 export async function POST(req: Request) {
+  const limited = await rateGate(req, "sell-claim", 8, 15 * 60);
+  if (limited) return limited;
   try {
     const acc = await currentAccount();
     if (!acc?.wallet) {
@@ -71,7 +74,7 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    if (!takeNonce(body.nonce)) {
+    if (!(await takeNonce(body.nonce))) {
       return NextResponse.json(
         { success: false, error: "Signature expired. Try again." },
         { status: 400 },

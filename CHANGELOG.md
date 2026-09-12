@@ -8,6 +8,27 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
+## 1.8.10 — 2026-09-12
+
+In-built security, one census, live listing evidence.
+
+### Was
+
+- Login, hire, and sell probe had almost no rate limits.
+- Wallet nonces lived only in process memory.
+- Job index and claim dump were public. Escrow submit did not check the listing wallet.
+
+### Now
+
+- Rate limits on login, register, wallet nonce, hire, sell probe/claim/ticket.
+- Nonces stored in KV (10 min). Probe caps body size and still blocks private hosts.
+- Security headers (CSP, frame deny, nosniff, referrer, permissions).
+- GET /api/jobs is own hires only; receipts by claim stay public. Claim dump closed.
+- Escrow submit requires the provider or token-owner wallet. Listings show Plan only / Escrow lock / Owner-signed.
+- Census numbers share `getHireTally()` on home, browse, index, and judge. Live listings show A2A endpoint + last probe. Probe does DNS private-IP check, rejects JSON-RPC error envelopes, and requires a canary quote for new seller hireable. Compare tray only on Browse/Compare. Third-party fund sends notify_funded. Job reseal cannot steal another owner's hire. Altana revoke requires sign-in.
+
+---
+
 ## 1.8.9 — 2026-09-12
 
 Profile is a pop menu, not a full page.

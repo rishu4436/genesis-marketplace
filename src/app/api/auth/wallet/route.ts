@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { loginOrCreateWallet, publicAccount } from "@/lib/accounts";
 import { loginAccount } from "@/lib/session";
+import { rateGate } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const limited = await rateGate(req, "wallet", 10, 15 * 60);
+  if (limited) return limited;
   try {
     const body = (await req.json()) as {
       address?: string;

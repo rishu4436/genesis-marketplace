@@ -14,9 +14,11 @@ export function SiteOverlays() {
   const onListing =
     pathname.startsWith("/genesis/") ||
     /^\/agents\/\d+\//.test(pathname);
+  const showCompare =
+    pathname.startsWith("/browse") || pathname.startsWith("/compare");
   return (
     <>
-      <CompareTray />
+      {showCompare ? <CompareTray /> : null}
       {onListing ? null : <AiConcierge />}
     </>
   );

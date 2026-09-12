@@ -103,19 +103,22 @@ export function a2aEvidence(agent: Agent): {
   protocols: string[];
 } {
   const pin = getFeaturedByToken(agent.chain_id, agent.token_id);
-  const card = pin?.a2aCardUrl || agent.a2a_endpoint || null;
-  const endpoint = pin?.rpcUrl || agent.a2a_endpoint || null;
+  const card =
+    agent.a2a_card_url || pin?.a2aCardUrl || agent.a2a_endpoint || null;
+  const endpoint =
+    agent.a2a_rpc || pin?.rpcUrl || agent.a2a_endpoint || card;
   const protocols = [
     ...(agent.supported_protocols || []),
     ...(pin ? ["A2A", "ERC-8183"] : []),
   ].filter((v, i, a) => a.indexOf(v) === i);
+  const kind =
+    agent.last_probe_kind ||
+    (pin ? "pin" : agent.probe_status || null);
   return {
     cardUrl: card,
     endpoint,
-    lastProbeAt: agent.last_probe_at || agent.updated_at || null,
-    lastProbeKind: pin
-      ? sellerPayloadKind(pin)
-      : agent.probe_status || null,
+    lastProbeAt: agent.last_probe_at || null,
+    lastProbeKind: kind,
     protocols,
   };
 }

@@ -109,6 +109,10 @@ export function hireableBscAsAgents(categoryId?: CategoryId): Agent[] {
       name: r.name,
       description: r.description,
       a2a_endpoint: r.a2a,
+      a2a_card_url: r.a2a,
+      a2a_rpc: r.a2a,
+      last_probe_at: file.asOf,
+      last_probe_kind: r.probe,
       supported_protocols:
         r.probe === "mcp" ? ["MCP"] : ["A2A", "ERC-8183"],
       probe_status: "alive" as const,

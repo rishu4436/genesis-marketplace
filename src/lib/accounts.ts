@@ -201,13 +201,22 @@ export async function loginEmail(
   return a;
 }
 
-export function issueNonce(): string {
+export async function issueNonce(): Promise<string> {
   const nonce = randomBytes(16).toString("hex");
-  nonces.set(nonce, { at: Date.now() });
+  const at = Date.now();
+  nonces.set(nonce, { at });
+  await kvCmd("SET", `genesis:nonce:${nonce}`, String(at), "EX", 600);
   return nonce;
 }
 
-export function takeNonce(nonce: string): boolean {
+export async function takeNonce(nonce: string): Promise<boolean> {
+  const key = `genesis:nonce:${nonce}`;
+  const fromKv = await kvCmd<string>("GET", key);
+  if (fromKv) {
+    await kvCmd("DEL", key);
+    nonces.delete(nonce);
+    return true;
+  }
   const row = nonces.get(nonce);
   if (!row) return false;
   nonces.delete(nonce);
@@ -219,7 +228,7 @@ export async function loginOrCreateWallet(
   signature: string,
   nonce: string,
 ): Promise<Account> {
-  if (!takeNonce(nonce)) throw new Error("Sign-in expired. Try again.");
+  if (!(await takeNonce(nonce))) throw new Error("Sign-in expired. Try again.");
   const recovered = await recoverMessageAddress({
     message: loginMessage(nonce),
     signature: signature as `0x${string}`,

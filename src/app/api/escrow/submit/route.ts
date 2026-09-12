@@ -11,6 +11,8 @@ import { readDisputeWindow, readOnchainJob } from "@/lib/erc8183-read";
 import { pinEscrowJudgeProof } from "@/lib/judge-proof";
 import { siteUrl } from "@/lib/site-url";
 import { hasLivePayload } from "@/lib/job-outcome";
+import { currentAccount } from "@/lib/session";
+import { readIdentityOwner, sameWallet } from "@/lib/erc8004-owner";
 
 export const runtime = "nodejs";
 
@@ -32,6 +34,16 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+    const acc = await currentAccount();
+    if (!acc?.wallet) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Sign in with the listing wallet to submit.",
+        },
+        { status: 401 },
+      );
+    }
     const job = await getJob(body.jobId);
     if (!job?.escrow?.onchainJobId) {
       return NextResponse.json(
@@ -39,6 +51,29 @@ export async function POST(req: Request) {
         { status: 404 },
       );
     }
+    const providerOk = sameWallet(acc.wallet, job.escrow.provider);
+    let ownerOk = false;
+    if (!providerOk && job.tokenId && /^\d+$/.test(String(job.tokenId))) {
+      try {
+        const owner = await readIdentityOwner(
+          String(job.tokenId),
+          job.chainId === 97 ? 97 : 56,
+        );
+        ownerOk = sameWallet(acc.wallet, owner);
+      } catch {
+        ownerOk = false;
+      }
+    }
+    if (!providerOk && !ownerOk) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This wallet is not the escrow provider or the token owner.",
+        },
+        { status: 403 },
+      );
+    }
+
     if (!hasLivePayload(job)) {
       return NextResponse.json(
         {

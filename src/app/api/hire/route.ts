@@ -14,6 +14,7 @@ import { sealJob } from "@/lib/job-receipt";
 import { ESCROW_STANCE } from "@/lib/escrow-stance";
 import { incidentFromPolicyBreak } from "@/lib/job-decision";
 import { saveIncident } from "@/lib/slash-store";
+import { rateGate } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -24,6 +25,8 @@ export const maxDuration = 30;
  * Card and wallet checkout are not a hire rail.
  */
 export async function POST(req: Request) {
+  const limited = await rateGate(req, "hire", 20, 10 * 60);
+  if (limited) return limited;
   try {
     const body = (await req.json()) as {
       chainId: number;

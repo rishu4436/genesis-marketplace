@@ -38,7 +38,13 @@ export function JobTicketStrip({
   );
 }
 
-export function JobTicketPanel({ ticket }: { ticket: JobTicket }) {
+export function JobTicketPanel({
+  ticket,
+  ownerSigned = false,
+}: {
+  ticket: JobTicket;
+  ownerSigned?: boolean;
+}) {
   const rows: { k: string; v: string }[] = [
     { k: "Job", v: ticket.job },
     { k: "You send", v: ticket.youSend },
@@ -65,6 +71,12 @@ export function JobTicketPanel({ ticket }: { ticket: JobTicket }) {
           </div>
         ))}
       </dl>
+      <p className="mt-3 text-[10px] leading-relaxed text-white/35">
+        Plan only
+        {ticket.lockU ? " · Escrow lock" : ""}
+        {ownerSigned ? " · Owner-signed listing" : ""}
+        {ticket.completes === "genesis-apex" ? " · Genesis APEX" : ""}
+      </p>
     </div>
   );
 }

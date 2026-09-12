@@ -34,6 +34,9 @@ export type Agent = {
   you_send?: string;
   you_get?: string;
   last_probe_at?: string;
+  last_probe_kind?: string;
+  a2a_card_url?: string;
+  a2a_rpc?: string;
 };
 
 export type Feedback = {

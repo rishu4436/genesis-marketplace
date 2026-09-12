@@ -10,6 +10,7 @@ import {
   type SellerListing,
 } from "@/lib/seller-listings";
 import { sameWallet } from "@/lib/erc8004-owner";
+import { rateGate } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 20;
@@ -17,6 +18,8 @@ export const maxDuration = 20;
 const CAT = new Set(CATEGORIES.map((c) => c.id));
 
 export async function POST(req: Request) {
+  const limited = await rateGate(req, "sell-ticket", 10, 10 * 60);
+  if (limited) return limited;
   try {
     const acc = await currentAccount();
     if (!acc?.wallet) {
@@ -78,6 +81,7 @@ export async function POST(req: Request) {
       }
     }
     const probe = await probeA2aUrl(a2aUrl);
+    const hireable = Boolean(probe.ok && probe.canary);
     const next: SellerListing = {
       ...listing,
       name: (body.name || listing.name || probe.name || `Agent #${listing.tokenId}`).trim(),
@@ -87,10 +91,14 @@ export async function POST(req: Request) {
       youGet: (body.youGet || "").trim().slice(0, 240),
       lockU,
       quoteOnly,
-      probeOk: probe.ok,
+      probeOk: hireable,
       probeAt: new Date().toISOString(),
-      probeError: probe.ok ? undefined : probe.error,
-      gate: probe.ok ? "hireable" : "indexed",
+      probeError: hireable
+        ? undefined
+        : probe.canary === false
+          ? "Card/RPC reachable but canary quote failed"
+          : probe.error,
+      gate: hireable ? "hireable" : "indexed",
     };
     const saved = await saveListing(next);
     return NextResponse.json({
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
       probe,
       note: saved.gate === "hireable"
         ? "On the hire floor. Buyers see the job ticket."
-        : "Still Indexed. A2A probe did not pass — not hireable.",
+        : "Still Indexed. Need a live A2A canary (quote), not only a card.",
     });
   } catch (e) {
     return NextResponse.json(

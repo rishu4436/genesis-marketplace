@@ -21,6 +21,15 @@ export function deskFloorAgents(): Agent[] {
   const genesis = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const probed = hireableBscAsAgents();
   const live = LIVE_SELLERS.map((s) => featuredAsAgent(s));
+  const byToken = new Map(probed.map((a) => [String(a.token_id), a]));
+  for (const a of live) {
+    const p = byToken.get(String(a.token_id));
+    if (!p) continue;
+    a.last_probe_at = a.last_probe_at || p.last_probe_at;
+    a.last_probe_kind = a.last_probe_kind || p.last_probe_kind;
+    a.a2a_rpc = a.a2a_rpc || p.a2a_rpc;
+    a.a2a_card_url = a.a2a_card_url || p.a2a_card_url;
+  }
   const sellers = hireableSellerAgents();
   return dedupeAgents([...genesis, ...live, ...probed, ...sellers]).filter(
     isHireableListing,

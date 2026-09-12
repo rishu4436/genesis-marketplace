@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findJobReceipt, listJobs, saveJob } from "@/lib/job-store";
+import { findJobReceipt, getJob, listJobs, saveJob } from "@/lib/job-store";
 import type { HireJob } from "@/lib/hire-engine";
 import { currentAccount } from "@/lib/session";
 
@@ -19,7 +19,14 @@ export async function GET(req: Request) {
     }
     return NextResponse.json({ success: true, data: job });
   }
-  const jobs = await listJobs(40);
+  const acc = await currentAccount();
+  if (!acc) {
+    return NextResponse.json(
+      { success: false, error: "Sign in required" },
+      { status: 401 },
+    );
+  }
+  const jobs = (await listJobs(80)).filter((j) => j.ownerId === acc.id);
   return NextResponse.json({ success: true, data: jobs });
 }
 
@@ -38,6 +45,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "job with id required" },
         { status: 400 },
+      );
+    }
+    const existing = await getJob(body.job.id);
+    if (existing?.ownerId && existing.ownerId !== acc.id) {
+      return NextResponse.json(
+        { success: false, error: "Not your hire" },
+        { status: 403 },
       );
     }
     const saved = await saveJob({ ...body.job, ownerId: acc.id });

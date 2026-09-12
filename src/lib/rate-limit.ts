@@ -3,6 +3,7 @@
  * still uses memory so a noisy client cannot stampede plan package runs.
  */
 
+import { NextResponse } from "next/server";
 import { kvCmd } from "./kv";
 
 const memory = new Map<string, { n: number; resetAt: number }>();
@@ -50,4 +51,25 @@ export function clientIp(req: Request): string {
     req.headers.get("cf-connecting-ip") ||
     "local";
   return ip.slice(0, 64);
+}
+
+export async function rateGate(
+  req: Request,
+  bucket: string,
+  limit: number,
+  windowSec: number,
+): Promise<NextResponse | null> {
+  const gated = await allowRate({
+    key: `${bucket}:${clientIp(req)}`,
+    limit,
+    windowSec,
+  });
+  if (gated.ok) return null;
+  return NextResponse.json(
+    { success: false, error: "Too many requests. Try again shortly." },
+    {
+      status: 429,
+      headers: { "Retry-After": String(gated.retryAfterSec) },
+    },
+  );
 }

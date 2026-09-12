@@ -26,7 +26,7 @@ import {
 import { PRICE_LEGEND } from "@/lib/copy";
 import { CatalogModeNav } from "@/components/CatalogModeNav";
 import { HireTallyBoard } from "@/components/HireTallyBoard";
-import { getHireTallyFast } from "@/lib/hire-tally";
+import { getHireTally } from "@/lib/hire-tally";
 import { fetchCensusAlive } from "@/lib/census-alive";
 import { deskFloorAgents } from "@/lib/desk-floor";
 import { hydrateSellerListings } from "@/lib/seller-listings";
@@ -126,7 +126,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         census: null,
       };
   if (!showIndex) await hydrateSellerListings();
-  const tally = showIndex ? null : getHireTallyFast();
+  const tally = await getHireTally();
   const genesisCards = allGenesisAgents().map((g) => genesisToAgentCard(g));
   const floor = deskFloorAgents();
   const merged = showIndex
@@ -310,10 +310,10 @@ export default async function BrowsePage({ searchParams }: Props) {
             : showIndex
               ? `Raw index · ${liveSplit.hireable.length} hireable · ${liveSplit.identity.length} unhireable · page ${safePage}/${totalPages}`
               : `Hire floor · ${tally ? tally.hireable : liveSplit.hireable.length} hireable · page ${safePage}/${totalPages}`}
-          {pool.census?.alive ? (
+          {tally && tally.endpointAlive ? (
             <span className="ml-1 text-lime-200/80">
-              · {pool.census.alive.toLocaleString()} endpoint-alive of{" "}
-              {pool.census.registered.toLocaleString()} registered
+              · {tally.endpointAlive.toLocaleString()} endpoint-alive of{" "}
+              {tally.registered.toLocaleString()} registered
             </span>
           ) : null}
           {relaxed && (
