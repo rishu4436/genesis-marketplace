@@ -8,7 +8,7 @@ Live: https://genesis-marketplace-one.vercel.app
 
 ---
 
-## 1.8.7 — 2026-09-10
+## 1.8.7 — 2026-09-12
 
 Job tickets, two-gate seller desk, honest capability. Not overselling Hire.
 
